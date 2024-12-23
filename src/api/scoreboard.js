@@ -38,7 +38,6 @@ const fetchTs = async () => {
   if (error) {
     throw new Error(error)
   }
-  console.log(tsResults)
   return tsResults
 }
 
@@ -54,7 +53,6 @@ const fetchStatuses = async () => {
   if (error) {
     throw new Error(error)
   }
-  console.log(data)
   return data
 }
 export const fetchScoreboardOptions = async () => {
@@ -75,7 +73,7 @@ export const fetchScoreboardOptions = async () => {
 export const insertScoreboardData = async (formData) => {
   //testing the loading and disabling
   await new Promise((resolve) => {
-    setTimeout(resolve, 3000)
+    setTimeout(resolve, 1000)
   })
 
   const { reportsData, ...extractedFormData } = formData
@@ -106,11 +104,11 @@ export const insertScoreboardData = async (formData) => {
   const transformedReportData = reportsData.map((reportItem) => {
     const combinedDateTime = combineDateTime(reportItem.dateForwarded, reportItem.timeForwarded)
     return {
-      report_id: reportItem.reportType.report_id,
+      report_id: reportItem.report.report_id,
       scoreboard_id: data[0].scoreboard_id,
       date_time_forwarded: combinedDateTime,
       num_working_time: reportItem.numWorkingDays,
-      prescribed_period_id: reportItem.prescribedPeriod.prescribedPeriodId
+      prescribed_period_id: reportItem.prescribed_period_id
     }
   })
   const { reportError } = await supabase.from('report_records').insert(transformedReportData)

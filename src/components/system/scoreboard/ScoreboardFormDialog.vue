@@ -3,15 +3,11 @@ import { requiredValidator } from "@/utils/validators.js"
 import { formActionDefault } from '@/utils/supabase.js'
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import { onMounted, reactive, computed } from "vue"
-const props = defineProps(["prescribedPeriod", "dateTimeForwarded", "reportType"]);
+const props = defineProps(["prescribedPeriod", "dateTimeForwarded", "report"]);
 const emit = defineEmits(['formSubmitted']);
 import { ref } from "vue"
-import { useDate } from "vuetify"
 
-
-const date = useDate()
 const formDataDefault = {
-    prescribedPeriod: props.prescribedPeriod,
     numWorkingDays: '',
     reviewedBy: '',
     dateForwarded: new Date(Date.now()),
@@ -19,6 +15,7 @@ const formDataDefault = {
 }
 
 const timeMenu = ref(false)
+const isDone = ref(false)
 const isOpen = ref(false)
 const refVForm = ref()
 const formAction = ref({
@@ -32,18 +29,13 @@ const onClose = () => {
     formAction.value = { ...formActionDefault }
     formData.value = { ...formDataDefault }
 }
-//havent formatted it yet
-const formattedDate = computed(() => {
-
-    return date.format('2010-04-13', "keyboardDate")
-})
-
 //let the parent component handle this event
 const onFormSubmit = () => {
     refVForm.value?.validate().then(({ valid }) => {
         if (valid) {
             isOpen.value = false
-            emit('formSubmitted', { ...formData.value, reportType: props.reportType, prescribedPeriod: props.prescribedPeriod })
+            isDone.value = true
+            emit('formSubmitted', { ...formData.value, ...props.prescribedPeriod, report: props.report })
         }
         else formAction.value = {
             ...formActionDefault,
@@ -55,26 +47,27 @@ const onFormSubmit = () => {
 onMounted(() => {
     console.log("Dialogs have been mounted")
 
-})</script>
+})
+</script>
 
 <template>
-    <v-btn :text="`Click to Fill ${props.reportType.report_name.toUpperCase()} Specifics`" variant="elevated"
-        @click="isOpen = true"></v-btn>
+    <v-btn :text="`Click to Fill ${props.report.report_name.toUpperCase()} Specifics`" variant="elevated"
+        @click="isOpen = true" :color="isDone ? 'blue-darken-3' : 'red-darken-3'"></v-btn>
     <v-dialog v-model="isOpen" max-width="900">
-        <v-card :title="props.reportType.report_name + ' Specifics'">
+        <v-card :title="props.report.report_name + ' Specifics'">
             <AlertNotification :form-success-message="formAction.formSuccessMessage"
                 :form-error-message="formAction.formErrorMessage"></AlertNotification>
             <v-card-text>
                 <v-form ref="refVForm" @submit.prevent="onFormSubmit">
                     <v-row dense>
                         <v-col>
-                            <v-text-field readonly v-model="props.prescribedPeriod.prescribedPeriodValue"
+                            <v-text-field readonly v-model="props.prescribedPeriod.prescribed_period_value"
                                 label="Prescribed Period" :rule="requiredValidator"></v-text-field>
                         </v-col>
                     </v-row>
                     <v-row>
                         <v-col>
-                            <v-date-input :label="props.dateTimeForwarded" :rules="[requiredValidator]"
+                            <v-date-input :label="props.report.date_time_forwarded_to" :rules="[requiredValidator]"
                                 v-model="formData.dateForwarded" prepend-icon=""
                                 prepend-inner-icon="$calendar"></v-date-input>
 
@@ -97,7 +90,7 @@ onMounted(() => {
                                 v-model="formData.numWorkingDays" :rules="[requiredValidator]">
                             </v-text-field>
                         </v-col>
-                        <v-col v-if="props.reportType.report_name === 'Asst. DC/Sr. BMS'">
+                        <v-col v-if="props.report.report_name === 'Asst. DC/Sr. BMS'">
                             <v-text-field label="Reviewed By" v-model="formData.reviewedBy"
                                 :rules="[requiredValidator]">
                             </v-text-field>

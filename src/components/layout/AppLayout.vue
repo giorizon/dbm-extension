@@ -44,7 +44,7 @@ onMounted(() => {
           </v-app-bar-nav-icon>
 
           <v-app-bar-title>
-            <v-img src="/images/header-dbm.png" :width="xs ? '100' : sm ? '40%' : '40%'"></v-img>
+            <v-img src="/images/header-dbm.png" :width="xs ? '100%' : sm ? '40%' : '40%'"></v-img>
           </v-app-bar-title>
 
           <v-spacer></v-spacer>
