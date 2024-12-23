@@ -9,21 +9,24 @@ export const scoreboardTableHeaders = [
         key: 'pap',
         sortable: false,
         align: 'start',
-        width: '50%'
+        width: '50%',
+        nowrap: true
       },
       {
         title: 'TS-in-Charge',
         key: 'ts',
         sortable: false,
         align: 'start',
-        width: '150px'
+        width: '150px',
+        nowrap: true
       },
       {
         title: 'Agency Name',
         key: 'agency_name',
         sortable: false,
         align: 'center',
-        width: '150px'
+        width: '150px',
+        nowrap: true
       }
     ]
   },
@@ -31,7 +34,7 @@ export const scoreboardTableHeaders = [
     title: 'DMS Reference Number',
     key: 'dms_reference_number',
     sortable: false,
-    align: 'end',
+    align: 'center',
     width: '150px',
     nowrap: true
   },

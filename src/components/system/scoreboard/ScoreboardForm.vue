@@ -173,15 +173,15 @@ onMounted(async () => {
                         </v-text-field>
                     </v-col>
                 </v-row>
-                <SuccessDialog @close-dialog="() => { isSuccess.value = false }" :isActive="isSuccess" />
+
                 <v-row dense>
                     <v-spacer></v-spacer>
                     <v-btn text="Submit Form" type="submit" color="red-darken-4" :loading="formAction.formProcess"
                         :disabled="formAction.formProcess">
                     </v-btn>
                 </v-row>
-
             </v-form>
+            <SuccessDialog @close-dialog="() => { isSuccess = false }" :isActive="isSuccess" />
         </v-card-text>
     </v-card>
 </template>

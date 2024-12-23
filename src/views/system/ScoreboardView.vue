@@ -20,7 +20,7 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
   tableOptions.value.isLoading = true
 
   //load the items here by calling the api
-  await scoreboardStore.getScoreboardPaginated({ currentPage: 1, perPage: 10, column: "" })
+  await scoreboardStore.getScoreboardPaginated({ currentPage: tableOptions.value.page, perPage: tableOptions.value.itemsPerPage, column: "" })
 
   tableOptions.value.isLoading = false
 
