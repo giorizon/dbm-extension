@@ -16,7 +16,7 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     const rangeStart = (currentPage - 1) * perPage
     const rangeEnd = rangeStart + perPage - 1
 
-    const { data, error, status, count } = await supabase
+    const { data, error, _, count } = await supabase
       .from('scoreboard_records')
       .select(
         'scoreboard_id, agency_name, css_submission_date, date_time_received,dms_reference_number, output_released_documents,remarks, pap:pap(code), ts:ts_in_charge(name), transaction_type:type_of_transactions(transaction_type), report_records:report_records(date_time_forwarded, num_working_time, prescribed_period:prescribed_periods(prescribed_period_value), report:reports(report_name)), status:status(status_name)',
