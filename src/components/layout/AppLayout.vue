@@ -1,5 +1,5 @@
 <script setup>
-import ProfileHeaderNavigation from './ProfileHeaderNavigation.vue'
+import TopHeaderNavigation from './navigation/TopHeaderNavigation.vue'
 import { useAuthUserStore } from '@/stores/authUser'
 import { useDisplay } from 'vuetify'
 import { onMounted, ref } from 'vue'
@@ -38,9 +38,18 @@ onMounted(() => {
   <v-responsive class="rounded">
     <v-app :theme="theme">
       <v-layout>
-        <v-app-bar image="/images/header-dbm-bg.jpg" class="px-3" :class="theme === 'light' ? 'bg-grey-lighten-2' : ''">
-          <v-app-bar-nav-icon v-if="props.isWithAppBarNavIcon" icon="mdi-menu" variant="tonal" :theme="theme"
-            @click="emit('isDrawerVisible')">
+        <v-app-bar
+          image="/images/header-dbm-bg.jpg"
+          class="px-3"
+          :class="theme === 'light' ? 'bg-grey-lighten-2' : ''"
+        >
+          <v-app-bar-nav-icon
+            v-if="props.isWithAppBarNavIcon"
+            icon="mdi-menu"
+            variant="tonal"
+            :theme="theme"
+            @click="emit('isDrawerVisible')"
+          >
           </v-app-bar-nav-icon>
 
           <v-app-bar-title>
@@ -49,10 +58,15 @@ onMounted(() => {
 
           <v-spacer></v-spacer>
 
-          <v-btn class="me-2" variant="elevated" :icon="theme === 'light' ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-            slim @click="onToggleTheme"></v-btn>
+          <v-btn
+            class="me-2"
+            variant="elevated"
+            :icon="theme === 'light' ? 'mdi-weather-sunny' : 'mdi-weather-night'"
+            slim
+            @click="onToggleTheme"
+          ></v-btn>
 
-          <ProfileHeaderNavigation v-if="isLoggedIn"></ProfileHeaderNavigation>
+          <TopHeaderNavigation v-if="isLoggedIn"></TopHeaderNavigation>
         </v-app-bar>
 
         <slot name="navigation"></slot>
@@ -61,8 +75,13 @@ onMounted(() => {
           <slot name="content"></slot>
         </v-main>
 
-        <v-footer class="font-weight-bold" :class="mobile ? 'text-caption' : ''"
-          :color="theme === 'light' ? 'grey-lighten-2' : undefined" border app>
+        <v-footer
+          class="font-weight-bold"
+          :class="mobile ? 'text-caption' : ''"
+          :color="theme === 'light' ? 'grey-lighten-2' : undefined"
+          border
+          app
+        >
           <div :class="mobile ? 'w-100 text-center' : ''">
             Copyright © 2024 - Department of Budget and Management | All Rights Reserved
           </div>

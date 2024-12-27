@@ -1,14 +1,17 @@
 <script setup>
-import AppLayout from '@/components/layout/AppLayout.vue'
-import { ref } from "vue"
+import ScoreboardForm from '@/components/system/accomplishments/scoreboard/ScoreboardForm.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
-import ScoreboardForm from '@/components/system/scoreboard/ScoreboardForm.vue'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import { ref } from 'vue'
 
 const isDrawerVisible = ref(true)
 </script>
 
 <template>
-  <AppLayout :is-with-app-bar-nav-icon="true" @is-drawer-visible="isDrawerVisible = !isDrawerVisible">
+  <AppLayout
+    :is-with-app-bar-nav-icon="true"
+    @is-drawer-visible="isDrawerVisible = !isDrawerVisible"
+  >
     <template #navigation>
       <SideNavigation :is-drawer-visible="isDrawerVisible"></SideNavigation>
     </template>
@@ -26,7 +29,9 @@ const isDrawerVisible = ref(true)
           </template>
 
           <template #subtitle>
-            <p class="ms-4 text-wrap">Add Report Record for Scoreboard. Records will be displayed as tables</p>
+            <p class="ms-4 text-wrap">
+              Add Report Record for Scoreboard. Records will be displayed as tables
+            </p>
           </template>
         </v-card>
         <ScoreboardForm />

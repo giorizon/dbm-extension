@@ -5,8 +5,9 @@ import NotFoundView from '@/views/errors/NotFoundView.vue'
 import AccountSettingsView from '@/views/system/AccountSettingsView.vue'
 import UserRolesView from '@/views/system/manage-users/UserRolesView.vue'
 import UsersView from '@/views/system/manage-users/UsersView.vue'
-import AddScoreBoardRecordView from '@/views/system/AddScoreBoardRecordView.vue'
-import ScoreboardView from '@/views/system/ScoreboardView.vue'
+import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
+import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
+
 // 👉 Routes
 export const routes = [
   // Auth Pages
@@ -47,7 +48,6 @@ export const routes = [
     meta: { requiresAuth: true }
   },
 
-  ,
   // Admin Pages
   {
     path: '/manage/user/roles',

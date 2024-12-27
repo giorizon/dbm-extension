@@ -1,13 +1,17 @@
 <script setup>
+import ScoreboardTable from '@/components/system/accomplishments/scoreboard/ScoreboardTable.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import ScoreboardTable from '@/components/system/scoreboard/ScoreboardTable.vue'
-import { ref } from "vue"
+import { ref } from 'vue'
+
 const isDrawerVisible = ref(true)
 </script>
 
 <template>
-  <AppLayout :is-with-app-bar-nav-icon="true" @is-drawer-visible="isDrawerVisible = !isDrawerVisible">
+  <AppLayout
+    :is-with-app-bar-nav-icon="true"
+    @is-drawer-visible="isDrawerVisible = !isDrawerVisible"
+  >
     <template #navigation>
       <SideNavigation :is-drawer-visible="isDrawerVisible"></SideNavigation>
     </template>
@@ -40,5 +44,4 @@ const isDrawerVisible = ref(true)
       </v-container>
     </template>
   </AppLayout>
-
 </template>
