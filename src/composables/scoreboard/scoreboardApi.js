@@ -1,7 +1,5 @@
 import { supabase } from '@/utils/supabase.js'
 import { combineDateTime } from '@/utils/helpers'
-
-//fetching functionality for scoreboard related data
 const fetchPaps = async () => {
   const { data: papResults, error } = await supabase.from('pap').select('id, code')
   if (error) {
