@@ -4,7 +4,8 @@ import { requiredValidator } from '@/utils/validators'
 import SuccessDialog from './SuccessDialog.vue'
 import { useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/scoreboard'
 import { ref } from 'vue'
-const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess } = useScoreboardForm()
+import ErrorDialog from './ErrorDialog.vue'
+const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess, refVForm } = useScoreboardForm()
 const { options, prescribedPeriodValues, typesOfTransaction } = useScoreboardData(formData)
 const timeMenu = ref()
 </script>
@@ -108,6 +109,10 @@ const timeMenu = ref()
         isSuccess = false
       }
         " :isActive="isSuccess" />
+      <ErrorDialog :isOpen="formAction.formErrorMessage.length !== 0" :errorMessage="formAction.formErrorMessage"
+        @on-close="() => {
+          formAction.formErrorMessage = ''
+        }" />
     </v-card-text>
   </v-card>
 </template>

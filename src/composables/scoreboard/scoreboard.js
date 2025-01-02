@@ -1,10 +1,10 @@
 import { ref, computed } from 'vue'
 import { formActionDefault } from '@/utils/supabase.js'
-import { fetchScoreboardOptions } from './scoreboardApi'
-import { insertScoreboardData } from './scoreboardApi'
+import { useScoreboardStore } from '@/stores/scoreboard'
 import { onMounted } from 'vue'
 //fetching functionality for scoreboard related data
 export const useScoreboardForm = () => {
+  const scoreboardStore = useScoreboardStore()
   const formDataDefault = {
     particulars: {
       pap: '',
@@ -41,20 +41,26 @@ export const useScoreboardForm = () => {
   const handleFormSubmit = async () => {
     formAction.value.formProcess = true
 
-    //i have to manually unwraped the proxied nested objects in these ref (will ask for suggestions)
-    const { error } = await insertScoreboardData({
-      ...formData.value,
-      particulars: { ...formData.value.particulars },
-      reportsData: [...formData.value.reportsData]
+    //validate input data
+    refVForm.value?.validate().then(async ({ valid }) => {
+      if (valid) {
+        //i have to manually unwraped the proxied nested objects in these ref (will ask for suggestions)
+        const { error } = await scoreboardStore.insertScoreboardData({
+          ...formData.value,
+          particulars: { ...formData.value.particulars },
+          reportsData: [...formData.value.reportsData]
+        })
+        if (error) {
+          formAction.value.formErrorMessage = error
+          formAction.value.formProcess = false
+          return
+        }
+        formAction.value.formProcess = false
+        formAction.value.formSuccessMessage = 'Record has been successfully inserted'
+        isSuccess.value = true
+        refVForm.value?.reset()
+      } else formAction.value.formProcess = false
     })
-    if (error) {
-      console.error('Error inserting data into scoreboard')
-      formAction.value.formErrorMessage = error
-    }
-
-    formAction.value.formProcess = false
-    isSuccess.value = true
-    refVForm.value?.reset()
   }
 
   return {
@@ -62,10 +68,12 @@ export const useScoreboardForm = () => {
     handleDialogFormSubmit,
     formData,
     formAction,
-    isSuccess
+    isSuccess,
+    refVForm
   }
 }
 export const useScoreboardData = (formData) => {
+  const scoreboardStore = useScoreboardStore()
   const optionsDefault = {
     natureOfRequest: [],
     tsInCharge: [],
@@ -76,7 +84,7 @@ export const useScoreboardData = (formData) => {
   const typesOfTransaction = ref([])
   const fetchData = async () => {
     const [natureOfRequestData, tsInChargeData, papData, typeOfTransactionData, statuses] =
-      await fetchScoreboardOptions()
+      await scoreboardStore.fetchScoreboardOptions()
     options.value = {
       natureOfRequest: natureOfRequestData,
       tsInCharge: tsInChargeData,

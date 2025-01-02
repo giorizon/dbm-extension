@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { supabase, tablePagination } from '@/utils/supabase.js'
+import { supabase } from '@/utils/supabase.js'
+import { combineDateTime } from '@/utils/helpers'
 export const useScoreboardStore = defineStore('scoreboard', () => {
   const scoreboardTable = ref([])
   const scoreboardTotal = ref(0)
@@ -9,7 +10,6 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     scoreboardTable.value = []
     scoreboardTotal.value = 0
   }
-
   async function getScoreboardPaginated({ currentPage, perPage, column }) {
     //calculate range first
 
@@ -24,7 +24,6 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
       )
       .range(rangeStart, rangeEnd)
     if (error) {
-      console.log('Error occured:', error)
       return { error }
     }
     //data transformation to fit into table
@@ -60,14 +59,127 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
       }
       return transformedData
     })
-    console.log(scoreboardData)
     scoreboardTotal.value = count
     scoreboardTable.value = scoreboardData
+  }
+  async function fetchPaps() {
+    const { data: papResults, error } = await supabase.from('pap').select('id, code')
+    if (error) {
+      throw new Error(error)
+    }
+    return papResults
+  }
+  async function fetchTypeOfTransactionList(prescribedPeriod = false) {
+    //fetch transactions with its associated prescribed period value and the report it belongs
+
+    if (prescribedPeriod) {
+      const { data: typeOfTransactionResult, error } = await supabase
+        .from('type_of_transactions')
+        .select(
+          'transaction_type, prescribed_periods(prescribed_periods_id, prescribed_period_value, report:reports(report_id, report_name, date_time_forwarded_to))'
+        )
+      if (error) {
+        throw new Error(error)
+      }
+      return typeOfTransactionResult
+    }
+
+    const { data: typeOfTransactionResult, error } = await supabase
+      .from('type_of_transactions')
+      .select('transaction_type')
+    if (error) {
+      throw new Error(error)
+    }
+    return typeOfTransactionResult.map((transaction) => transaction.transaction_type)
+  }
+  async function fetchTs() {
+    const { data: tsResults, error } = await supabase.from('ts_in_charge').select('tic_id, name')
+    if (error) {
+      throw new Error(error)
+    }
+    return tsResults
+  }
+
+  async function fetchNatureOfRequest() {
+    const { data: norList, error } = await supabase.from('nature_of_transaction').select('noq_name')
+    if (error) {
+      throw new Error(error)
+    }
+    return norList.map((ts) => ts.noq_name)
+  }
+  async function fetchStatuses() {
+    const { data, error } = await supabase.from('status').select('id, status_name')
+    if (error) {
+      throw new Error(error)
+    }
+    return data
+  }
+  async function fetchScoreboardOptions() {
+    try {
+      return await Promise.all([
+        fetchNatureOfRequest(),
+        fetchTs(),
+        fetchPaps(),
+        fetchTypeOfTransactionList(true),
+        fetchStatuses()
+      ])
+    } catch (error) {
+      return { error }
+    }
+  }
+  //this calls a lot of supabase trip bc I did not store the ids of these foreign values for scoreboard
+  async function insertScoreboardData(formData) {
+    //testing the loading and disabling
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1000)
+    })
+
+    const { reportsData, ...extractedFormData } = formData
+
+    //setting timestamp, combining selected date and time
+    const combinedDateTime = combineDateTime(
+      extractedFormData.dateReceivedRecordSection,
+      extractedFormData.timeReceivedRecordSection
+    )
+
+    const { data, error } = await supabase
+      .from('scoreboard_records')
+      .insert({
+        pap_id: extractedFormData.particulars.pap,
+        ts_in_charge_id: extractedFormData.particulars.ts,
+        transaction_type: extractedFormData.typeOfTransaction,
+        agency_name: extractedFormData.particulars.agency,
+        dms_reference_number: extractedFormData.dmsReferenceNumber,
+        date_time_received: combinedDateTime,
+        remarks: extractedFormData.remarks,
+        status_id: extractedFormData.status
+      })
+      .select('scoreboard_id')
+    if (error) {
+      return { error: error }
+    }
+    const transformedReportData = reportsData.map((reportItem) => {
+      const combinedDateTime = combineDateTime(reportItem.dateForwarded, reportItem.timeForwarded)
+      return {
+        report_id: reportItem.report.report_id,
+        scoreboard_id: data[0].scoreboard_id,
+        date_time_forwarded: combinedDateTime,
+        num_working_time: reportItem.numWorkingDays,
+        prescribed_period_id: reportItem.prescribed_period_id
+      }
+    })
+    const { reportError } = await supabase.from('report_records').insert(transformedReportData)
+    if (reportError) {
+      return { error: reportError }
+    }
+    return { data: `Succesfully inserted with scoreboard id ${data[0].scoreboard_id}` }
   }
   return {
     scoreboardTotal,
     scoreboardTable,
     getScoreboardPaginated,
+    insertScoreboardData,
+    fetchScoreboardOptions,
     $reset
   }
 })

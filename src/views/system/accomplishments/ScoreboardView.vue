@@ -8,10 +8,7 @@ const isDrawerVisible = ref(true)
 </script>
 
 <template>
-  <AppLayout
-    :is-with-app-bar-nav-icon="true"
-    @is-drawer-visible="isDrawerVisible = !isDrawerVisible"
-  >
+  <AppLayout :is-with-app-bar-nav-icon="true" @is-drawer-visible="isDrawerVisible = !isDrawerVisible">
     <template #navigation>
       <SideNavigation :is-drawer-visible="isDrawerVisible"></SideNavigation>
     </template>
@@ -20,7 +17,7 @@ const isDrawerVisible = ref(true)
         <v-card class="mb-5">
           <template #title>
             <span class="text-h6 font-weight-bold">
-              <v-breadcrumbs :items="['User Management', 'List of Users']">
+              <v-breadcrumbs :items="['Monitoring', 'Scoreboard']">
                 <template #prepend>
                   <v-icon icon="mdi-account-multiple" size="small" class="me-1"></v-icon>
                 </template>
@@ -29,7 +26,7 @@ const isDrawerVisible = ref(true)
           </template>
 
           <template #subtitle>
-            <p class="ms-4 text-wrap">Scoreboard Table for Reports.</p>
+            <p class="ms-4 text-wrap">Monitoring scoreboard records</p>
           </template>
         </v-card>
         <v-row>
