@@ -41,8 +41,6 @@ export const useScoreboardForm = () => {
   const handleFormSubmit = async () => {
     formAction.value.formProcess = true
 
-    console.log(formData.outputReleasedDocuments)
-    console.log('Hello World')
     //validate input data
     refVForm.value?.validate().then(async ({ valid }) => {
       if (valid) {

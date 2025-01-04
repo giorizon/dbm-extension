@@ -11,14 +11,13 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     scoreboardTotal.value = 0
   }
   async function deleteScoreboardRecord(scoreboardId) {
-    console.log(scoreboardId)
     const { data, error, status } = await supabase
       .from('scoreboard_records')
       .delete()
       .eq('scoreboard_id', scoreboardId)
     if (error) return { error }
 
-    return { message: 'item has been deleted', status }
+    return { message: 'Item has been deleted', status }
   }
   async function getScoreboardPaginated({ currentPage, perPage, column }) {
     //calculate range first

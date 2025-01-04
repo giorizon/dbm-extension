@@ -1,55 +1,20 @@
 <script setup>
 import { scoreboardTableHeaders } from '@/components/system/accomplishments/scoreboard/scoreboardTableUtils'
-import { useScoreboardStore } from '@/stores/scoreboard'
 import { useDate } from 'vuetify'
-import { ref } from 'vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import { formActionDefault } from '@/utils/supabase'
+import AlertNotification from '@/components/common/AlertNotification.vue'
+import { useScoreboardTable } from '@/composables/scoreboard/scoreboardTable'
+import { useScoreboardStore } from '@/stores/scoreboard'
 
 const date = useDate()
 const scoreboardStore = useScoreboardStore()
-const isDialogVisible = ref(false)
-const selectedScoreboardId = ref('')
-const formAction = ref({ ...formActionDefault })
-const tableOptions = ref({
-  page: 1,
-  itemsPerPage: 10,
-  sortBy: [],
-  isLoading: false
-})
+const { onDelete, onConfirmDelete, onLoadItems, isDialogVisible, formAction, tableOptions } = useScoreboardTable()
 
-const onLoadItems = async ({ page, itemsPerPage }) => {
-  tableOptions.value.isLoading = true
-
-  //load the items here by calling the api
-  await scoreboardStore.getScoreboardPaginated({
-    currentPage: page,
-    perPage: itemsPerPage,
-    column: ''
-  })
-
-  tableOptions.value.isLoading = false
-}
-const onDelete = (scoreboardId) => {
-  isDialogVisible.value = true
-  selectedScoreboardId.value = scoreboardId
-}
-const onConfirmDelete = async () => {
-  formAction.value.formProcess = true
-  if (selectedScoreboardId === '') {
-    console.log("Should not be able to delete")
-    return
-  }
-  const { error, message, status } = await scoreboardStore.deleteScoreboardRecord(selectedScoreboardId.value)
-  if (error) {
-    formAction.value = { formErrorMessage: error, formStatus: status, formProcess: false }
-    return
-  }
-  formAction.value = { formSuccessMessage: message, formStatus: status, formProcess: false }
-}
 </script>
 
 <template>
+  <AlertNotification :form-success-message="formAction.formSuccessMessage"
+    :form-error-message="formAction.formErrorMessage"></AlertNotification>
   <v-data-table-server v-model:items-per-page="tableOptions.itemsPerPage" v-model:page="tableOptions.page"
     v-model:sort-by="tableOptions.sortBy" :loading="tableOptions.isLoading" :headers="scoreboardTableHeaders"
     :items="scoreboardStore.scoreboardTable" :items-length="scoreboardStore.scoreboardTotal" :hover="true"
@@ -120,6 +85,11 @@ const onConfirmDelete = async () => {
     <template #item.date_time_forwarded_opar="{ item }">
       <span class="font-weight-bold">
         {{ date.format(item.date_time_forwarded_opar, 'fullDateTime') }}
+      </span>
+    </template>
+    <template #item.css_submission_date="{ item }">
+      <span class="font-weight-bold">
+        {{ date.format(item.css_submission_date, 'fullDateTime') }}
       </span>
     </template>
     <template #item.actions="{ item }">

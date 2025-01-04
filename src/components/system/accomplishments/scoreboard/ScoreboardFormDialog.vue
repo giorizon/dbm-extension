@@ -94,7 +94,7 @@ const onFormSubmit = () => {
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn text="Close" variant="tonal" type="button" @click="onClose"></v-btn>
-                        <v-btn text="Confirm" variant="elevated" type="submit"></v-btn>
+                        <v-btn text="Confirm" color="red-darken-4" variant="elevated" type="submit"></v-btn>
                     </v-card-actions>
                 </v-form>
             </v-card-text>
