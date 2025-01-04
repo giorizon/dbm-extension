@@ -32,5 +32,4 @@ app.use(vuetify)
 app.use(router)
 
 //the mount method returns a root component instance
-const appRootComponentInstance = app.mount('#app')
-console.log(appRootComponentInstance)
+app.mount('#app')

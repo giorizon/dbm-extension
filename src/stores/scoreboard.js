@@ -10,6 +10,16 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     scoreboardTable.value = []
     scoreboardTotal.value = 0
   }
+  async function deleteScoreboardRecord(scoreboardId) {
+    console.log(scoreboardId)
+    const { data, error, status } = await supabase
+      .from('scoreboard_records')
+      .delete()
+      .eq('scoreboard_id', scoreboardId)
+    if (error) return { error }
+
+    return { message: 'item has been deleted', status }
+  }
   async function getScoreboardPaginated({ currentPage, perPage, column }) {
     //calculate range first
 
@@ -19,7 +29,7 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     const { data, error, _, count } = await supabase
       .from('scoreboard_records')
       .select(
-        'scoreboard_id, agency_name, css_submission_date, date_time_received,dms_reference_number, output_released_documents,remarks, pap:pap(code), ts:ts_in_charge(name), transaction_type:type_of_transactions(transaction_type), report_records:report_records(date_time_forwarded, num_working_time, prescribed_period:prescribed_periods(prescribed_period_value), report:reports(report_name)), status:status(status_name)',
+        'scoreboard_id, agency_name, css_submission_date, date_time_received,dms_reference_number, output_released_documents,remarks, pap:pap(code), ts:ts_in_charge(name), transaction_type:type_of_transactions(transaction_type), report_records:report_records(reviewed_by, date_time_forwarded, num_working_time, prescribed_period:prescribed_periods(prescribed_period_value), report:reports(report_name)), status:status(status_name)',
         { count: 'exact' }
       )
       .range(rangeStart, rangeEnd)
@@ -35,7 +45,7 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
             ...reportsObj,
             date_time_forwarded_bms: reportData.date_time_forwarded,
             num_working_days_bms: reportData.num_working_time,
-            reviewed_by_bms: 'test',
+            reviewed_by_bms: reportData.reviewed_by,
             prescribed_period_bms: reportData.prescribed_period?.prescribed_period_value
           }
           return
@@ -133,7 +143,6 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     await new Promise((resolve) => {
       setTimeout(resolve, 1000)
     })
-
     const { reportsData, ...extractedFormData } = formData
 
     //setting timestamp, combining selected date and time
@@ -152,12 +161,15 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
         dms_reference_number: extractedFormData.dmsReferenceNumber,
         date_time_received: combinedDateTime,
         remarks: extractedFormData.remarks,
-        status_id: extractedFormData.status
+        status_id: extractedFormData.status,
+        output_released_documents: extractedFormData.outputReleasedDocuments,
+        css_submission_date: new Date(Date.now())
       })
       .select('scoreboard_id')
     if (error) {
       return { error: error }
     }
+    //add reviewed by here only on ASST. DC
     const transformedReportData = reportsData.map((reportItem) => {
       const combinedDateTime = combineDateTime(reportItem.dateForwarded, reportItem.timeForwarded)
       return {
@@ -165,7 +177,8 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
         scoreboard_id: data[0].scoreboard_id,
         date_time_forwarded: combinedDateTime,
         num_working_time: reportItem.numWorkingDays,
-        prescribed_period_id: reportItem.prescribed_period_id
+        prescribed_period_id: reportItem.prescribed_period_id,
+        reviewed_by: reportItem.reviewedBy
       }
     })
     const { reportError } = await supabase.from('report_records').insert(transformedReportData)
@@ -180,6 +193,7 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     getScoreboardPaginated,
     insertScoreboardData,
     fetchScoreboardOptions,
+    deleteScoreboardRecord,
     $reset
   }
 })

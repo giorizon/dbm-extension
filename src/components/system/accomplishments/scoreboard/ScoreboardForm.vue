@@ -52,7 +52,7 @@ const timeMenu = ref()
           </v-col>
           <v-col>
             <v-text-field v-model="formData.timeReceivedRecordSection" label="Pick Time" :active="timeMenu"
-              prepend-inner-icon="mdi-clock-time-four-outline" readonly>
+              prepend-inner-icon="mdi-clock-time-four-outline" :rules="[requiredValidator]" readonly>
               <v-menu v-model="timeMenu" :close-on-content-click="false" activator="parent"
                 transition="scale-transition">
                 <v-time-picker v-if="timeMenu" v-model="formData.timeReceivedRecordSection" format="24hr">
@@ -64,7 +64,8 @@ const timeMenu = ref()
         <v-row>
           <v-col>
             <v-select :items="typesOfTransaction" item-title="transaction_type" item-value="transaction_type"
-              v-model="formData.typeOfTransaction" outlined label="Choose Type of Transaction"></v-select>
+              v-model="formData.typeOfTransaction" outlined label="Choose Type of Transaction"
+              :rules="[requiredValidator]"></v-select>
           </v-col>
         </v-row>
         <v-row v-if="prescribedPeriodValues.length !== 0">

@@ -42,7 +42,7 @@ export const scoreboardTableHeaders = [
     title: 'Date and Time Received by the Records Section',
     key: 'date_time_received',
     sortable: false,
-    align: 'end',
+    align: 'center',
     width: '150px',
     nowrap: true
   },
@@ -213,6 +213,13 @@ export const scoreboardTableHeaders = [
     key: 'css_submission_date',
     align: 'center',
     sortable: false,
-    width: '150px'
+    width: '150px',
+    nowrap: true
+  },
+  {
+    title: 'Actions',
+    key: 'actions',
+    sortable: false,
+    align: 'center'
   }
 ]

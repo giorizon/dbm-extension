@@ -12,7 +12,7 @@ const emit = defineEmits(['closeDialog'])
       <v-divider></v-divider>
       <v-card-text>
         <div class="text-center py-8">
-          <v-icon color="success" icon="mdi-alert-circle-outline" size="128"> </v-icon>
+          <v-icon color="success" icon="mdi-check-circle-outline" size="128"> </v-icon>
           <div class="text-h4 font-weight-bold">Form has been submitted</div>
         </div>
         <v-divider></v-divider>

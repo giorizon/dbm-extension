@@ -2,7 +2,6 @@
 import { requiredValidator } from "@/utils/validators.js"
 import { formActionDefault } from '@/utils/supabase.js'
 import AlertNotification from '@/components/common/AlertNotification.vue'
-import { onMounted, reactive, computed } from "vue"
 const props = defineProps(["prescribedPeriod", "dateTimeForwarded", "report"]);
 const emit = defineEmits(['formSubmitted']);
 import { ref } from "vue"
@@ -44,10 +43,6 @@ const onFormSubmit = () => {
     })
 
 }
-onMounted(() => {
-    console.log("Dialogs have been mounted")
-
-})
 </script>
 
 <template>

@@ -3,9 +3,14 @@ import { scoreboardTableHeaders } from '@/components/system/accomplishments/scor
 import { useScoreboardStore } from '@/stores/scoreboard'
 import { useDate } from 'vuetify'
 import { ref } from 'vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import { formActionDefault } from '@/utils/supabase'
 
 const date = useDate()
 const scoreboardStore = useScoreboardStore()
+const isDialogVisible = ref(false)
+const selectedScoreboardId = ref('')
+const formAction = ref({ ...formActionDefault })
 const tableOptions = ref({
   page: 1,
   itemsPerPage: 10,
@@ -25,32 +30,36 @@ const onLoadItems = async ({ page, itemsPerPage }) => {
 
   tableOptions.value.isLoading = false
 }
+const onDelete = (scoreboardId) => {
+  isDialogVisible.value = true
+  selectedScoreboardId.value = scoreboardId
+}
+const onConfirmDelete = async () => {
+  formAction.value.formProcess = true
+  if (selectedScoreboardId === '') {
+    console.log("Should not be able to delete")
+    return
+  }
+  const { error, message, status } = await scoreboardStore.deleteScoreboardRecord(selectedScoreboardId.value)
+  if (error) {
+    formAction.value = { formErrorMessage: error, formStatus: status, formProcess: false }
+    return
+  }
+  formAction.value = { formSuccessMessage: message, formStatus: status, formProcess: false }
+}
 </script>
 
 <template>
-  <v-data-table-server
-    v-model:items-per-page="tableOptions.itemsPerPage"
-    v-model:page="tableOptions.page"
-    v-model:sort-by="tableOptions.sortBy"
-    :loading="tableOptions.isLoading"
-    :headers="scoreboardTableHeaders"
-    :items="scoreboardStore.scoreboardTable"
-    :items-length="scoreboardStore.scoreboardTotal"
-    :hover="true"
-    @update:options="onLoadItems"
-  >
+  <v-data-table-server v-model:items-per-page="tableOptions.itemsPerPage" v-model:page="tableOptions.page"
+    v-model:sort-by="tableOptions.sortBy" :loading="tableOptions.isLoading" :headers="scoreboardTableHeaders"
+    :items="scoreboardStore.scoreboardTable" :items-length="scoreboardStore.scoreboardTotal" :hover="true"
+    @update:options="onLoadItems">
     <template #top>
       <v-row dense>
         <v-spacer></v-spacer>
 
         <v-col cols="12" md="3">
-          <v-btn
-            class="my-1"
-            prepend-icon="mdi-account-plus"
-            color="red-darken-4"
-            block
-            to="/add-scoreboard"
-          >
+          <v-btn class="my-1" prepend-icon="mdi-account-plus" color="red-darken-4" block to="/add-scoreboard">
             Add Scoreboard Record
           </v-btn>
         </v-col>
@@ -67,8 +76,7 @@ const onLoadItems = async ({ page, itemsPerPage }) => {
     <template #header.ipar="{ column: { title } }">
       <span class="font-weight-bold w-75 text-h5 mx-4">
         {{ title }}
-      </span> </template
-    ><template #header.particulars="{ column: { title } }">
+      </span> </template><template #header.particulars="{ column: { title } }">
       <span class="font-weight-bold w-75 text-h5">
         {{ title }}
       </span>
@@ -114,5 +122,14 @@ const onLoadItems = async ({ page, itemsPerPage }) => {
         {{ date.format(item.date_time_forwarded_opar, 'fullDateTime') }}
       </span>
     </template>
+    <template #item.actions="{ item }">
+      <v-btn variant="text" density="comfortable" @click="onDelete(item.scoreboard_id)" icon>
+        <v-icon icon="mdi-trash-can" color="red-darken-4"></v-icon>
+        <v-tooltip activator="parent" location="top">Delete Scoreboard</v-tooltip>
+      </v-btn>
+    </template>
   </v-data-table-server>
+  <ConfirmDialog v-model:is-dialog-visible="isDialogVisible"
+    :text="'Are you sure you want to delete scoreboard record?'" :title="'Delete Scoreboard'"
+    @confirm="onConfirmDelete"></ConfirmDialog>
 </template>
