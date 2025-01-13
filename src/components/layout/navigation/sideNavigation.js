@@ -1,9 +1,7 @@
 // 👉 Main Navigation; Title, Icon
 export const mainNav = [
   ['User Management', 'mdi-account-box-multiple'],
-  ['Individual Performance Accomplishment', 'mdi-account'],
-  ['Division Performance Accomplishment', 'mdi-domain'],
-  ['Office Performance Accomplishment', 'mdi-office-building'],
+  ['Accomplishments', 'mdi-account'],
   ['Reporting', 'mdi-file-chart']
 ]
 
@@ -13,15 +11,12 @@ export const menuItemsNav1 = [
   ['Users Management', 'mdi-account-multiple', '', '/manage/users']
 ]
 export const menuItemsNav2 = [
-  ['Individual Performance Accomplishment', 'mdi-list-box', 'Accomplishment Report Form', '/ipcr']
-]
-export const menuItemsNav3 = [
-  ['Division Performance Accomplishment', 'mdi-list-box', 'Accomplishment Report Form', '/dpcr']
-]
-export const menuItemsNav4 = [
+  ['Scoreboard', 'mdi-developer-board', 'Monitoring Scoreboard', '/scoreboard'],
+  ['Individual Performance Accomplishment', 'mdi-list-box', 'Accomplishment Report Form', '/ipcr'],
+  ['Division Performance Accomplishment', 'mdi-list-box', 'Accomplishment Report Form', '/dpcr'],
   ['Office Performance Accomplishment', 'mdi-list-box', 'Accomplishment Report Form', '/opcr']
 ]
-export const menuItemsNav5 = [
+export const menuItemsNav3 = [
   ['Individual Performance', 'mdi-account', 'Contract & Rating', '/report/ipcr'],
   ['Division Performance', 'mdi-domain', 'Contract & Rating', '/report/dpcr'],
   ['Office Performance', 'mdi-office-building', 'Contract & Rating', '/report/opcr']

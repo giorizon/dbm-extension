@@ -11,6 +11,7 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { VDateInput, VTimePicker } from 'vuetify/lib/labs/components.mjs'
 
 const app = createApp(App)
 
@@ -18,7 +19,11 @@ const vuetify = createVuetify({
   icons: {
     defaultSet: 'mdi'
   },
-  components,
+  components: {
+    ...components,
+    VDateInput,
+    VTimePicker
+  },
   directives
 })
 
@@ -26,4 +31,5 @@ app.use(createPinia())
 app.use(vuetify)
 app.use(router)
 
+//the mount method returns a root component instance
 app.mount('#app')

@@ -1,17 +1,15 @@
 <script setup>
-import { useUserRolesStore } from '@/stores/userRoles'
-import AlertNotification from '@/components/common/AlertNotification.vue'
-import { requiredValidator } from '@/utils/validators'
-import { formActionDefault } from '@/utils/supabase.js'
-import { ref, watch } from 'vue'
 import {
   mainNav,
   menuItemsNav1,
   menuItemsNav2,
-  menuItemsNav3,
-  menuItemsNav4,
-  menuItemsNav5
+  menuItemsNav3
 } from '@/components/layout/navigation/sideNavigation'
+import AlertNotification from '@/components/common/AlertNotification.vue'
+import { formActionDefault } from '@/utils/supabase.js'
+import { useUserRolesStore } from '@/stores/userRoles'
+import { requiredValidator } from '@/utils/validators'
+import { ref, watch } from 'vue'
 
 const props = defineProps(['isDialogVisible', 'itemData'])
 
@@ -158,38 +156,6 @@ const onFormReset = () => {
                   <template v-if="title === mainNav[2][0]">
                     <v-list-item
                       v-for="([title, icon, subtitle, to], i) in menuItemsNav3"
-                      :key="i"
-                      :prepend-icon="icon"
-                      :title="title"
-                      :subtitle="subtitle ?? undefined"
-                    >
-                      <template #append>
-                        <v-list-item-action end>
-                          <v-checkbox-btn v-model="formData.pages" :value="to"></v-checkbox-btn>
-                        </v-list-item-action>
-                      </template>
-                    </v-list-item>
-                  </template>
-
-                  <template v-if="title === mainNav[3][0]">
-                    <v-list-item
-                      v-for="([title, icon, subtitle, to], i) in menuItemsNav4"
-                      :key="i"
-                      :prepend-icon="icon"
-                      :title="title"
-                      :subtitle="subtitle ?? undefined"
-                    >
-                      <template #append>
-                        <v-list-item-action end>
-                          <v-checkbox-btn v-model="formData.pages" :value="to"></v-checkbox-btn>
-                        </v-list-item-action>
-                      </template>
-                    </v-list-item>
-                  </template>
-
-                  <template v-if="title === mainNav[4][0]">
-                    <v-list-item
-                      v-for="([title, icon, subtitle, to], i) in menuItemsNav5"
                       :key="i"
                       :prepend-icon="icon"
                       :title="title"

@@ -1,9 +1,9 @@
 <script setup>
 import { supabase, formActionDefault } from '@/utils/supabase'
+import { useAuthUserStore } from '@/stores/authUser'
 import { getAvatarText } from '@/utils/helpers'
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
-import { useAuthUserStore } from '@/stores/authUser'
 
 // Utilize pre-defined vue functions
 const router = useRouter()
