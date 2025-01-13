@@ -5,6 +5,8 @@ import NotFoundView from '@/views/errors/NotFoundView.vue'
 import AccountSettingsView from '@/views/system/AccountSettingsView.vue'
 import UserRolesView from '@/views/system/manage-users/UserRolesView.vue'
 import UsersView from '@/views/system/manage-users/UsersView.vue'
+import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
+import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
 
 // 👉 Routes
 export const routes = [
@@ -32,6 +34,18 @@ export const routes = [
     name: 'account-settings',
     component: AccountSettingsView,
     meta: { requiresAuth: true, isDefault: true }
+  },
+  {
+    path: '/add-scoreboard',
+    name: 'add-scoreboard',
+    component: AddScoreBoardRecordView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/scoreboard',
+    name: 'scoreboard',
+    component: ScoreboardView,
+    meta: { requiresAuth: true }
   },
 
   // Admin Pages

@@ -1,10 +1,9 @@
 <script setup>
-import WelcomeWidget from '@/components/system/dashboard/WelcomeWidget.vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
+import ScoreboardTable from '@/components/system/accomplishments/scoreboard/ScoreboardTable.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
+import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref } from 'vue'
 
-// Load Variables
 const isDrawerVisible = ref(true)
 </script>
 
@@ -13,28 +12,30 @@ const isDrawerVisible = ref(true)
     <template #navigation>
       <SideNavigation :is-drawer-visible="isDrawerVisible"></SideNavigation>
     </template>
-
     <template #content>
       <v-container>
         <v-card class="mb-5">
           <template #title>
             <span class="text-h6 font-weight-bold">
-              <v-breadcrumbs :items="['System', 'Dashboard']">
+              <v-breadcrumbs :items="['Monitoring', 'Scoreboard']">
                 <template #prepend>
-                  <v-icon icon="mdi-view-dashboard" size="small" class="me-1"></v-icon>
+                  <v-icon icon="mdi-account-multiple" size="small" class="me-1"></v-icon>
                 </template>
               </v-breadcrumbs>
             </span>
           </template>
 
           <template #subtitle>
-            <p class="ms-4 text-wrap"></p>
+            <p class="ms-4 text-wrap">Monitoring scoreboard records</p>
           </template>
         </v-card>
-
         <v-row>
           <v-col cols="12">
-            <WelcomeWidget></WelcomeWidget>
+            <v-card>
+              <v-card-text>
+                <ScoreboardTable />
+              </v-card-text>
+            </v-card>
           </v-col>
         </v-row>
       </v-container>
