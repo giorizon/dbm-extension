@@ -1,7 +1,9 @@
+
 <script setup>
 import { useAuthUserStore } from '@/stores/authUser'
 import { useDisplay } from 'vuetify'
-
+import '@/assets/dashboard.css';
+import receiving_dashboard from '@/components/system/dashboard/ReceivingWelcome.vue'
 // Use Pinia Store
 const authStore = useAuthUserStore()
 
@@ -34,5 +36,7 @@ const { mobile } = useDisplay()
         </v-col>
       </v-row>
     </v-card-text>
+    <hr>
+    <receiving_dashboard/>
   </v-card>
 </template>

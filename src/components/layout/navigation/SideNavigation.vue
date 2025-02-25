@@ -68,11 +68,12 @@ onMounted(() => {
       <v-divider></v-divider>
 
       <v-list-group :key="i" v-for="([title, icon], i) in mainNav">
+ 
         <template #activator="{ props }">
           <v-list-item v-bind="props" :prepend-icon="icon" :title="title"></v-list-item>
         </template>
-
-        <template v-if="title === mainNav[0][0]">
+          
+          <template v-if="title === mainNav[0][0]">
           <v-list-item
             v-for="([title, icon, subtitle, to], i) in editableMenuItemsNav1"
             :key="i"
@@ -82,7 +83,6 @@ onMounted(() => {
             :to="to ?? undefined"
           ></v-list-item>
         </template>
-
         <template v-if="title === mainNav[1][0]">
           <v-list-item
             v-for="([title, icon, subtitle, to], i) in editableMenuItemsNav2"

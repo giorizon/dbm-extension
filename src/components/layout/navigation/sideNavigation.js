@@ -1,8 +1,8 @@
 // 👉 Main Navigation; Title, Icon
 export const mainNav = [
-  ['User Management', 'mdi-account-box-multiple'],
+  ['Monitoring  Scoreboard', 'mdi-account-box-multiple'],
   ['Accomplishments', 'mdi-account'],
-  ['Reporting', 'mdi-file-chart']
+  ['Report', 'mdi-file-chart']
 ]
 
 // 👉 Sub Navigations; Title, Icon, Subtitle, Redirect Path
@@ -17,7 +17,7 @@ export const menuItemsNav2 = [
   ['Office Performance Accomplishment', 'mdi-list-box', 'Accomplishment Report Form', '/opcr']
 ]
 export const menuItemsNav3 = [
-  ['Individual Performance', 'mdi-account', 'Contract & Rating', '/report/ipcr'],
-  ['Division Performance', 'mdi-domain', 'Contract & Rating', '/report/dpcr'],
-  ['Office Performance', 'mdi-office-building', 'Contract & Rating', '/report/opcr']
+  ['Audit Trail', 'mdi-list-box', 'Record Keeping and Logging', '/report/ipcr'],
+ // ['Division Performance', 'mdi-domain', 'Contract & Rating', '/report/dpcr'],
+ // ['Office Performance', 'mdi-office-building', 'Contract & Rating', '/report/opcr']
 ]

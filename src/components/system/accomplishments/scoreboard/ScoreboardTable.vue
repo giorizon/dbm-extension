@@ -6,6 +6,7 @@ import AlertNotification from '@/components/common/AlertNotification.vue'
 import { useScoreboardTable } from '@/composables/scoreboard/scoreboardTable'
 import { useScoreboardStore } from '@/stores/scoreboard'
 
+
 const date = useDate()
 const scoreboardStore = useScoreboardStore()
 const { onDelete, onConfirmDelete, onLoadItems, isDialogVisible, formAction, tableOptions } = useScoreboardTable()
@@ -15,11 +16,20 @@ const { onDelete, onConfirmDelete, onLoadItems, isDialogVisible, formAction, tab
 <template>
   <AlertNotification :form-success-message="formAction.formSuccessMessage"
     :form-error-message="formAction.formErrorMessage"></AlertNotification>
-  <v-data-table-server v-model:items-per-page="tableOptions.itemsPerPage" v-model:page="tableOptions.page"
-    v-model:sort-by="tableOptions.sortBy" :loading="tableOptions.isLoading" :headers="scoreboardTableHeaders"
-    :items="scoreboardStore.scoreboardTable" :items-length="scoreboardStore.scoreboardTotal" :hover="true"
-    @update:options="onLoadItems">
-    <template #top>
+
+
+  <v-data-table-server 
+    v-model:items-per-page="tableOptions.itemsPerPage" 
+    v-model:page="tableOptions.page"
+    v-model:sort-by="tableOptions.sortBy" 
+    :loading="tableOptions.isLoading" 
+    :headers="scoreboardTableHeaders"
+    :items="scoreboardStore.scoreboardTable" 
+    :items-length="scoreboardStore.scoreboardTotal" 
+    :hover="true"
+  @update:options="onLoadItems">
+
+  <template #top>
       <v-row dense>
         <v-spacer></v-spacer>
 
@@ -30,75 +40,21 @@ const { onDelete, onConfirmDelete, onLoadItems, isDialogVisible, formAction, tab
         </v-col>
       </v-row>
       <v-divider class="my-5"></v-divider>
-    </template>
+  </template>
+  <!-- Add slot for the 'Action' column -->
+  <template #item.action="{ item }">
+    <v-btn size="small" color="primary" class="mr-2" @click="editItem(item)">
+      <v-icon left>mdi-pencil</v-icon> Edit
+    </v-btn>
+    <v-btn size="small" color="red" @click="deleteItem(item)">
+      <v-icon left>mdi-delete</v-icon> Delete
+    </v-btn>
+  </template>
+   </v-data-table-server>
 
-    <!-- eslint-disable vue/valid-v-slot -->
-    <template #header.pap="{ column: { title } }">
-      <span class="font-weight-bold w-75">
-        {{ title }}
-      </span>
-    </template>
-    <template #header.ipar="{ column: { title } }">
-      <span class="font-weight-bold w-75 text-h5 mx-4">
-        {{ title }}
-      </span> </template><template #header.particulars="{ column: { title } }">
-      <span class="font-weight-bold w-75 text-h5">
-        {{ title }}
-      </span>
-    </template>
-    <template #header.asst_dc_sr_bms="{ column: { title } }">
-      <span class="font-weight-bold w-75 text-h5">
-        {{ title }}
-      </span>
-    </template>
+<br><br>
 
-    <template #header.opar="{ column: { title } }">
-      <span class="font-weight-bold w-75 text-h5">
-        {{ title }}
-      </span>
-    </template>
-    <template #header.dpar="{ column: { title } }">
-      <span class="font-weight-bold w-75 text-h5">
-        {{ title }}
-      </span>
-    </template>
-    <template #item.date_time_received="{ item }">
-      <span class="font-weight-bold">
-        {{ date.format(item.date_time_received, 'fullDateTime') }}
-      </span>
-    </template>
-    <template #item.date_time_forwarded_ipar="{ item }">
-      <span class="font-weight-bold">
-        {{ date.format(item.date_time_forwarded_ipar, 'fullDateTime') }}
-      </span>
-    </template>
-    <template #item.date_time_forwarded_bms="{ item }">
-      <span class="font-weight-bold">
-        {{ date.format(item.date_time_forwarded_bms, 'fullDateTime') }}
-      </span>
-    </template>
-    <template #item.date_time_forwarded_dpar="{ item }">
-      <span class="font-weight-bold">
-        {{ date.format(item.date_time_forwarded_dpar, 'fullDateTime') }}
-      </span>
-    </template>
-    <template #item.date_time_forwarded_opar="{ item }">
-      <span class="font-weight-bold">
-        {{ date.format(item.date_time_forwarded_opar, 'fullDateTime') }}
-      </span>
-    </template>
-    <template #item.css_submission_date="{ item }">
-      <span class="font-weight-bold">
-        {{ date.format(item.css_submission_date, 'fullDateTime') }}
-      </span>
-    </template>
-    <template #item.actions="{ item }">
-      <v-btn variant="text" density="comfortable" @click="onDelete(item.scoreboard_id)" icon>
-        <v-icon icon="mdi-trash-can" color="red-darken-4"></v-icon>
-        <v-tooltip activator="parent" location="top">Delete Scoreboard</v-tooltip>
-      </v-btn>
-    </template>
-  </v-data-table-server>
+  
   <ConfirmDialog v-model:is-dialog-visible="isDialogVisible"
     :text="'Are you sure you want to delete scoreboard record?'" :title="'Delete Scoreboard'"
     @confirm="onConfirmDelete"></ConfirmDialog>

@@ -38,7 +38,6 @@ const isDrawerVisible = ref(true)
             </v-card>
           </v-col>
         </v-row>
-        
       </v-container>
     </template>
   </AppLayout>

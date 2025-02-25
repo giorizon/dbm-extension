@@ -59,7 +59,6 @@ export const useUserRolesStore = defineStore('userRoles', () => {
       .from('user_role_pages')
       .delete()
       .eq('user_role_id', id)
-
     if (deleteError) return { error: deleteError }
 
     const pageData = pages.map((page) => ({ page, user_role_id: id }))
