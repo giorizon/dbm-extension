@@ -1,14 +1,32 @@
 
 <script setup>
-import { useAuthUserStore } from '@/stores/authUser'
+//import { useAuthUserStore } from '@/stores/authUser'
 import { useDisplay } from 'vuetify'
-import '@/assets/dashboard.css';
+import '@/assets/dashboard.css'
+import { useAuthUserStore } from '@/stores/authUser'
 import receiving_dashboard from '@/components/system/dashboard/ReceivingWelcome.vue'
+import technical_dashboard from '@/components/system/dashboard/TechnicalWelcome.vue'
+import admin_dashboard from '@/components/system/dashboard/AdminWelcome.vue'
+import { computed } from 'vue'
 // Use Pinia Store
 const authStore = useAuthUserStore()
 
 // Utilize pre-defined vue functions
 const { mobile } = useDisplay()
+
+// Get user role
+const userRole = computed(() => authStore.userRole)
+
+const SelectedForm = computed(() => {
+  if (userRole.value === 'Technical') {
+    //alert("Hello");
+    return technical_dashboard
+  } else if (userRole.value === 'Administrator') {
+    return admin_dashboard  // ✅ Show Admin Form
+  } else {
+    return receiving_dashboard  // Default: Receiving Form
+  }
+})
 </script>
 
 <template>
@@ -26,7 +44,6 @@ const { mobile } = useDisplay()
               {{ authStore.userData.firstname + ' ' + authStore.userData.lastname }}!
             </span>
           </h2>
-
           <p class="text-justify">
             Welcome to the DBM HRPMS System! Lorem ipsum dolor, sit amet consectetur adipisicing
             elit. Rem minima quam nobis. Rem quibusdam, laudantium veniam aliquid repudiandae
@@ -37,6 +54,6 @@ const { mobile } = useDisplay()
       </v-row>
     </v-card-text>
     <hr>
-    <receiving_dashboard/>
+    <component :is="SelectedForm" />
   </v-card>
 </template>

@@ -6,7 +6,7 @@ import { useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/s
 import { ref, onMounted } from 'vue';
 import ErrorDialog from './ErrorDialog.vue';
 import supabase from './supabase'; 
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 
 const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess, refVForm } = useScoreboardForm();
 const { prescribedPeriodValues } = useScoreboardData(formData);
@@ -103,47 +103,29 @@ onMounted(() => {
   fetchStaff(); 
 });
 // Get the current time in HH:mm format
-const selectedDateReceived = ref(null);
-const selectedTimeReceived = ref(format(new Date(), 'HH:mm'));
-const selectedDateForwarded = ref(null);
-const selectedTimeForwarded = ref(format(new Date(), 'HH:mm'));
+const selectedTime = ref(format(new Date(), 'HH:mm'))
+const timeDialog = ref(false); // ✅ Add this reactive variable
 
-const dateReceivedDialog = ref(false);
-const timeReceivedDialog = ref(false);
-const dateForwardedDialog = ref(false);
-const timeForwardedDialog = ref(false);
 
+//const dms_number = ref('');
+//const agency = ref('');
 const submitScoreboard = async () => {
-  if (!selectedDateReceived.value || !selectedTimeReceived.value) {
-    alert('❌ Please select both date and time for received.');
+  if (!formData.value.dateReceivedRecordSection || !selectedTime.value) {
+    alert('❌ Please select both date and time.');
     return;
   }
-  
-// Format time in AM/PM
-    const formatTime = (time) => {
-      if (!time) return '';
-      const parsedTime = parse(time, 'HH:mm', new Date());
-      return format(parsedTime, 'hh:mm a'); // 12-hour format with AM/PM
-    };
-    const formattedReceivedTime = formatTime(selectedTimeReceived.value);
-    const formattedForwardedTime = formatTime(selectedTimeForwarded.value);
 
-    console.log("✅ Time Received:", formattedReceivedTime);
-    console.log("✅ Time Forwarded:", formattedForwardedTime);
   try {
-    const formattedReceivedDate = format(new Date(selectedDateReceived.value), "yyyy-MM-dd");
-    const formattedReceivedTime = selectedTimeReceived.value.includes(":") ? selectedTimeReceived.value : `${selectedTimeReceived.value}:00`;
-    const formattedForwardedDate = selectedDateForwarded.value 
-      ? format(new Date(selectedDateForwarded.value), "yyyy-MM-dd") 
-      : null; 
-    const receivedDateTime = `${formattedReceivedDate}T${formattedReceivedTime}:00`;
-    const finalReceivedDateTime = format(new Date(receivedDateTime), "yyyy-MM-dd HH:mm:ss");
+    const datePart = format(new Date(formData.value.dateReceivedRecordSection), "yyyy-MM-dd");
+    const timePart = selectedTime.value.includes(":") ? selectedTime.value : `${selectedTime.value}:00`;
+    const combinedDateTime = `${datePart}T${timePart}:00`;
+    const parsedDateTime = new Date(combinedDateTime);
+    const formattedDateTime = format(parsedDateTime, "yyyy-MM-dd HH:mm:ss");
 
-
-    console.log("✅ Date-Time Received:", finalReceivedDateTime);
-    console.log("✅ Date Forwarded:", selectedDateForwarded.value);
-    console.log("✅ Time Forwarded:", selectedTimeForwarded.value);
-
+    console.log("Formatted Date-Time:", formattedDateTime);
+    console.log("DMS Reference Number:", formData.value.dmsReferenceNumber);
+    console.log("Agency ID:", formData.value.particulars.agencyID);
+    console.log("User ID (Creator):", userUUID.value);
 
     // ✅ Insert into scoreboard_receiving and RETURN the inserted ID
     const { data: receivingData, error: receivingError } = await supabase
@@ -153,8 +135,7 @@ const submitScoreboard = async () => {
           dms_reference_number: formData.value.dmsReferenceNumber,
           agency_id: formData.value.particulars.agencyID,
           user_id: userUUID.value,
-          date_received: formattedReceivedDate, // ✅ Store as YYYY-MM-DD
-          date_forwarded: formattedForwardedDate // ✅ Store as YYYY-MM-DD
+          date_received: formattedDateTime
         }
       ])
       .select('id'); 
@@ -172,9 +153,9 @@ const submitScoreboard = async () => {
 
     console.log("✅ New scoreboard_receiving ID:", newReceivingId);
 
-    // ✅ Insert into scoreboard_individual using the newReceivingId
+    // ✅ Insert into scoreboard_technical using the newReceivingId
     const { data: technicalData, error: technicalError } = await supabase
-      .from('scoreboard_individual')
+      .from('scoreboard_technical')
       .insert([
         {
           scoreboard_id: newReceivingId, // ✅ Insert the new ID
@@ -184,8 +165,8 @@ const submitScoreboard = async () => {
       ]);
 
     if (technicalError) {
-      console.error('🚨 Supabase Insert Error (Individual):', technicalError.message);
-      alert('❌ Failed to save data in scoreboard_individual! Error: ' + technicalError.message);
+      console.error('🚨 Supabase Insert Error (Technical):', technicalError.message);
+      alert('❌ Failed to save data in scoreboard_technical! Error: ' + technicalError.message);
       return;
     }
 
@@ -194,6 +175,25 @@ const submitScoreboard = async () => {
     console.error('Unexpected error:', err);
     alert('❌ Unexpected error occurred while saving to the database.');
   }
+};
+const showAlert = () => {
+  // Find selected agency name
+  const selectedAgency = agencies.value.find(a => a.id === formData.value.particulars.agencyID); 
+  const agencyName = selectedAgency ? selectedAgency.agency_name : 'Not Selected';
+
+  // Find selected staff name
+  const selectedStaff = staffList.value.find(s => s.id === formData.value.particulars.staffID);
+  const staffName = selectedStaff ? selectedStaff.name : 'Not Assigned';
+
+  // Show alert with formatted values
+  alert(`
+    📌 DMS Reference Number: ${formData.value.dmsReferenceNumber || 'N/A'}
+    🏛️ Agency Name: ${formData.value.particulars.agencyID}
+    👤 Assigned To: ${formData.value.particulars.staffID}
+    📅 Date Received: ${formData.value.dateReceivedRecordSection || 'N/A'}
+    ⏰ Time Forwarded: ${selectedTime.value || 'N/A'}
+      Login-user: ${userUUID.value}
+  `);
 };
 </script>
 
@@ -218,7 +218,7 @@ const submitScoreboard = async () => {
         <v-row>
           <v-col>
             <v-select
-              label="Agency Name"
+              label="FAD Sub Units"
               :items="agencies"
               item-title="agency_name"
               item-value="id"
@@ -234,7 +234,7 @@ const submitScoreboard = async () => {
           </v-col>
           <v-col>
             <v-select
-              label="Assign to"
+              label="Process Owner"
               :items="staffList"
               item-title="name"
               item-value="id"
@@ -244,104 +244,62 @@ const submitScoreboard = async () => {
           ></v-select>
           </v-col>
         </v-row>
-        <!-- DATE RECEIVED -->
         <v-row>
           <v-col>
-            <v-text-field
-              v-model="selectedDateReceived"
-              label="Date Received"
-              prepend-icon="mdi-calendar"
-              readonly
-               :value="selectedDateReceived ? format(new Date(selectedDateReceived), 'yyyy-MM-dd') : ''"
-              @click="dateReceivedDialog = true"
-            ></v-text-field>
+            <v-date-input
+              label="Date received"
+              prepend-inner-icon="$calendar"
+              v-model="formData.dateReceivedRecordSection"
+              :rules="[requiredValidator]"
+            />
           </v-col>
           <v-col>
             <v-text-field
-              v-model="selectedTimeReceived"
+              v-model="selectedTime"
               label="Time Received"
               prepend-icon="mdi-clock"
               readonly
-              @click="timeReceivedDialog = true"
+              @click="timeDialog = true"
             ></v-text-field>
           </v-col>
+          
         </v-row>
-
-     <!-- DATE FORWARDED -->
-     <v-row>
+        <v-row>
           <v-col>
-            <v-text-field
-              v-model="selectedDateForwarded"
+            <v-date-input
               label="Date Forwarded"
-              prepend-icon="mdi-calendar"
-              readonly
-              :value="selectedDateForwarded ? format(new Date(selectedDateForwarded), 'yyyy-MM-dd') : ''"
-              @click="dateForwardedDialog = true"
-            ></v-text-field>
+              prepend-inner-icon="$calendar"
+              v-model="formData.dateReceivedRecordSection"
+              :rules="[requiredValidator]"
+            />
           </v-col>
           <v-col>
             <v-text-field
-              v-model="selectedTimeForwarded"
+              v-model="selectedTime"
               label="Time Forwarded"
               prepend-icon="mdi-clock"
               readonly
-              @click="timeForwardedDialog = true"
+              @click="timeDialog = true"
             ></v-text-field>
           </v-col>
+          
         </v-row>
-
-        <!-- DATE PICKERS -->
-        <v-dialog v-model="dateReceivedDialog" max-width="400">
-          <v-card>
-            <v-card-title>Select Date Received</v-card-title>
-            <v-card-text>
-              <v-date-picker 
-                  v-model="selectedDateReceived" 
-                  @update:model-value="dateReceivedDialog = false"
-                />
-            </v-card-text>
-          </v-card>
-        </v-dialog>
-
-        <v-dialog v-model="dateForwardedDialog" max-width="400">
-          <v-card>
-            <v-card-title>Select Date Forwarded</v-card-title>
-            <v-card-text>
-              <v-date-picker 
-                v-model="selectedDateForwarded" 
-                @update:model-value="dateForwardedDialog = false"
-              />
-            </v-card-text>
-          </v-card>
-        </v-dialog>
-        <!-- TIME PICKERS -->
-      <v-dialog v-model="timeReceivedDialog" max-width="400">
+        <!-- Time Picker-->
+        <v-dialog v-model="timeDialog" max-width="400">
         <v-card>
-          <v-card-title>Select Time Received</v-card-title>
+          <v-card-title class="text-center">Select Time</v-card-title>
           <v-card-text>
             <v-time-picker 
-              v-model="selectedTimeReceived" 
-              format="ampm"
-              ampm-in-title 
-              @update:model-value="timeReceivedDialog = false"
-            />
+              v-model="selectedTime"
+              @update:model-value="timeDialog = false"
+            ></v-time-picker>
           </v-card-text>
+          <v-card-actions class="justify-center">
+            <v-btn text="Close" @click="timeDialog = false"></v-btn>
+          </v-card-actions>
         </v-card>
       </v-dialog>
 
-      <v-dialog v-model="timeForwardedDialog" max-width="400">
-        <v-card>
-          <v-card-title>Select Time Forwarded</v-card-title>
-          <v-card-text>
-            <v-time-picker 
-              v-model="selectedTimeForwarded" 
-              format="ampm"
-              ampm-in-title 
-              @update:model-value="timeForwardedDialog = false"
-            />
-          </v-card-text>
-        </v-card>
-      </v-dialog>
 
         <v-row v-if="prescribedPeriodValues.length !== 0">
           <v-col v-for="(value, index) in prescribedPeriodValues" :key="index">
@@ -365,7 +323,7 @@ const submitScoreboard = async () => {
             :loading="formAction.formProcess"
             :disabled="formAction.formProcess"
           /> -->
-          <v-btn color="primary" @click="submitScoreboard">Submit Scoreboard</v-btn>
+          <v-btn color="primary" @click="submitScoreboard">Submit FAD Scoreboard</v-btn>
         </v-row>
       </v-form>
 

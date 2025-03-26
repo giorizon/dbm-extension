@@ -6,6 +6,8 @@ import AccountSettingsView from '@/views/system/AccountSettingsView.vue'
 import UserRolesView from '@/views/system/manage-users/UserRolesView.vue'
 import UsersView from '@/views/system/manage-users/UsersView.vue'
 import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
+import AddScoreBoardIndividualView from '@/views/system/accomplishments/AddScoreboardIndividualView.vue'
+import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
 import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
 
 // 👉 Routes
@@ -39,6 +41,18 @@ export const routes = [
     path: '/add-scoreboard',
     name: 'add-scoreboard',
     component: AddScoreBoardRecordView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-individual',
+    name: 'add-scoreboard-individual',
+    component: AddScoreBoardIndividualView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-fad',
+    name: 'add-scoreboard-fad',
+    component: AddScoreBoardFAD,
     meta: { requiresAuth: true }
   },
   {

@@ -1,39 +1,24 @@
 export const scoreboardTableHeaders = [
   {
-    title: 'No.',
-    key: 'number',
-    align: 'center',
-    nowrap: true
-  },
-  {
     title: 'DMS Reference Number',
-    key: 'dms_reference_number',
-    sortable: false,
-    align: 'center',
-    width: '150px',
-    nowrap: true
+     text: "DMS Reference Number", 
+     value: "dms_reference_number"
   },
   {
-    title: 'Date and Time Received by the Records Section',
-    key: 'date_time_received',
-    sortable: false,
-    align: 'center',
-    width: '150px',
-    nowrap: true
+    title: 'Date and Time Received ',
+    text: "Date Received", value: "date_received"
+  },
+  {
+    title: 'Date and Time Forwarded ',
+     text: "Date Forwarded", value: "date_forwarded"
   },
   {
     title: 'Assigned to',
-    key: 'assigned_to',
-    sortable: false,
-    align: 'start',
-    nowrap: true,
-    width: '150px'
+   text: "Name", value: "name"
   },
   {
     title: 'Status',
-    key: 'status',
-    align: 'center',
-    nowrap: true
+    text: "Status", value: "status" 
   },
   {
     title: 'Action',

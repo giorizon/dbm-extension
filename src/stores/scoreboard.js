@@ -3,6 +3,68 @@ import { defineStore } from 'pinia'
 import { supabase } from '@/utils/supabase.js'
 import { combineDateTime } from '@/utils/helpers'
 
+export const useScoreboardStore = defineStore('scoreboard', {
+  state: () => ({
+    scoreboardTable: [],
+    scoreboardTotal: 0
+  }),
+
+  actions: {
+    async getScoreboardPaginated({ currentPage, perPage }) {
+      try {
+        const { data: user, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        
+        const userId = user?.user?.id; 
+        if (!userId) throw new Error("User not found or not authenticated");
+        
+        const from = (currentPage - 1) * perPage;
+        const to = from + perPage - 1;
+
+        const { data, error, count } = await supabase
+        .from('scoreboard_receiving')
+        .select(`
+          dms_reference_number, 
+          date_received, 
+          date_forwarded, 
+          scoreboard_individual (
+            status, 
+            user_profiles!inner (firstname, lastname)
+          )
+        `, { count: 'exact' })
+        .eq('user_id', 'ba19715e-ecf1-469a-ad62-1545ec6026a3')
+        .range(from, to);
+      
+        if (error) throw error;
+         
+        console.log("Fetched Data:", data);
+        this.scoreboardTable = data.map(item => {
+          const individual = item.scoreboard_individual?.[0]; 
+        
+          return {
+            dms_reference_number: item.dms_reference_number,
+            date_received: item.date_received,
+            date_forwarded: item.date_forwarded,
+            name: (individual?.user_profiles) 
+                  ? `${individual.user_profiles.firstname} ${individual.user_profiles.lastname}` 
+                  : "Unknown",
+            status: individual?.status || "N/A"
+          };
+        });
+        data.forEach(item => {
+          console.log("User Profile Data:", item.scoreboard_individual?.user_profiles);
+        }); 
+
+        this.scoreboardTotal = count;
+
+        console.log("Final Data Structure:", JSON.stringify(data, null, 2));
+      } catch (error) {
+        console.error('Error fetching scoreboard data:', error.message);
+      }
+    }
+  }
+});
+/*
 export const useScoreboardStore = defineStore('scoreboard', () => {
   async function getAuthPages(name) {
     const { data } = await supabase
@@ -89,4 +151,4 @@ export const useScoreboardStore = defineStore('scoreboard', () => {
     getScoreboardPaginated,
     $reset
   }
-})
+}) */

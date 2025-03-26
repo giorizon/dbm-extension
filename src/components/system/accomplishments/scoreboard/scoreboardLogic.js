@@ -1,20 +1,28 @@
 import { ref, onMounted } from 'vue'
 import { format } from 'date-fns'
 import supabase from './supabase'
-import { useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/scoreboard'
+import {useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/scoreboard'
 import { requiredValidator } from '@/utils/validators'
 
 export function useScoreboardLogic() {
   const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess, refVForm } = useScoreboardForm()
   const { options, prescribedPeriodValues } = useScoreboardData(formData)
 
-  // Time Picker
-  const selectedTime = ref(format(new Date(), 'HH:mm'))
-  const timeDialog = ref(false)
+  // Initialize Date Pickers with Current Date
+  const dateReceivedRecordSection = ref(format(new Date(), 'yyyy-MM-dd'))
+  const dateForwarded = ref(format(new Date(), 'yyyy-MM-dd'))
+
+  // Initialize Time Pickers with Current Time
+  const timeReceived = ref(format(new Date(), 'HH:mm'))
+  const timeForwarded = ref(format(new Date(), 'HH:mm'))
+
+  // Separate Dialogs for Time Pickers
+  const timeReceivedDialog = ref(false)
+  const timeForwardedDialog = ref(false)
 
   const type_of_transaction = ref([])
   const nature_of_transaction = ref([])
-  
+
   // Fetch Type of Transactions from Supabase
   const fetchTypeOfTransaction = async () => {
     try {
@@ -103,8 +111,12 @@ export function useScoreboardLogic() {
     refVForm,
     options,
     prescribedPeriodValues,
-    selectedTime,
-    timeDialog,
+    dateReceivedRecordSection,
+    dateForwarded,
+    timeReceived,
+    timeForwarded,
+    timeReceivedDialog,
+    timeForwardedDialog,
     type_of_transaction,
     nature_of_transaction,
     fetchPAP,
