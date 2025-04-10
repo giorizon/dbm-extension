@@ -12,7 +12,7 @@ const staffList = ref([
 
 const formData = ref({
   particulars: {
-    staffID: null // Initialize with a default value
+    staffID: null
   }
 })
 
@@ -23,7 +23,7 @@ const formAction = ref({
 
 <template>
   <v-card>
-    <v-row>
+    <v-row class="pa-4">
       <v-col>
         <v-text-field
           v-model="agencyName"
