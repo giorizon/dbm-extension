@@ -5,6 +5,7 @@ import NotFoundView from '@/views/errors/NotFoundView.vue'
 import AccountSettingsView from '@/views/system/AccountSettingsView.vue'
 import UserRolesView from '@/views/system/manage-users/UserRolesView.vue'
 import UsersView from '@/views/system/manage-users/UsersView.vue'
+import AgenciesView from '@/views/system/manage-agencies/AgenciesView.vue'
 import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
 import AddScoreBoardIndividualView from '@/views/system/accomplishments/AddScoreboardIndividualView.vue'
 import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
@@ -73,6 +74,12 @@ export const routes = [
     path: '/manage/users',
     name: 'manage-users',
     component: UsersView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/manage/agencies',
+    name: 'manage-agencies',
+    component: AgenciesView,
     meta: { requiresAuth: true }
   },
 
