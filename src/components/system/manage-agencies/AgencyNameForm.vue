@@ -42,8 +42,8 @@ const submitForm = async () => {
   }
 
   try {
-    // Insert into the agencies table
-    const { data, error } = await supabase.from('agencies').insert([
+    // Insert into the agency table
+    const { data, error } = await supabase.from('agency').insert([
       {
         agency_name: formData.value.agencyName, // Save the agency name
         user_id: formData.value.particulars.staffID // Save the selected staff ID
@@ -94,7 +94,7 @@ const submitForm = async () => {
 
     <v-row dense>
       <v-spacer></v-spacer>
-      <v-btn class="mr-4 mb-6 pt-2" type="submit" color="red-darken-4" @click="submitForm">
+      <v-btn class="mr-4 mb-6 py-2" type="submit" color="red-darken-4" @click="submitForm">
         Submit Form
       </v-btn>
     </v-row>
