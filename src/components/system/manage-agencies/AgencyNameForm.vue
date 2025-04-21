@@ -37,7 +37,7 @@ onMounted(() => {
 
 const submitForm = async () => {
   if (!formData.value.agencyName || !formData.value.particulars.staffID) {
-    alert('❌ Please provide both agency name and staff selection!')
+    alert('❌ Please provide both agency name and assigned staff!')
     return
   }
 
