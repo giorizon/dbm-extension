@@ -26,6 +26,7 @@ const onAdd = () => {
       </v-btn>
     </v-col>
   </v-row>
+  <v-divider class="my-5"></v-divider>
 
   <UsersFormDialog v-model:is-dialog-visible="isDialogVisible" :item-data="itemData" />
 </template>
