@@ -1,4 +1,5 @@
 <script setup>
+import AgenciesFormDialog from './AgenciesFormDialog.vue'
 import { ref } from 'vue'
 
 // Reactive state
@@ -28,5 +29,5 @@ const onAdd = () => {
   </v-row>
   <v-divider class="my-5"></v-divider>
 
-  <UsersFormDialog v-model:is-dialog-visible="isDialogVisible" :item-data="itemData" />
+  <AgenciesFormDialog v-model:is-dialog-visible="isDialogVisible" :item-data="itemData" />
 </template>

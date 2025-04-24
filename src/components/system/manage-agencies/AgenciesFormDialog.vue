@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { requiredValidator } from '@/utils/validators'
 import { supabase } from '@/utils/supabase'
 
+const props = defineProps(['isDialogVisible', 'itemData', 'tableOptions'])
+
 const formData = ref({
   agencyName: '',
   particulars: {
@@ -65,38 +67,45 @@ const submitForm = async () => {
 </script>
 
 <template>
-  <v-card>
-    <v-row class="pa-4">
-      <!-- Agency Name as Text Input -->
-      <v-col>
-        <v-text-field
-          label="Agency Name"
-          outlined
-          clearable
-          v-model="formData.agencyName"
-          :rules="[requiredValidator]"
-        />
-      </v-col>
+  <v-dialog max-width="800" :model-value="props.isDialogVisible" persistent>
+    <v-card prepend-icon="mdi-office-building-cog" title="Agency Information">
+      <v-card-text>
+        <v-row class="pa-4">
+          <!-- Agency Name as Text Input -->
+          <v-col>
+            <v-text-field
+              label="Agency Name"
+              outlined
+              clearable
+              v-model="formData.agencyName"
+              :rules="[requiredValidator]"
+            />
+          </v-col>
 
-      <!-- Assign to Dropdown -->
-      <v-col>
-        <v-select
-          label="Assign to"
-          :items="staffList"
-          item-title="name"
-          item-value="id"
-          outlined
-          v-model="formData.particulars.staffID"
-          :rules="[requiredValidator]"
-        />
-      </v-col>
-    </v-row>
+          <!-- Assign to Dropdown -->
+          <v-col>
+            <v-select
+              label="Assign to"
+              :items="staffList"
+              item-title="name"
+              item-value="id"
+              outlined
+              v-model="formData.particulars.staffID"
+              :rules="[requiredValidator]"
+            />
+          </v-col>
+        </v-row>
+      </v-card-text>
+      <v-divider></v-divider>
 
-    <v-row dense>
-      <v-spacer></v-spacer>
-      <v-btn class="mr-4 mb-6 py-2" type="submit" color="red-darken-4" @click="submitForm">
-        Submit Form
-      </v-btn>
-    </v-row>
-  </v-card>
+      <v-card-actions class="pa-4">
+        <v-spacer></v-spacer>
+        <v-btn text="Close" variant="plain" prepend-icon="mdi-close" @click="onFormReset"></v-btn>
+
+        <v-btn class="mr-4 mb-6 py-2" type="submit" color="red-darken-4" @click="submitForm">
+          Submit Form
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
