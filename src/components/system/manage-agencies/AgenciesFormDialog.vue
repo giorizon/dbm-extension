@@ -5,6 +5,8 @@ import { supabase } from '@/utils/supabase'
 
 const props = defineProps(['isDialogVisible', 'itemData', 'tableOptions'])
 
+const emit = defineEmits(['update:isDialogVisible'])
+
 const formData = ref({
   agencyName: '',
   particulars: {
@@ -63,6 +65,10 @@ const submitForm = async () => {
     console.error('Unexpected error:', err)
     alert('❌ Unexpected error occurred while saving to the database.')
   }
+}
+// Form Reset
+const onFormReset = () => {
+  emit('update:isDialogVisible', false)
 }
 </script>
 
