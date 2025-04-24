@@ -5,10 +5,12 @@ import ScoreboardFormDialog from './ScoreboardFormDialog.vue'
 import SuccessDialog from './SuccessDialog.vue'
 import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
+import supabase from './supabase'; 
 
 
-
-const validationError = ref("");
+const validationError = ref("")
+const isSuccess = ref(false)
+const formErrorMessage = ref("")
 
 const props = defineProps({
   dmsReferenceNumber: String,
@@ -18,33 +20,27 @@ const props = defineProps({
 });
 
 const {
-  handleDialogFormSubmit,
-  handleFormSubmit,
+  //handleDialogFormSubmit,
+  //handleFormSubmit,
   formData,
   formAction,
-  isSuccess,
+ // isSuccess,
   refVForm,
   options,
   prescribedPeriodValues,
   type_of_transaction,
+  type_of_downtime,
   nature_of_transaction,
   fetchPAP,
   papData,
   requiredValidator
 } = useScoreboardLogic();
 
-// Initialize Date Pickers with Current Date
 formData.dateReceivedRecordSection = ref(format(new Date(), 'yyyy-MM-dd'))
-const dateForwardedValue = ref(format(new Date(), 'yyyy-MM-dd'));
-
-// Initialize Time Pickers with Current Time
-//const selectedTimeReceived = ref(format(new Date(), 'hh:mm a'))  // ✅ AM/PM format
-//const timeDialogReceived = ref(false)
-
-const selectedTimeForwarded = ref(format(new Date(), 'hh:mm a'))  // ✅ AM/PM format
+const dateForwardedValue = ref(format(new Date(), 'yyyy-MM-dd'))
+const selectedTimeForwarded = ref(format(new Date(), 'HH:mm'))
 const timeDialogForwarded = ref(false)
 
-// Pre-fill form fields with received data
 formData.dmsReferenceNumber = props.dmsReferenceNumber;
 formData.dateReceived = props.dateReceived;
 formData.agencyName = props.agencyName;
@@ -55,9 +51,63 @@ onMounted(() => {
   formData.dateForwarded = dateForwardedValue.value;
   selectedTimeForwarded.value = format(new Date(), 'HH:mm')
 })
+const handleFormSubmit = async () => {
+  console.log("Scoreboard ID (RefImpl):", formData.scoreboardId);
+  console.log("Extracted Scoreboard ID:", formData.scoreboardId.value);
 
+  validationError.value = "";
+  formErrorMessage.value = "";
 
-//for submit scoreboard
+  if (!formData.scoreboardId?.value) {
+    validationError.value = "Scoreboard ID is required";
+    return;
+  }
+
+  // 🆕 Safely extract from formData
+  const scoreboardId = formData.scoreboardId.value;
+  const downtime = formData.downtime || 0;
+  const particulars = formData.particulars || {};
+  const typeDowntime = particulars.typeDowntime || null;
+
+  // Logging to confirm values
+  console.log("Downtime:", downtime);
+  console.log("Type of Downtime:", typeDowntime);
+
+  const updateData = {
+    date_forwarded: formData.dateForwarded,
+    status: "Accepted-Individual",
+    date_received: formData.dateReceived,
+    downtime: downtime
+  };
+
+  try {
+    const { error: updateError } = await supabase
+      .from('scoreboard_individual')
+      .update(updateData)
+      .eq('id', scoreboardId);
+
+    if (updateError) throw updateError;
+
+    const { data: insertedData, error: insertError } = await supabase
+      .from('technical_individual_downtime')
+      .insert([{
+        downtime: downtime,
+        downtime_id: typeDowntime,
+        scoreboard_id: scoreboardId
+      }])
+      .select('id');
+
+    if (insertError) throw insertError;
+
+    const newInsertedId = insertedData[0]?.id;
+    console.log("New technical_individual_downtime ID:", newInsertedId);
+
+    isSuccess.value = true;
+
+  } catch (err) {
+    formErrorMessage.value = err.message || "Failed to submit the form.";
+  }
+};
 </script>
 
 <template>
@@ -94,6 +144,15 @@ onMounted(() => {
               @update:modelValue="fetchPAP"
             ></v-select>
           </v-col>
+          <v-col>
+            <v-text-field
+              :rules="[requiredValidator]"
+              label="PAP"
+              v-model="papData"
+              outlined
+              readonly
+            />
+          </v-col>
         </v-row>
 
         <v-row>
@@ -110,56 +169,23 @@ onMounted(() => {
           </v-col>
           <v-col>
             <v-text-field
-              :rules="[requiredValidator]"
-              label="PAP"
-              v-model="papData"
-              outlined
-              readonly
-            />
-          </v-col>
-        </v-row>
-
-        <!-- Date and Time Picker Row for Date Received 
-        <v-row>
-          <v-col cols="5">
-             <v-date-input 
-               label="Date Received" 
-               prepend-inner-icon="$calendar"
-               v-model="formData.dateReceivedRecordSection" 
-               :rules="[requiredValidator]"
-             ></v-date-input>
-          </v-col>
-          <v-col cols="5">
-      
-            <v-text-field
-              v-model="selectedTimeReceived"
-              label="Time Received"
-              prepend-inner-icon="mdi-clock"
-              readonly
-              @click="timeDialogReceived = true"
+              v-model="formData.downtime"
+              label="Downtime"
+              type="number"
             ></v-text-field>
           </v-col>
-        </v-row> -->
-
-        <!-- Time Picker Dialog for Date Received 
-        <v-dialog v-model="timeDialogReceived" max-width="400">
-        <v-card>
-          <v-card-title class="text-center">Select Time</v-card-title>
-          <v-card-text>
-            <v-time-picker 
-              v-model="selectedTimeReceived"
-              format="ampm"  
-              ampm-in-title 
-              @update:model-value="timeDialogReceived = false"
-            ></v-time-picker>
-          </v-card-text>
-          <v-card-actions class="justify-center">
-            <v-btn text="Close" @click="timeDialogReceived = false"></v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-            -->
-        <!-- Date and Time Picker Row for Date Forwarded -->
+          <v-col>
+            <v-select 
+              label="Type of Downtime" 
+              :items="type_of_downtime" 
+              item-title="title" 
+              item-value="value"
+              :rules="[requiredValidator]" 
+              outlined 
+              v-model="formData.particulars.typeDowntime">
+            </v-select>
+          </v-col>
+        </v-row>
         <v-row>
           <v-col cols="5">
              <v-date-input 
@@ -180,7 +206,7 @@ onMounted(() => {
             ></v-text-field>
           </v-col>
         </v-row>
-
+        
         <!-- Time Picker Dialog for Date Forwarded -->
         <v-dialog v-model="timeDialogForwarded" max-width="400">
         <v-card>
@@ -220,9 +246,7 @@ onMounted(() => {
           <v-btn 
             text="Submit Form" 
             type="submit" 
-            color="red-darken-4"
-            :loading="formAction.formProcess" 
-            :disabled="formAction.formProcess"
+            color="green-darken-4"
           >
           </v-btn>
         </v-row>

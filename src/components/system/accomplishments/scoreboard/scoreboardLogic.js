@@ -23,6 +23,7 @@ export function useScoreboardLogic() {
   const type_of_transaction = ref([])
   const nature_of_transaction = ref([])
 
+  const type_of_downtime = ref([])
   // Fetch Type of Transactions from Supabase
   const fetchTypeOfTransaction = async () => {
     try {
@@ -56,6 +57,28 @@ export function useScoreboardLogic() {
       console.error('Unexpected error fetching Nature of Transaction:', err)
     }
   }
+
+//Fetch type of downtown
+  const fetchTypeOfDowntime = async () => {
+    try {
+     
+      const { data, error } = await supabase.from('type_of_downtime').select('id, name')
+      if (error) {
+        alert("error1");
+        console.error('Error fetching Type of Downtime:', error)
+        return
+      }
+      type_of_downtime.value = data.map(item => ({
+        title: item.name,
+        value: item.id
+      }))
+      console.log("Fetched Downtime Types:", data);
+    } catch (err) {
+      alert("error2");
+      console.error('Unexpected error fetching Type of downtime:', err)
+    }
+  }
+
 
   const papData = ref("")
 
@@ -100,6 +123,7 @@ export function useScoreboardLogic() {
   onMounted(() => {
     fetchTypeOfTransaction()
     fetchNatureOfTransaction()
+    fetchTypeOfDowntime()
   })
 
   return {
@@ -119,6 +143,7 @@ export function useScoreboardLogic() {
     timeForwardedDialog,
     type_of_transaction,
     nature_of_transaction,
+    type_of_downtime,
     fetchPAP,
     papData,
     requiredValidator
