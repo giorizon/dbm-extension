@@ -1,7 +1,8 @@
 <script setup>
 import AppLayout from '@/components/layout/AppLayout.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
-import AgencyNameForm from '@/components/system/manage-agencies/AgencyNameForm.vue'
+import AgencyFormDialog from '@/components/system/manage-agencies/AgencyFormDialog.vue'
+import AgenciesTable from '@/components/system/manage-agencies/AgenciesTable.vue'
 import { ref } from 'vue'
 
 const isDrawerVisible = ref(true)
@@ -33,11 +34,16 @@ const isDrawerVisible = ref(true)
             <p class="ms-4 text-wrap">Manage agencies and assign personnel.</p>
           </template>
         </v-card>
-        <v-row>
+        <!-- <v-row>
           <v-card-text>
             <AgencyNameForm />
           </v-card-text>
-        </v-row>
+        </v-row> -->
+        <v-card>
+          <v-card-text>
+            <AgenciesTable></AgenciesTable>
+          </v-card-text>
+        </v-card>
       </v-container>
     </template>
   </AppLayout>
