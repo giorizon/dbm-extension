@@ -1,3 +1,78 @@
+<script setup>
+import { ref } from 'vue'
+import { useAgenciesStore } from '@/stores/agencies'
+import AlertNotification from '@/components/common/AlertNotification.vue'
+import AgenciesFormDialog from './AgenciesFormDialog.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import { formActionDefault } from '@/utils/supabase'
+import { tableHeaders } from './agenciesTableUtils'
+import { useDate } from 'vuetify'
+
+const date = useDate()
+
+const agenciesStore = useAgenciesStore()
+
+const tableOptions = ref({
+  page: 1,
+  itemsPerPage: 10,
+  sortBy: [],
+  isLoading: false
+})
+const isDialogVisible = ref(false)
+const isConfirmDeleteDialog = ref(false)
+const itemData = ref(null)
+const deleteId = ref('')
+const formAction = ref({
+  ...formActionDefault
+})
+
+// Load Data Function
+const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
+  tableOptions.value.isLoading = true
+
+  await agenciesStore.getAgenciesTable({ page, itemsPerPage, sortBy })
+
+  tableOptions.value.isLoading = false
+}
+
+// Add Agency Button
+const onAdd = () => {
+  itemData.value = null
+  isDialogVisible.value = true
+}
+
+// Update Agency Button
+const onUpdate = (item) => {
+  itemData.value = item
+  isDialogVisible.value = true
+}
+
+// Delete Agency Button
+const onDelete = (id) => {
+  deleteId.value = id
+  isConfirmDeleteDialog.value = true
+}
+
+// Confirm Delete
+const onConfirmDelete = async () => {
+  formAction.value = { ...formActionDefault, formProcess: true }
+
+  const { error } = await agenciesStore.deleteAgency(deleteId.value)
+
+  formAction.value.formProcess = false
+
+  if (error) {
+    formAction.value.formErrorMessage = error.message
+    formAction.value.formStatus = error.status
+    return
+  }
+
+  formAction.value.formSuccessMessage = 'Successfully Deleted Agency.'
+
+  onLoadItems(tableOptions.value)
+}
+</script>
+
 <template>
   <AlertNotification
     :form-success-message="formAction.formSuccessMessage"
@@ -83,78 +158,3 @@
   >
   </ConfirmDialog>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { useAgenciesStore } from '@/stores/agencies'
-import AlertNotification from '@/components/common/AlertNotification.vue'
-import AgenciesFormDialog from './AgenciesFormDialog.vue'
-import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import { formActionDefault } from '@/utils/supabase'
-import { tableHeaders } from './agenciesTableUtils'
-import { useDate } from 'vuetify'
-
-const date = useDate()
-
-const agenciesStore = useAgenciesStore()
-
-const tableOptions = ref({
-  page: 1,
-  itemsPerPage: 10,
-  sortBy: [],
-  isLoading: false
-})
-const isDialogVisible = ref(false)
-const isConfirmDeleteDialog = ref(false)
-const itemData = ref(null)
-const deleteId = ref('')
-const formAction = ref({
-  ...formActionDefault
-})
-
-// Load Data Function
-const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
-  tableOptions.value.isLoading = true
-
-  await agenciesStore.getAgenciesTable({ page, itemsPerPage, sortBy })
-
-  tableOptions.value.isLoading = false
-}
-
-// Add Agency Button
-const onAdd = () => {
-  itemData.value = null
-  isDialogVisible.value = true
-}
-
-// Update Agency Button
-const onUpdate = (item) => {
-  itemData.value = item
-  isDialogVisible.value = true
-}
-
-// Delete Agency Button
-const onDelete = (id) => {
-  deleteId.value = id
-  isConfirmDeleteDialog.value = true
-}
-
-// Confirm Delete
-const onConfirmDelete = async () => {
-  formAction.value = { ...formActionDefault, formProcess: true }
-
-  const { error } = await agenciesStore.deleteAgency(deleteId.value)
-
-  formAction.value.formProcess = false
-
-  if (error) {
-    formAction.value.formErrorMessage = error.message
-    formAction.value.formStatus = error.status
-    return
-  }
-
-  formAction.value.formSuccessMessage = 'Successfully Deleted Agency.'
-
-  onLoadItems(tableOptions.value)
-}
-</script>

@@ -10,8 +10,8 @@ export const tableHeaders = [
   },
   {
     title: 'Assigned Staff',
-    key: 'staff_name',
-    sortable: true,
+    key: 'lastname',
+    sortable: false,
     align: 'start'
   },
   {
