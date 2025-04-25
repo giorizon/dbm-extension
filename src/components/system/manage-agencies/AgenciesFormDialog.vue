@@ -77,8 +77,9 @@ const submitForm = async () => {
       formAction.value.formErrorMessage = `Error: ${result.error.message}`
     } else {
       formAction.value.formSuccessMessage = 'Agency successfully added!'
-      await agenciesStore.getAgenciesTable(props.tableOptions)
-
+      if (props.tableOptions) {
+        await agenciesStore.getAgenciesTable(props.tableOptions)
+      }
       // Reset form and close dialog after a delay
       setTimeout(() => {
         onFormReset()
