@@ -1,12 +1,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { requiredValidator } from '@/utils/validators'
+import { formActionDefault } from '@/utils/supabase.js'
 import { supabase } from '@/utils/supabase'
 
 const props = defineProps(['isDialogVisible', 'itemData', 'tableOptions'])
 
 const emit = defineEmits(['update:isDialogVisible'])
-
+const formAction = ref({
+  ...formActionDefault
+})
 const formData = ref({
   agencyName: '',
   particulars: {
@@ -109,8 +112,15 @@ const onFormReset = () => {
         <v-spacer></v-spacer>
         <v-btn text="Close" variant="plain" prepend-icon="mdi-close" @click="onFormReset"></v-btn>
 
-        <v-btn prepend-icon="mdi-pencil" color="red-darken-4" type="submit" variant="elevated">
-          Add Agency
+        <v-btn
+          prepend-icon="mdi-pencil"
+          color="red-darken-4"
+          type="submit"
+          variant="elevated"
+          :disabled="formAction.formProcess"
+          :loading="formAction.formProcess"
+        >
+          {{ isUpdate ? 'Update Agency' : 'Add Agency' }}
         </v-btn>
       </v-card-actions>
     </v-card>
