@@ -1,21 +1,23 @@
-// Table Headers
+// usersTableUtils.js
+
+// Table Headers for Agencies
 export const tableHeaders = [
   {
-    title: 'Agency',
+    title: 'Agency Name',
     key: 'agency_name',
-    sortable: false,
+    sortable: true,
     align: 'start'
   },
   {
-    title: 'Assigned To',
-    key: 'lastname',
-    sortable: false,
+    title: 'Assigned Staff',
+    key: 'staff_name',
+    sortable: true,
     align: 'start'
   },
   {
     title: 'Date Created',
     key: 'created_at',
-    sortable: false,
+    sortable: true,
     align: 'center'
   },
   {
