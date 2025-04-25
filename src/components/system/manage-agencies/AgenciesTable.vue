@@ -29,5 +29,8 @@ const onAdd = () => {
   </v-row>
   <v-divider class="my-5"></v-divider>
 
-  <AgenciesFormDialog v-model:is-dialog-visible="isDialogVisible" :item-data="itemData" />
+  <AgenciesFormDialog
+    v-model:is-dialog-visible="isDialogVisible"
+    :item-data="itemData"
+  ></AgenciesFormDialog>
 </template>
