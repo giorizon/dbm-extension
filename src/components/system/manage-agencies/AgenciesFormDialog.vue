@@ -96,6 +96,7 @@ const onFormReset = () => {
               item-title="name"
               item-value="id"
               outlined
+              clearable
               v-model="formData.particulars.staffID"
               :rules="[requiredValidator]"
             />
