@@ -109,8 +109,8 @@ const onFormReset = () => {
         <v-spacer></v-spacer>
         <v-btn text="Close" variant="plain" prepend-icon="mdi-close" @click="onFormReset"></v-btn>
 
-        <v-btn class="mr-4 mb-6 py-2" type="submit" color="red-darken-4" @click="submitForm">
-          Submit Form
+        <v-btn prepend-icon="mdi-pencil" color="red-darken-4" type="submit" variant="elevated">
+          Add Agency
         </v-btn>
       </v-card-actions>
     </v-card>
