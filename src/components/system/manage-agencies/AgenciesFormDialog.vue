@@ -60,7 +60,7 @@ const submitForm = async () => {
   try {
     const agencyData = {
       agency_name: formData.value.agencyName,
-      user_id: formData.value.particulars.staffID
+      user_id: formData.value.particulars.staffID // Make sure user_id is set
     }
 
     let result

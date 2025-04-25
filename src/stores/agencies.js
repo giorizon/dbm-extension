@@ -18,7 +18,7 @@ export const useAgenciesStore = defineStore('agencies', () => {
   async function getAgenciesTable({ page, itemsPerPage }) {
     const { data: agencies, error } = await supabaseAdmin
       .from('agency') // Ensure the table name is "agency"
-      .select('*')
+      .select('*, user_profiles(*)') // Select user_profiles as well
       .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
 
     if (error) {
@@ -29,7 +29,15 @@ export const useAgenciesStore = defineStore('agencies', () => {
     // Assuming you want the total number of agencies
     const { count } = await supabaseAdmin.from('agency').select('*', { count: 'exact' }) // Get total count of agencies
 
-    agenciesTable.value = agencies
+    // Map over agencies to get the staff name
+    agenciesTable.value = agencies.map((agency) => {
+      return {
+        ...agency,
+        staff_name: agency.user_profiles
+          ? `${agency.user_profiles.lastname}, ${agency.user_profiles.firstname}`
+          : 'No staff assigned'
+      }
+    })
     agenciesTotal.value = count
   }
 
