@@ -53,7 +53,7 @@ onMounted(() => {
 
 const submitForm = async () => {
   if (!formData.value.agencyName || !formData.value.particulars.staffID) {
-    formAction.value.formErrorMessage = '❌ Please provide both agency name and assigned staff!'
+    formAction.value.formErrorMessage = 'Please provide both agency name and assigned staff!'
     return
   }
 
@@ -76,7 +76,7 @@ const submitForm = async () => {
     if (result && result.error) {
       formAction.value.formErrorMessage = `Error: ${result.error.message}`
     } else {
-      formAction.value.formSuccessMessage = '✅ Agency successfully saved!'
+      formAction.value.formSuccessMessage = 'Agency successfully added!'
       await agenciesStore.getAgenciesTable(props.tableOptions)
 
       // Reset form and close dialog after a delay
