@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
 import { requiredValidator } from '@/utils/validators'
 import { formActionDefault } from '@/utils/supabase.js'
 import { useAgenciesStore } from '@/stores/agencies'
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import { supabase } from '@/utils/supabase'
+import { ref, onMounted } from 'vue'
 
 const props = defineProps(['isDialogVisible', 'itemData', 'tableOptions'])
 const emit = defineEmits(['update:isDialogVisible'])
@@ -60,7 +60,7 @@ const submitForm = async () => {
   try {
     const agencyData = {
       agency_name: formData.value.agencyName,
-      user_id: formData.value.particulars.staffID // Make sure user_id is set
+      user_id: formData.value.particulars.staffID
     }
 
     let result

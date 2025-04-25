@@ -1,14 +1,11 @@
-// src/stores/agencies.js
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { supabaseAdmin } from '@/utils/supabase'
 
 export const useAgenciesStore = defineStore('agencies', () => {
-  // States
   const agenciesTable = ref([])
   const agenciesTotal = ref(0)
 
-  // Reset State Action
   function $reset() {
     agenciesTable.value = []
     agenciesTotal.value = 0
@@ -17,8 +14,8 @@ export const useAgenciesStore = defineStore('agencies', () => {
   // Retrieve Agencies
   async function getAgenciesTable({ page, itemsPerPage }) {
     const { data: agencies, error } = await supabaseAdmin
-      .from('agency') // Ensure the table name is "agency"
-      .select('*, user_profiles(*)') // Select user_profiles as well
+      .from('agency')
+      .select('*, user_profiles(*)')
       .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
 
     if (error) {
@@ -26,8 +23,7 @@ export const useAgenciesStore = defineStore('agencies', () => {
       return
     }
 
-    // Assuming you want the total number of agencies
-    const { count } = await supabaseAdmin.from('agency').select('*', { count: 'exact' }) // Get total count of agencies
+    const { count } = await supabaseAdmin.from('agency').select('*', { count: 'exact' })
 
     // Map over agencies to get the staff name
     agenciesTable.value = agencies.map((agency) => {
@@ -44,9 +40,7 @@ export const useAgenciesStore = defineStore('agencies', () => {
   // Add Agency
   async function addAgency(formData) {
     const { agency_name, user_id } = formData
-    const { data, error } = await supabaseAdmin
-      .from('agency') // Insert into the "agency" table
-      .insert([{ agency_name, user_id }])
+    const { data, error } = await supabaseAdmin.from('agency').insert([{ agency_name, user_id }])
 
     if (error) {
       console.error('Error adding agency:', error.message)
@@ -60,7 +54,7 @@ export const useAgenciesStore = defineStore('agencies', () => {
   async function updateAgency(formData) {
     const { id, agency_name, user_id } = formData
     const { data, error } = await supabaseAdmin
-      .from('agency') // Update the "agency" table
+      .from('agency')
       .update({ agency_name, user_id })
       .eq('id', id)
 
@@ -74,10 +68,7 @@ export const useAgenciesStore = defineStore('agencies', () => {
 
   // Delete Agency
   async function deleteAgency(id) {
-    const { data, error } = await supabaseAdmin
-      .from('agency') // Delete from the "agency" table
-      .delete()
-      .eq('id', id)
+    const { data, error } = await supabaseAdmin.from('agency').delete().eq('id', id)
 
     if (error) {
       console.error('Error deleting agency:', error.message)

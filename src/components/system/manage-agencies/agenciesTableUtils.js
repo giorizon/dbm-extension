@@ -1,5 +1,3 @@
-// usersTableUtils.js
-
 // Table Headers for Agencies
 export const tableHeaders = [
   {
