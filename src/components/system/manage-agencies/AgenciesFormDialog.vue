@@ -1,12 +1,14 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { requiredValidator } from '@/utils/validators'
 import { formActionDefault } from '@/utils/supabase.js'
+import { useAgenciesStore } from '@/stores/agencies'
+import AlertNotification from '@/components/common/AlertNotification.vue'
 import { supabase } from '@/utils/supabase'
 
 const props = defineProps(['isDialogVisible', 'itemData', 'tableOptions'])
-
 const emit = defineEmits(['update:isDialogVisible'])
+
 const formAction = ref({
   ...formActionDefault
 })
@@ -19,14 +21,16 @@ const formData = ref({
 
 const staffList = ref([])
 
-// ✅ Fetch Staff from Supabase
+// Use Pinia store for agencies
+const agenciesStore = useAgenciesStore()
+
+// Fetch Staff from Supabase
 const fetchStaff = async () => {
   try {
     const { data, error } = await supabase.from('user_profiles').select('id, firstname, lastname')
 
     if (error) {
-      console.error('Error fetching staff:', error)
-      return
+      throw new Error(error.message)
     }
 
     staffList.value = data.map((user) => ({
@@ -34,43 +38,59 @@ const fetchStaff = async () => {
       name: `${user.lastname || ''}, ${user.firstname || ''}`.trim() || 'No Name'
     }))
   } catch (err) {
-    console.error('Unexpected error fetching staff:', err)
+    formAction.value.formErrorMessage = `Error fetching staff: ${err.message}`
   }
 }
 
+// Load existing data for editing if itemData exists
 onMounted(() => {
   fetchStaff()
+  if (props.itemData) {
+    formData.value.agencyName = props.itemData.agency_name
+    formData.value.particulars.staffID = props.itemData.user_id
+  }
 })
 
 const submitForm = async () => {
   if (!formData.value.agencyName || !formData.value.particulars.staffID) {
-    alert('❌ Please provide both agency name and assigned staff!')
+    formAction.value.formErrorMessage = '❌ Please provide both agency name and assigned staff!'
     return
   }
 
   try {
-    // Insert into the agency table
-    const { data, error } = await supabase.from('agency').insert([
-      {
-        agency_name: formData.value.agencyName, // Save the agency name
-        user_id: formData.value.particulars.staffID // Save the selected staff ID
-      }
-    ])
-
-    if (error) {
-      console.error('🚨 Error inserting data into agencies:', error.message)
-      alert('❌ Failed to save data! Error: ' + error.message)
-      return
+    const agencyData = {
+      agency_name: formData.value.agencyName,
+      user_id: formData.value.particulars.staffID
     }
 
-    alert('✅ Agency successfully saved!')
+    let result
+
+    if (props.itemData) {
+      // Update existing agency
+      result = await agenciesStore.updateAgency({ ...agencyData, id: props.itemData.id })
+    } else {
+      // Insert new agency
+      result = await agenciesStore.addAgency(agencyData)
+    }
+
+    if (result && result.error) {
+      formAction.value.formErrorMessage = `Error: ${result.error.message}`
+    } else {
+      formAction.value.formSuccessMessage = '✅ Agency successfully saved!'
+      await agenciesStore.getAgenciesTable(props.tableOptions)
+
+      // Reset form and close dialog after a delay
+      setTimeout(() => {
+        onFormReset()
+      }, 2500)
+    }
   } catch (err) {
-    console.error('Unexpected error:', err)
-    alert('❌ Unexpected error occurred while saving to the database.')
+    formAction.value.formErrorMessage = `Unexpected error occurred: ${err.message}`
   }
 }
-// Form Reset
+
 const onFormReset = () => {
+  formAction.value = { ...formActionDefault }
   emit('update:isDialogVisible', false)
 }
 </script>
@@ -78,6 +98,11 @@ const onFormReset = () => {
 <template>
   <v-dialog max-width="800" :model-value="props.isDialogVisible" persistent>
     <v-card prepend-icon="mdi-office-building-cog" title="Agency Information">
+      <AlertNotification
+        :form-success-message="formAction.formSuccessMessage"
+        :form-error-message="formAction.formErrorMessage"
+      ></AlertNotification>
+
       <v-card-text>
         <v-row class="pa-4">
           <!-- Agency Name as Text Input -->
@@ -119,8 +144,9 @@ const onFormReset = () => {
           variant="elevated"
           :disabled="formAction.formProcess"
           :loading="formAction.formProcess"
+          @click="submitForm"
         >
-          {{ isUpdate ? 'Update Agency' : 'Add Agency' }}
+          {{ props.itemData ? 'Update Agency' : 'Add Agency' }}
         </v-btn>
       </v-card-actions>
     </v-card>
