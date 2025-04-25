@@ -12,10 +12,12 @@ export const useAgenciesStore = defineStore('agencies', () => {
   }
 
   // Retrieve Agencies
+  // Retrieve Agencies
   async function getAgenciesTable({ page, itemsPerPage }) {
     const { data: agencies, error } = await supabaseAdmin
       .from('agency')
       .select('*, user_profiles(*)')
+      .order('created_at', { ascending: false }) // 👈 this ensures latest comes first
       .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
 
     if (error) {
