@@ -64,8 +64,14 @@ export const useAgenciesStore = defineStore('agencies', () => {
   }
 
   // Update Agency
+
   async function updateAgency(formData) {
     const { id, agency_name, user_id } = formData
+
+    if (!id) {
+      console.error('Cannot update agency: ID is missing.')
+      return { error: { message: 'ID is required to update agency.' } }
+    }
 
     const { data, error } = await supabaseAdmin
       .from('agency')
@@ -75,13 +81,9 @@ export const useAgenciesStore = defineStore('agencies', () => {
 
     if (error) {
       console.error('Error updating agency:', error.message)
-      return
     }
 
-    // Refresh the agencies table with updated data
-    await getAgenciesTable({ page: 1, itemsPerPage: 10 }) // Adjust as needed for pagination
-
-    return data
+    return { data, error }
   }
 
   // Delete Agency

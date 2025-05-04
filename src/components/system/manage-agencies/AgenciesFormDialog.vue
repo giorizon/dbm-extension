@@ -62,7 +62,7 @@ const fetchStaff = async () => {
 
     staffList.value = data.map((user) => ({
       id: user.id,
-      name: `${user.lastname || ''}, ${user.firstname || ''}`.trim() || 'No Name'
+      name: [user.lastname, user.firstname].filter(Boolean).join(', ') || 'No Name'
     }))
   } catch (err) {
     formAction.value.formErrorMessage = `Error fetching staff: ${err.message}`
@@ -73,6 +73,12 @@ onMounted(() => fetchStaff())
 
 // Computed for handling form state
 const isUpdate = computed(() => Boolean(props.itemData))
+
+// Computed for controlling dialog visibility
+const dialogVisible = computed({
+  get: () => props.isDialogVisible,
+  set: (val) => emit('update:isDialogVisible', val)
+})
 
 // Submit Functionality
 const onSubmit = async () => {
@@ -91,6 +97,7 @@ const onSubmit = async () => {
   formAction.value = { ...formActionDefault, formProcess: true }
 
   const agencyData = {
+    id: props.itemData?.id, // Include ID only if updating
     agency_name: formData.value.agencyName,
     user_id: formData.value.particulars.staffID
   }
@@ -98,7 +105,7 @@ const onSubmit = async () => {
   try {
     const response = isUpdate.value
       ? await agenciesStore.updateAgency(agencyData)
-      : await agenciesStore.addAgency(agencyData, props.tableOptions) // Pass tableOptions here
+      : await agenciesStore.addAgency(agencyData)
 
     if (response?.error) throw new Error(response.error.message)
 
@@ -108,7 +115,8 @@ const onSubmit = async () => {
 
     setTimeout(() => {
       onFormReset()
-      emit('update:isDialogVisible', false)
+      dialogVisible.value = false // Close the dialog after success
+      agenciesStore.getAgenciesTable(props.tableOptions) // Fetch updated data after success
     }, 2500)
   } catch (err) {
     formAction.value.formErrorMessage = err.message
@@ -128,12 +136,12 @@ const onFormSubmit = () => {
 const onFormReset = () => {
   formData.value = { ...formDataDefault }
   formAction.value = { ...formActionDefault }
-  emit('update:isDialogVisible', false)
+  dialogVisible.value = false // Close the dialog when resetting the form
 }
 </script>
 
 <template>
-  <v-dialog max-width="800" v-model="props.isDialogVisible" persistent>
+  <v-dialog max-width="800" v-model="dialogVisible" persistent>
     <v-card prepend-icon="mdi-office-building-cog" title="Agency Information">
       <AlertNotification
         :form-success-message="formAction.formSuccessMessage"
