@@ -55,24 +55,28 @@ const onConfirmDelete = async () => {
   // Reset Form Action utils
   formAction.value = { ...formActionDefault, formProcess: true }
 
-  const { error } = await agenciesStore.deleteAgency(deleteId.value)
+  try {
+    const { error } = await agenciesStore.deleteAgency(deleteId.value)
 
-  // Turn off processing
-  formAction.value.formProcess = false
+    // Turn off processing
+    formAction.value.formProcess = false
 
-  if (error) {
-    // Add Error Message and Status Code
-    formAction.value.formErrorMessage = error.message
-    formAction.value.formStatus = error.status
+    if (error) {
+      // Add Error Message and Status Code
+      formAction.value.formErrorMessage = error.message
+      formAction.value.formStatus = error.status
+      return
+    }
 
-    return
+    // Add Success Message
+    formAction.value.formSuccessMessage = 'Successfully Deleted Agency.'
+
+    // Retrieve Data
+    onLoadItems(tableOptions.value)
+  } catch (err) {
+    formAction.value.formProcess = false
+    formAction.value.formErrorMessage = 'Error deleting agency: ' + err.message
   }
-
-  // Add Success Message
-  formAction.value.formSuccessMessage = 'Successfully Deleted Agency.'
-
-  // Retrieve Data
-  onLoadItems(tableOptions.value)
 }
 
 // Load Tables Data
@@ -80,10 +84,14 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
   // Trigger Loading
   tableOptions.value.isLoading = true
 
-  await agenciesStore.getAgenciesTable({ page, itemsPerPage, sortBy })
-
-  // Trigger Loading
-  tableOptions.value.isLoading = false
+  try {
+    await agenciesStore.getAgenciesTable({ page, itemsPerPage, sortBy })
+  } catch (err) {
+    formAction.value.formErrorMessage = 'Error loading agencies: ' + err.message
+  } finally {
+    // Trigger Loading
+    tableOptions.value.isLoading = false
+  }
 }
 </script>
 
@@ -91,8 +99,7 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
   <AlertNotification
     :form-success-message="formAction.formSuccessMessage"
     :form-error-message="formAction.formErrorMessage"
-  >
-  </AlertNotification>
+  ></AlertNotification>
 
   <v-row>
     <v-col cols="12">
@@ -170,6 +177,5 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
     title="Confirm Delete"
     text="Are you sure you want to delete this agency?"
     @confirm="onConfirmDelete"
-  >
-  </ConfirmDialog>
+  ></ConfirmDialog>
 </template>

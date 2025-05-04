@@ -82,6 +82,12 @@ const onSubmit = async () => {
     return
   }
 
+  if (!formData.value.agencyName) {
+    formAction.value.formErrorMessage = 'Agency name is required.'
+    formAction.value.formProcess = false
+    return
+  }
+
   formAction.value = { ...formActionDefault, formProcess: true }
 
   const agencyData = {
