@@ -1,9 +1,8 @@
-// Table Headers for Agencies
 export const tableHeaders = [
   {
     title: 'Agency Name',
     key: 'agency_name',
-    sortable: true,
+    sortable: false,
     align: 'start'
   },
   {

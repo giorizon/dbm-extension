@@ -8,16 +8,20 @@ import { formActionDefault } from '@/utils/supabase'
 import { tableHeaders } from './agenciesTableUtils'
 import { useDate } from 'vuetify'
 
+// Utilize pre-defined vue functions
 const date = useDate()
 
+// Use Pinia Store for Agencies
 const agenciesStore = useAgenciesStore()
 
+// Load Variables
 const tableOptions = ref({
   page: 1,
   itemsPerPage: 10,
   sortBy: [],
   isLoading: false
 })
+
 const isDialogVisible = ref(false)
 const isConfirmDeleteDialog = ref(false)
 const itemData = ref(null)
@@ -26,30 +30,21 @@ const formAction = ref({
   ...formActionDefault
 })
 
-// Load Data Function
-const onLoadItems = async (options = { page: 1, itemsPerPage: 10, sortBy: [] }) => {
-  const { page, itemsPerPage, sortBy } = options
+// Trigger Update Btn
+const onUpdate = (item) => {
+  const { id, agency_name, user_id } = item
 
-  tableOptions.value.isLoading = true
-
-  await agenciesStore.getAgenciesTable({ page, itemsPerPage, sortBy })
-
-  tableOptions.value.isLoading = false
+  itemData.value = { id, agency_name, user_id }
+  isDialogVisible.value = true
 }
 
-// Add Agency Button
+// Trigger Add Btn
 const onAdd = () => {
   itemData.value = null
   isDialogVisible.value = true
 }
 
-// Update Agency Button
-const onUpdate = (item) => {
-  itemData.value = item
-  isDialogVisible.value = true
-}
-
-// Delete Agency Button
+// Trigger Delete Btn
 const onDelete = (id) => {
   deleteId.value = id
   isConfirmDeleteDialog.value = true
@@ -57,21 +52,38 @@ const onDelete = (id) => {
 
 // Confirm Delete
 const onConfirmDelete = async () => {
+  // Reset Form Action utils
   formAction.value = { ...formActionDefault, formProcess: true }
 
   const { error } = await agenciesStore.deleteAgency(deleteId.value)
 
+  // Turn off processing
   formAction.value.formProcess = false
 
   if (error) {
+    // Add Error Message and Status Code
     formAction.value.formErrorMessage = error.message
     formAction.value.formStatus = error.status
+
     return
   }
 
+  // Add Success Message
   formAction.value.formSuccessMessage = 'Successfully Deleted Agency.'
 
+  // Retrieve Data
   onLoadItems(tableOptions.value)
+}
+
+// Load Tables Data
+const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
+  // Trigger Loading
+  tableOptions.value.isLoading = true
+
+  await agenciesStore.getAgenciesTable({ page, itemsPerPage, sortBy })
+
+  // Trigger Loading
+  tableOptions.value.isLoading = false
 }
 </script>
 
@@ -119,7 +131,7 @@ const onConfirmDelete = async () => {
         </template>
 
         <template #item.staff_name="{ item }">
-          <span class="font-weight-bold">
+          <span>
             {{ item.staff_name || 'No staff assigned' }}
           </span>
         </template>
@@ -150,6 +162,7 @@ const onConfirmDelete = async () => {
   <AgenciesFormDialog
     v-model:is-dialog-visible="isDialogVisible"
     :item-data="itemData"
+    :table-options="tableOptions"
   ></AgenciesFormDialog>
 
   <ConfirmDialog

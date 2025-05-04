@@ -3,9 +3,11 @@ import { defineStore } from 'pinia'
 import { supabaseAdmin } from '@/utils/supabase'
 
 export const useAgenciesStore = defineStore('agencies', () => {
+  // States
   const agenciesTable = ref([])
   const agenciesTotal = ref(0)
 
+  // Reset State Action
   function $reset() {
     agenciesTable.value = []
     agenciesTotal.value = 0
@@ -46,7 +48,6 @@ export const useAgenciesStore = defineStore('agencies', () => {
   }
 
   // Add Agency
-  // Add Agency
   async function addAgency(formData, tableOptions) {
     const { agency_name, user_id } = formData
     const { data, error } = await supabaseAdmin.from('agency').insert([{ agency_name, user_id }])
@@ -57,21 +58,31 @@ export const useAgenciesStore = defineStore('agencies', () => {
     }
 
     // After adding, refresh the agencies table with updated data
-    await getAgenciesTable(tableOptions) // Pass the table options for pagination, etc.
+    await getAgenciesTable(tableOptions)
     return data
   }
 
   // Update Agency
-  async function updateAgency(formData) {
+  async function updateAgency(formData, tableOptions) {
     const { id, agency_name, user_id } = formData
     const { data, error } = await supabaseAdmin
       .from('agency')
       .update({ agency_name, user_id })
       .eq('id', id)
+      .single() // Make sure it returns the updated data
 
     if (error) {
       console.error('Error updating agency:', error.message)
       return
+    }
+
+    // Refresh the table after the update
+    await getAgenciesTable(tableOptions)
+
+    // Update the store directly with the updated data
+    const index = agenciesTable.value.findIndex((agency) => agency.id === id)
+    if (index !== -1) {
+      agenciesTable.value[index] = { ...agenciesTable.value[index], agency_name, user_id }
     }
 
     return data
@@ -79,14 +90,18 @@ export const useAgenciesStore = defineStore('agencies', () => {
 
   // Delete Agency
   async function deleteAgency(id) {
-    const { data, error } = await supabaseAdmin.from('agency').delete().eq('id', id)
+    try {
+      const { error } = await supabaseAdmin.from('agency').delete().eq('id', id)
+      if (error) {
+        console.error('Error deleting agency:', error.message)
+        return
+      }
 
-    if (error) {
-      console.error('Error deleting agency:', error.message)
-      return
+      // Refresh the table after the delete
+      await getAgenciesTable({ page: 1, itemsPerPage: agenciesTotal.value })
+    } catch (err) {
+      console.error('Error in deleteAgency:', err.message)
     }
-
-    return data
   }
 
   return {
