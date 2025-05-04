@@ -12,35 +12,42 @@ export const useAgenciesStore = defineStore('agencies', () => {
   }
 
   // Retrieve Agencies
-  // Retrieve Agencies
   async function getAgenciesTable({ page, itemsPerPage }) {
-    const { data: agencies, error } = await supabaseAdmin
-      .from('agency')
-      .select('*, user_profiles(*)')
-      .order('created_at', { ascending: false }) // 👈 this ensures latest comes first
-      .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
+    try {
+      const { data: agencies, error } = await supabaseAdmin
+        .from('agency')
+        .select('*, user_profiles(*)')
+        .order('created_at', { ascending: false })
+        .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
 
-    if (error) {
-      console.error('Error fetching agencies:', error.message)
-      return
-    }
+      if (error) {
+        console.error('Error fetching agencies:', error.message)
+        return
+      }
 
-    const { count } = await supabaseAdmin.from('agency').select('*', { count: 'exact' })
+      if (!agencies) {
+        console.error('No agencies data found')
+        return
+      }
 
-    // Map over agencies to get the staff name
-    agenciesTable.value = agencies.map((agency) => {
-      return {
+      const { count } = await supabaseAdmin.from('agency').select('*', { count: 'exact' })
+
+      // Map over agencies to get the staff name
+      agenciesTable.value = agencies.map((agency) => ({
         ...agency,
         staff_name: agency.user_profiles
           ? `${agency.user_profiles.lastname}, ${agency.user_profiles.firstname}`
           : 'No staff assigned'
-      }
-    })
-    agenciesTotal.value = count
+      }))
+      agenciesTotal.value = count
+    } catch (err) {
+      console.error('Error in getAgenciesTable:', err.message)
+    }
   }
 
   // Add Agency
-  async function addAgency(formData) {
+  // Add Agency
+  async function addAgency(formData, tableOptions) {
     const { agency_name, user_id } = formData
     const { data, error } = await supabaseAdmin.from('agency').insert([{ agency_name, user_id }])
 
@@ -49,6 +56,8 @@ export const useAgenciesStore = defineStore('agencies', () => {
       return
     }
 
+    // After adding, refresh the agencies table with updated data
+    await getAgenciesTable(tableOptions) // Pass the table options for pagination, etc.
     return data
   }
 

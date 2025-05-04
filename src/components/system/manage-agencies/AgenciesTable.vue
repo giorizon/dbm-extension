@@ -27,7 +27,9 @@ const formAction = ref({
 })
 
 // Load Data Function
-const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
+const onLoadItems = async (options = { page: 1, itemsPerPage: 10, sortBy: [] }) => {
+  const { page, itemsPerPage, sortBy } = options
+
   tableOptions.value.isLoading = true
 
   await agenciesStore.getAgenciesTable({ page, itemsPerPage, sortBy })
