@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { requiredValidator } from '@/utils/validators'
+import { requiredValidator, agencyNameValidator } from '@/utils/validators'
 import { formActionDefault } from '@/utils/supabase.js'
 import { useAgenciesStore } from '@/stores/agencies'
 import { supabase } from '@/utils/supabase'
@@ -105,7 +105,7 @@ const onSubmit = async () => {
   try {
     const response = isUpdate.value
       ? await agenciesStore.updateAgency(agencyData)
-      : await agenciesStore.addAgency(agencyData)
+      : await agenciesStore.addAgency(agencyData, props.tableOptions) // Pass tableOptions here
 
     if (response?.error) throw new Error(response.error.message)
 
@@ -116,7 +116,6 @@ const onSubmit = async () => {
     setTimeout(() => {
       onFormReset()
       dialogVisible.value = false // Close the dialog after success
-      agenciesStore.getAgenciesTable(props.tableOptions) // Fetch updated data after success
     }, 2500)
   } catch (err) {
     formAction.value.formErrorMessage = err.message
@@ -126,10 +125,18 @@ const onSubmit = async () => {
 }
 
 // Trigger Validators
-const onFormSubmit = () => {
-  refVForm.value?.validate().then(({ valid }) => {
-    if (valid) onSubmit()
-  })
+const onFormSubmit = async () => {
+  const { valid } = await refVForm.value?.validate()
+  if (!valid) return
+
+  // Manually run agencyNameValidator
+  const agencyNameValidation = await agencyNameValidator(formData.value.agencyName)
+  if (agencyNameValidation !== true) {
+    formAction.value.formErrorMessage = agencyNameValidation
+    return
+  }
+
+  await onSubmit()
 }
 
 // Form Reset
