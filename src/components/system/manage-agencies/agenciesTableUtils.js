@@ -14,7 +14,7 @@ export const tableHeaders = [
   {
     title: 'Date Created',
     key: 'created_at',
-    sortable: true,
+    sortable: false,
     align: 'center'
   },
   {
