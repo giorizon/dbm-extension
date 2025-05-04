@@ -52,7 +52,6 @@ const onDelete = (id) => {
 
 // Confirm Delete
 const onConfirmDelete = async () => {
-  // Reset Form Action utils
   formAction.value = { ...formActionDefault, formProcess: true }
 
   try {

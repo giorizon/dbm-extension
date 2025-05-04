@@ -13,8 +13,8 @@ const props = defineProps({
   tableOptions: {
     type: Object,
     default: () => ({
-      page: 1, // Start at page 1
-      itemsPerPage: 10 // Show 10 items per page by default
+      page: 1,
+      itemsPerPage: 10
     })
   }
 })
@@ -54,7 +54,7 @@ watch(
 
 // Fetch staff from Supabase
 const fetchStaff = async () => {
-  if (staffList.value.length) return // Prevent fetching if staff list already populated
+  if (staffList.value.length) return
 
   try {
     const { data, error } = await supabase.from('user_profiles').select('id, firstname, lastname')
@@ -74,7 +74,6 @@ onMounted(() => fetchStaff())
 // Computed for handling form state
 const isUpdate = computed(() => Boolean(props.itemData))
 
-// Computed for controlling dialog visibility
 const dialogVisible = computed({
   get: () => props.isDialogVisible,
   set: (val) => emit('update:isDialogVisible', val)
@@ -97,7 +96,7 @@ const onSubmit = async () => {
   formAction.value = { ...formActionDefault, formProcess: true }
 
   const agencyData = {
-    id: props.itemData?.id, // Include ID only if updating
+    id: props.itemData?.id,
     agency_name: formData.value.agencyName,
     user_id: formData.value.particulars.staffID
   }
@@ -105,7 +104,7 @@ const onSubmit = async () => {
   try {
     const response = isUpdate.value
       ? await agenciesStore.updateAgency(agencyData)
-      : await agenciesStore.addAgency(agencyData, props.tableOptions) // Pass tableOptions here
+      : await agenciesStore.addAgency(agencyData, props.tableOptions)
 
     if (response?.error) throw new Error(response.error.message)
 
@@ -115,7 +114,7 @@ const onSubmit = async () => {
 
     setTimeout(() => {
       onFormReset()
-      dialogVisible.value = false // Close the dialog after success
+      dialogVisible.value = false
     }, 2500)
   } catch (err) {
     formAction.value.formErrorMessage = err.message
@@ -143,7 +142,7 @@ const onFormSubmit = async () => {
 const onFormReset = () => {
   formData.value = { ...formDataDefault }
   formAction.value = { ...formActionDefault }
-  dialogVisible.value = false // Close the dialog when resetting the form
+  dialogVisible.value = false
 }
 </script>
 

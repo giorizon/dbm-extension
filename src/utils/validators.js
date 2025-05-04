@@ -148,7 +148,6 @@ export const agencyNameValidator = async (agencyName) => {
 
     if (error) throw new Error(error.message)
 
-    // If data length is greater than 0, it means the agency name already exists
     if (data.length > 0) return 'Agency name already exists.'
 
     return true

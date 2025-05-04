@@ -58,13 +58,12 @@ export const useAgenciesStore = defineStore('agencies', () => {
     }
 
     // Refresh the agencies table with updated data
-    await getAgenciesTable({ page: 1, itemsPerPage: 10 }) // Adjust as needed for pagination
+    await getAgenciesTable({ page: 1, itemsPerPage: 10 })
 
     return data
   }
 
   // Update Agency
-
   async function updateAgency(formData) {
     const { id, agency_name, user_id } = formData
 
@@ -88,7 +87,6 @@ export const useAgenciesStore = defineStore('agencies', () => {
 
   // Delete Agency
   async function deleteAgency(id) {
-    // Perform the delete operation and return the result
     return await supabaseAdmin.from('agency').delete().eq('id', id)
   }
 
