@@ -20,7 +20,9 @@ export const useScoreboardForm = () => {
     status: '',
     remarks: '',
     outputReleasedDocuments: '',
-    cssSubmissionDate: ''
+    cssSubmissionDate: '',
+    downtime: '',
+    typeDowntime:''
   }
   const isSuccess = ref(false)
   const formAction = ref({ ...formActionDefault })

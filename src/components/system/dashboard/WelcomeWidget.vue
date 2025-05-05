@@ -6,6 +6,7 @@ import '@/assets/dashboard.css'
 import { useAuthUserStore } from '@/stores/authUser'
 import receiving_dashboard from '@/components/system/dashboard/ReceivingWelcome.vue'
 import technical_dashboard from '@/components/system/dashboard/TechnicalWelcome.vue'
+import supervisor_dashboard from '@/components/system/dashboard/SupervisorWelcome.vue'
 import admin_dashboard from '@/components/system/dashboard/AdminWelcome.vue'
 import { computed } from 'vue'
 // Use Pinia Store
@@ -23,7 +24,10 @@ const SelectedForm = computed(() => {
     return technical_dashboard
   } else if (userRole.value === 'Administrator') {
     return admin_dashboard  // ✅ Show Admin Form
-  } else {
+  } 
+  else if (userRole.value === 'Supervisor') {
+    return supervisor_dashboard  // ✅ Show Admin Form
+  }else {
     return receiving_dashboard  // Default: Receiving Form
   }
 })

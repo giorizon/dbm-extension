@@ -39,7 +39,7 @@ export function useScoreboardLogic() {
     } catch (err) {
       console.error('Unexpected error fetching Type of Transaction:', err)
     }
-  }
+  } 
 
   // Fetch Nature of Transaction
   const fetchNatureOfTransaction = async () => {
@@ -59,6 +59,7 @@ export function useScoreboardLogic() {
   }
 
 //Fetch type of downtown
+  /*
   const fetchTypeOfDowntime = async () => {
     try {
      
@@ -77,7 +78,7 @@ export function useScoreboardLogic() {
       alert("error2");
       console.error('Unexpected error fetching Type of downtime:', err)
     }
-  }
+  } */
 
 
   const papData = ref("")
@@ -123,7 +124,7 @@ export function useScoreboardLogic() {
   onMounted(() => {
     fetchTypeOfTransaction()
     fetchNatureOfTransaction()
-    fetchTypeOfDowntime()
+    //fetchTypeOfDowntime()
   })
 
   return {
@@ -143,7 +144,7 @@ export function useScoreboardLogic() {
     timeForwardedDialog,
     type_of_transaction,
     nature_of_transaction,
-    type_of_downtime,
+    //type_of_downtime,
     fetchPAP,
     papData,
     requiredValidator

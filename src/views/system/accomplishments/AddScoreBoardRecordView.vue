@@ -1,6 +1,7 @@
 <script setup>
 import ScoreboardForm_receiving from '@/components/system/accomplishments/scoreboard/ScoreboardForm_receiving.vue'
 import ScoreboardForm_technical from '@/components/system/accomplishments/scoreboard/ScoreboardForm_technical.vue'
+import ScoreboardForm_supervisor from '@/components/system/accomplishments/scoreboard/ScoreboardForm_supervisor.vue'
 import ScoreboardForm from '@/components/system/accomplishments/scoreboard/ScoreboardForm.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -23,6 +24,8 @@ const userRole = computed(() => authStore.userRole)
 const SelectedForm = computed(() => {
   if (userRole.value === 'Technical') {
     return ScoreboardForm_technical
+  } else if (userRole.value === 'Supervisor') {
+    return ScoreboardForm_supervisor  // ✅ Show Supervisor Form
   } else if (userRole.value === 'Administrator') {
     return ScoreboardForm  // ✅ Show Admin Form
   } else {

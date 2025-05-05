@@ -3,7 +3,7 @@ import ScoreboardFormDialog from './ScoreboardFormDialog.vue';
 import { requiredValidator } from '@/utils/validators';
 import SuccessDialog from './SuccessDialog.vue';
 import { useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/scoreboard';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch} from 'vue';
 import ErrorDialog from './ErrorDialog.vue';
 import supabase from './supabase'; 
 import { format } from 'date-fns';
@@ -96,19 +96,106 @@ const fetchloginUser = async () => {
   userUUID.value = data?.user?.id; // ✅ Store the UUID
   console.log("User UUID:", userUUID.value);
 };
+const transactionList = ref([]); // Store transactions
+const subtypeList = ref([]);  // For Subtypes
 
+// ✅ Fetch Type of Transactions from Supabase
+const fetchTransactionTypes = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('type_of_transactions_fad')
+      .select('id, name');
+
+    if (error) {
+      console.error('Error fetching transactions:', error);
+      return;
+    }
+
+    // Map the fetched data
+    transactionList.value = data.map(item => ({
+      id: item.id,
+      transaction_name: item.name, // Display name
+    }));
+
+  } catch (err) {
+    console.error('Unexpected error fetching transaction types:', err);
+  }
+};
+// Function to fetch sub-types based on selected transaction type
+const fetchSubTypes = async () => {
+  if (!formData.value.particulars.transactionID) {
+    subtypeList.value = []; // Clear sub-type list if no transaction selected
+    return;
+  }
+
+  let tableName = '';
+
+  if (formData.value.particulars.transactionID === 2) {
+    tableName = 'internal_reports';
+  } else if (formData.value.particulars.transactionID === 3) {
+    tableName = 'external_reports';
+  } else {
+    subtypeList.value = []; // No valid transaction type selected
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('id, name'); // Fetch sub-types
+
+    if (error) {
+      console.error(`Error fetching ${tableName}:`, error);
+      return;
+    }
+
+    subtypeList.value = data.map(item => ({
+      id: item.id,
+      subtype: item.name,
+    }));
+
+  } catch (err) {
+    console.error(`Unexpected error fetching ${tableName}:`, err);
+  }
+};
+
+// Watch for changes in "Type of Transaction" to trigger fetchSubTypes
+watch(() => formData.value.particulars.transactionID, fetchSubTypes);
+
+
+const fetchFADSubUnits = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('fad_sub_units')
+      .select('id, name'); 
+
+    if (error) {
+      console.error('Error fetching FAD Sub Units:', error);
+      return;
+    }
+
+    console.log("FAD Sub Units Data:", data); // ✅ Log fetched data
+
+    fadSubUnits.value = data.map(item => ({
+      id: item.id,
+      name: item.name, // Display name
+    }));
+
+  } catch (err) {
+    console.error('Unexpected error fetching FAD Sub Units:', err);
+  }
+};
 onMounted(() => {
+  fetchTransactionTypes();
   fetchloginUser();
   fetchAgencies();
   fetchStaff(); 
+  fetchFADSubUnits(); 
 });
-// Get the current time in HH:mm format
+
 const selectedTime = ref(format(new Date(), 'HH:mm'))
-const timeDialog = ref(false); // ✅ Add this reactive variable
+const timeDialog = ref(false); 
 
-
-//const dms_number = ref('');
-//const agency = ref('');
 const submitScoreboard = async () => {
   if (!formData.value.dateReceivedRecordSection || !selectedTime.value) {
     alert('❌ Please select both date and time.');
@@ -176,25 +263,8 @@ const submitScoreboard = async () => {
     alert('❌ Unexpected error occurred while saving to the database.');
   }
 };
-const showAlert = () => {
-  // Find selected agency name
-  const selectedAgency = agencies.value.find(a => a.id === formData.value.particulars.agencyID); 
-  const agencyName = selectedAgency ? selectedAgency.agency_name : 'Not Selected';
+const fadSubUnits = ref([]); // Store FAD Sub Units
 
-  // Find selected staff name
-  const selectedStaff = staffList.value.find(s => s.id === formData.value.particulars.staffID);
-  const staffName = selectedStaff ? selectedStaff.name : 'Not Assigned';
-
-  // Show alert with formatted values
-  alert(`
-    📌 DMS Reference Number: ${formData.value.dmsReferenceNumber || 'N/A'}
-    🏛️ Agency Name: ${formData.value.particulars.agencyID}
-    👤 Assigned To: ${formData.value.particulars.staffID}
-    📅 Date Received: ${formData.value.dateReceivedRecordSection || 'N/A'}
-    ⏰ Time Forwarded: ${selectedTime.value || 'N/A'}
-      Login-user: ${userUUID.value}
-  `);
-};
 </script>
 
 <template>
@@ -214,23 +284,45 @@ const showAlert = () => {
           <v-col> 
           </v-col>
         </v-row>
+        <v-row>
+          <v-col>
+            <v-select
+              label="Type of Transaction"
+              :items="transactionList"
+              item-title="transaction_name" 
+              item-value="id"
+              :rules="[requiredValidator]"
+              outlined
+              v-model="formData.particulars.transactionID" 
+            ></v-select>
+          </v-col>
+          <v-col>
+            <v-select
+            label="Sub-Type"
+            :items="subtypeList"
+            item-title="subtype"
+            item-value="id"
+            :rules="[requiredValidator]"
+            outlined
+            v-model="formData.particulars.subTypeID" 
+          ></v-select>
+          </v-col>
+        </v-row>
+        <v-row>
 
+        </v-row>
         <v-row>
           <v-col>
             <v-select
               label="FAD Sub Units"
-              :items="agencies"
-              item-title="agency_name"
-              item-value="id"
+              :items="fadSubUnits" 
+              item-title="name"      
+              item-value="id" 
               :rules="[requiredValidator]"
               outlined
               v-model="formData.particulars.agencyID"   
               @update:model-value="handleAgencyChange"
-            >     
-              <template v-slot:prepend-item>
-               
-              </template>
-            </v-select>
+            />
           </v-col>
           <v-col>
             <v-select

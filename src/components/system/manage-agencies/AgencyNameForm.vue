@@ -43,7 +43,7 @@ const submitForm = async () => {
 
   try {
     // Insert into the agencies table
-    const { data, error } = await supabase.from('agencies').insert([
+    const { data, error } = await supabase.from('agency').insert([
       {
         agency_name: formData.value.agencyName, // Save the agency name
         user_id: formData.value.particulars.staffID // Save the selected staff ID
