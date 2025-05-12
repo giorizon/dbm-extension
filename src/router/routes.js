@@ -8,6 +8,7 @@ import UsersView from '@/views/system/manage-users/UsersView.vue'
 import AgenciesView from '@/views/system/manage-agencies/AgenciesView.vue'
 import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
 import AddScoreBoardIndividualView from '@/views/system/accomplishments/AddScoreboardIndividualView.vue'
+import AddScoreBoardSuperovisorView from '@/views/system/accomplishments/AddScoreboardSupervisorView.vue'
 import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
 import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
 
@@ -48,6 +49,12 @@ export const routes = [
     path: '/add-scoreboard-individual',
     name: 'add-scoreboard-individual',
     component: AddScoreBoardIndividualView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-supervisor',
+    name: 'add-scoreboard-supervisor',
+    component: AddScoreBoardSuperovisorView,
     meta: { requiresAuth: true }
   },
   {

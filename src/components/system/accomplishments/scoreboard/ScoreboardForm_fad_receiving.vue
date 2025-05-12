@@ -12,9 +12,59 @@ const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSucces
 const { prescribedPeriodValues } = useScoreboardData(formData);
 const timeMenu = ref();
 
-
+const processOwners = ref([]);
 const user = ref(null);
+const fetchProcessOwnersBySubUnit = async (subUnitId) => {
+  try {
+    const { data, error } = await supabase
+      .from('fad_process_owner')
+      .select(`
+        id,
+        pos_id,
+        sub_unit_id,
+        position (
+          id,
+          pos_user_profile (
+            user_id,
+            user_profiles (
+              id,
+              firstname,
+              lastname
+            )
+          )
+        )
+      `)
+      .eq('sub_unit_id', subUnitId);
 
+    if (error) {
+      console.error('❌ Error fetching process owners:', error);
+      processOwners.value = [];
+      return;
+    }
+
+    const owners = [];
+
+    data.forEach(owner => {
+      const position = owner.position;
+      if (position?.pos_user_profile) {
+        position.pos_user_profile.forEach(profile => {
+          const user = profile.user_profiles;
+          if (user) {
+            owners.push({
+              id: user.id,
+              name: `${user.firstname} ${user.lastname}`
+            });
+          }
+        });
+      }
+    });
+
+    processOwners.value = owners;
+  } catch (err) {
+    console.error('❌ Unexpected error:', err);
+    processOwners.value = [];
+  }
+};
 const fetchUser = async () => {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
@@ -71,16 +121,17 @@ const fetchStaff = async () => {
   }
 };
 
-// ✅ Auto-Select Assigned Staff when Agency is Chosen
-const handleAgencyChange = () => {
+const handleSubunitChange = async () => {
   if (!formData.value.particulars) {
-    formData.value.particulars = {}; // ✅ Ensure particulars exists
+    formData.value.particulars = {};
   }
 
-  const selectedAgency = agencies.value.find(a => a.id === formData.value.particulars.agencyID);
-  if (selectedAgency) {
-    const assignedUser = staffList.value.find(user => user.id === selectedAgency.user_id);
-    formData.value.particulars.staffID = assignedUser ? assignedUser.id : null;
+  const selectedSubUnitId = formData.value.particulars.agencyID;
+  await fetchProcessOwnersBySubUnit(selectedSubUnitId);
+
+  // Reset staffID if not matched
+  if (!processOwners.value.find(owner => owner.id === formData.value.particulars.staffID)) {
+    formData.value.particulars.staffID = null;
   }
 };
 
@@ -321,19 +372,19 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
               :rules="[requiredValidator]"
               outlined
               v-model="formData.particulars.agencyID"   
-              @update:model-value="handleAgencyChange"
+              @update:model-value="handleSubunitChange"
             />
           </v-col>
           <v-col>
             <v-select
               label="Process Owner"
-              :items="staffList"
+              :items="processOwners"
               item-title="name"
               item-value="id"
               :rules="[requiredValidator]"
               outlined
               v-model="formData.particulars.staffID"
-          ></v-select>
+            />
           </v-col>
         </v-row>
         <v-row>

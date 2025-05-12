@@ -1,15 +1,20 @@
 <script setup>
 import { ref, defineProps, onMounted } from 'vue'
 import { format } from 'date-fns'
+import '@/assets/scoreboard.css'
 import ScoreboardFormDialog from './ScoreboardFormDialog.vue'
 import SuccessDialog from './SuccessDialog.vue'
 import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
+import { watch } from 'vue';
+
+
 
 const validationError = ref("")
 const isSuccess = ref(false)
 const formErrorMessage = ref("")
+
 
 const props = defineProps({
   dmsReferenceNumber: String,
@@ -35,14 +40,33 @@ const {
   requiredValidator
 } = useScoreboardLogic();
 
+const downtimeChecker = ref(false);
+
 formData.dateReceivedRecordSection = ref(format(new Date(), 'yyyy-MM-dd'))
 const dateForwardedValue = ref(format(new Date(), 'yyyy-MM-dd'))
 const selectedTimeForwarded = ref(format(new Date(), 'HH:mm'))
 const timeDialogForwarded = ref(false)
 
 const downtimeValue = ref(null);
-const remark = ref(null);
 const typeDowntime = ref(null);
+const remark = ref(null);
+const downtimeFlag = ref(0); 
+const userUUID = ref(null);
+
+watch(downtimeChecker, (newVal) => {
+  downtimeFlag.value = newVal ? 1 : 0;
+});
+
+const fetchLoggedInUser = async () => {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    console.error("Error fetching user:", error);
+    return;
+  }
+  userUUID.value = data?.user?.id;
+  console.log("✅ User UUID:", userUUID.value);
+};
+
 const type_of_downtime = ref([])
   // Fetch Type of Transactions from Supabase
   const fetchTypeOfDowntime = async () => {
@@ -73,6 +97,7 @@ formData.scoreboardId = props.scoreboardId;
 onMounted(() => {
   formData.dateForwarded = dateForwardedValue.value;
   fetchTypeOfDowntime();
+  fetchLoggedInUser();
   selectedTimeForwarded.value = format(new Date(), 'HH:mm');
 })
 const handleFormSubmit = async () => {
@@ -111,37 +136,52 @@ const handleFormSubmit = async () => {
 
     console.log("Downtime ", downtimeValue.value);
     console.log("Downtime type:", typeDowntime.value);
-    console.log("Remark ", remark.value);
+    console.log("Remark:", remark.value);
 
     console.log("Scoreboard ID Final:", scoreboardId);
 
-    const userSession = await supabase.auth.getSession();
-    console.log("Current user session:", userSession);
-    const session = await supabase.auth.getSession();
-    console.log("Session:", session);
+    if (downtimeFlag.value === 1) {
+      alert("here")
+      const { error: insertError, data: insertedData } = await supabase
+      .from('technical_individual_downtime')
+      .insert([{
+        downtime_id: typeDowntime.value,
+        downtime: downtimeValue.value,
+        scoreboard_id: formData.scoreboardId.value,
+        remark: remark.value
+      }]);
+        console.log("Insert response:", insertedData, insertError);
+        if (insertError) throw insertError;
 
+        const newInsertedId = insertedData[0]?.id;
+        console.log("New technical_individual_downtime ID:", newInsertedId);
+
+        isSuccess.value = true;
+    }
+    alert("Hello");
+    //insert for Scoreboard_supervising table
     const { error: insertError, data: insertedData } = await supabase
-  .from('technical_individual_downtime')
-  .insert([{
-    downtime_id: typeDowntime.value,
-    downtime: downtimeValue.value,
-    scoreboard_id: formData.scoreboardId.value,
-    remark: remark.value 
-  }]);
+      .from('scoreboard_supervising')
+      .insert([{
+        scoreboard_id: formData.scoreboardId.value,
+        date_received: formData.dateForwarded,
+        date_forwarded: null,
+        user_id:  userUUID.value
+      }]);
+        console.log("Insert response:", insertedData, insertError);
+        if (insertError) {
+          console.error("Insert error:", insertError);
+          throw insertError;
+        }
+        const newInsertedId = insertedData[0]?.id;
+        console.log("New technical_individual_downtime ID:", newInsertedId);
 
-    console.log("Insert response:", insertedData, insertError);
-    
-    if (insertError) throw insertError;
-
-    const newInsertedId = insertedData[0]?.id;
-    console.log("New technical_individual_downtime ID:", newInsertedId);
-
-    isSuccess.value = true;
-   
+        isSuccess.value = true;
   } catch (err) {
     formErrorMessage.value = err.message || "Failed to submit the form.";
   } 
 };
+
 </script>
 
 <template>
@@ -151,79 +191,65 @@ const handleFormSubmit = async () => {
         <v-row>
           <v-col>
             <p class="ms-4 text-wrap">
-           <!--Scoreboard ID: <b style="padding-left: 10px;">43>-->   
+              Scoreboard ID: <b style="padding-left: 10px;">{{ scoreboardId }}</b>
             </p>
             <p class="ms-4 text-wrap">
-              DMS Reference Number: <b style="padding-left: 10px;">2025-03534</b>
-               <!--DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>>-->   
+              DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>
             </p>
             <p class="ms-4 text-wrap">
-              Date Received: <b style="padding-left: 10px;">April 23, 2025</b>
-               <!--Date Received: <b style="padding-left: 10px;">{{ dateReceived }}</b>-->   
+              Date Received: <b style="padding-left: 10px;">{{ dateReceived }}</b>
             </p>
             <p class="ms-4 text-wrap">
-              Agency Name: <b style="padding-left: 10px;">Caraga State University</b>
-               <!--Agency Name: <b style="padding-left: 10px;">{{ agencyName }}</b>-->   
+              Agency Name: <b style="padding-left: 10px;">{{ agencyName }}</b>
             </p>
           </v-col>
         </v-row>
+        <v-row>
+          <v-col>
+            <v-checkbox
+              v-model="downtimeChecker"
+              label="Check for Downtime"
+              color="primary"
+            ></v-checkbox>
+            <span v-if="downtimeChecker">
+              <b style = "color: red">Submit with Downtime</b>
+            </span>
+          </v-col>
+        </v-row>
+          <transition name="slide-fade">
+          <v-row v-if="downtimeChecker">
+            <v-col>
+              <v-text-field
+                v-model="downtimeValue"
+                label="Downtime"
+                type="number"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-select 
+                label="Type of Downtime" 
+                :items="type_of_downtime" 
+                item-title="title" 
+                item-value="value"
+                :rules="[requiredValidator]" 
+                outlined 
+                v-model="typeDowntime"
+              ></v-select>
+            </v-col>
+          </v-row>
+          </transition>
+          <transition name="slide-fade">
+          <v-row v-if="downtimeChecker">
+            <v-col>
+              <v-text-field
+                v-model="remark"
+                label="Downtime Remark"
+                type="text"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </transition>
 
-        <v-row>
-          <v-col>
-            <v-select 
-              label="Nature of Transaction" 
-              :items="nature_of_transaction" 
-              item-title="title" 
-              item-value="value"
-              :rules="[requiredValidator]" 
-              outlined 
-              v-model="formData.particulars.nature"
-              @update:modelValue="fetchPAP"
-            ></v-select>
-          </v-col>
-          <v-col>
-            <v-select 
-              label="Type of Transaction" 
-              :items="type_of_transaction" 
-              item-title="title" 
-              item-value="value"
-              :rules="[requiredValidator]" 
-              outlined 
-              v-model="formData.particulars.type">
-            </v-select>
-          </v-col>
-        </v-row>
-
-        <v-row>
-          
-          <v-col>
-            <v-text-field
-              v-model="downtimeValue"
-              label="Downtime"
-              type="number"
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <v-select 
-              label="Type of Downtime" 
-              :items="type_of_downtime" 
-              item-title="title" 
-              item-value="value"
-              :rules="[requiredValidator]" 
-              outlined 
-              v-model="typeDowntime">
-            </v-select>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-text-field
-              v-model="remark"
-              label="Downtime"
-              type="number"
-            ></v-text-field>
-          </v-col>
-        </v-row>
         <v-row>
           <v-col cols="5">
              <v-date-input 

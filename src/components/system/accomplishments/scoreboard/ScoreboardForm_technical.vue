@@ -173,13 +173,10 @@ const handleFormSubmit = async () => {
           console.error("Insert error:", insertError);
           throw insertError;
         }
-
         const newInsertedId = insertedData[0]?.id;
         console.log("New technical_individual_downtime ID:", newInsertedId);
 
         isSuccess.value = true;
-        
-        
   } catch (err) {
     formErrorMessage.value = err.message || "Failed to submit the form.";
   } 
