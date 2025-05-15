@@ -128,8 +128,12 @@ const onFormSubmit = async () => {
   const { valid } = await refVForm.value?.validate()
   if (!valid) return
 
-  // Manually run agencyNameValidator
-  const agencyNameValidation = await agencyNameValidator(formData.value.agencyName)
+  // Use selected staff ID from formData
+  const agencyNameValidation = await agencyNameValidator(
+    formData.value.agencyName,
+    formData.value.particulars.staffID
+  )
+
   if (agencyNameValidation !== true) {
     formAction.value.formErrorMessage = agencyNameValidation
     return

@@ -137,18 +137,20 @@ export const imageValidator = (value) => {
 }
 
 // 👉 Agency Name Unique Validator
-export const agencyNameValidator = async (agencyName) => {
+export const agencyNameValidator = async (agencyName, userId) => {
   if (isEmpty(agencyName)) return 'Agency name is required'
+  if (!userId) return 'Assigned staff is required'
 
   try {
     const { data, error } = await supabase
       .from('agency')
-      .select('agency_name')
+      .select('id')
       .eq('agency_name', agencyName)
+      .eq('user_id', userId)
 
     if (error) throw new Error(error.message)
 
-    if (data.length > 0) return 'Agency name already exists.'
+    if (data.length > 0) return 'Agency name with this assigned staff already exists.'
 
     return true
   } catch (err) {
