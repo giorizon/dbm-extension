@@ -37,12 +37,12 @@ onMounted(() => {
 
 const submitForm = async () => {
   if (!formData.value.agencyName || !formData.value.particulars.staffID) {
-    alert('❌ Please provide both agency name and staff selection!')
+    alert('❌ Please provide both agency name and assigned staff!')
     return
   }
 
   try {
-    // Insert into the agencies table
+    // Insert into the agency table
     const { data, error } = await supabase.from('agency').insert([
       {
         agency_name: formData.value.agencyName, // Save the agency name
@@ -94,7 +94,7 @@ const submitForm = async () => {
 
     <v-row dense>
       <v-spacer></v-spacer>
-      <v-btn class="mr-4 mb-6 pt-2" type="submit" color="red-darken-4" @click="submitForm">
+      <v-btn class="mr-4 mb-6 py-2" type="submit" color="red-darken-4" @click="submitForm">
         Submit Form
       </v-btn>
     </v-row>

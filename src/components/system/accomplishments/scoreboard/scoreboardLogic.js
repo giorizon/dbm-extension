@@ -1,30 +1,19 @@
 import { ref, onMounted } from 'vue'
-import { format } from 'date-fns'
 import supabase from './supabase'
-import {useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/scoreboard'
+
+import { useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/scoreboard'
 import { requiredValidator } from '@/utils/validators'
 
 export function useScoreboardLogic() {
-  const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess, refVForm } = useScoreboardForm()
+ const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess, refVForm } = useScoreboardForm()
   const { options, prescribedPeriodValues } = useScoreboardData(formData)
 
-  // Initialize Date Pickers with Current Date
-  const dateReceivedRecordSection = ref(format(new Date(), 'yyyy-MM-dd'))
-  const dateForwarded = ref(format(new Date(), 'yyyy-MM-dd'))
-
-  // Initialize Time Pickers with Current Time
-  const timeReceived = ref(format(new Date(), 'HH:mm'))
-  const timeForwarded = ref(format(new Date(), 'HH:mm'))
-
-  // Separate Dialogs for Time Pickers
-  const timeReceivedDialog = ref(false)
-  const timeForwardedDialog = ref(false)
-
+  
   const type_of_transaction = ref([])
   const nature_of_transaction = ref([])
-
-  const type_of_downtime = ref([])
   // Fetch Type of Transactions from Supabase
+
+  
   const fetchTypeOfTransaction = async () => {
     try {
       const { data, error } = await supabase.from('type_of_transactions').select('top_id, transaction_type')
@@ -58,28 +47,7 @@ export function useScoreboardLogic() {
     }
   }
 
-//Fetch type of downtown
-  /*
-  const fetchTypeOfDowntime = async () => {
-    try {
-     
-      const { data, error } = await supabase.from('type_of_downtime').select('id, name')
-      if (error) {
-        alert("error1");
-        console.error('Error fetching Type of Downtime:', error)
-        return
-      }
-      type_of_downtime.value = data.map(item => ({
-        title: item.name,
-        value: item.id
-      }))
-      console.log("Fetched Downtime Types:", data);
-    } catch (err) {
-      alert("error2");
-      console.error('Unexpected error fetching Type of downtime:', err)
-    }
-  } */
-
+const typeOfDowntime = ref(null)
 
   const papData = ref("")
 
@@ -120,7 +88,30 @@ export function useScoreboardLogic() {
       console.error('Unexpected error fetching PAP:', err)
     }
   }
+  const fetchToTDowntime = async (totId) => {
+    console.log("type of transaction id:", totId)
+    try {
+      const { data: viewData, error: viewError } = await supabase
+        .from('view_tot_downtime')
+        .select('downtime_id')
+        .eq('type_id', totId)  // ✅ fixed here
 
+      if (viewError) {
+        console.error('❌ Error fetching downtime_id:', viewError)
+        return
+      }
+
+      if (!viewData || viewData.length === 0) {
+        typeOfDowntime.value = ""
+        return
+      }
+
+      typeOfDowntime.value = viewData[0].downtime_id
+      console.log("✅ The downtime_id for ToT is", typeOfDowntime.value)
+    } catch (err) {
+      console.error('❌ Unexpected error fetching ToT downtime:', err)
+    }
+  }
   onMounted(() => {
     fetchTypeOfTransaction()
     fetchNatureOfTransaction()
@@ -136,15 +127,11 @@ export function useScoreboardLogic() {
     refVForm,
     options,
     prescribedPeriodValues,
-    dateReceivedRecordSection,
-    dateForwarded,
-    timeReceived,
-    timeForwarded,
-    timeReceivedDialog,
-    timeForwardedDialog,
-    type_of_transaction,
+     type_of_transaction,
     nature_of_transaction,
-    //type_of_downtime,
+    dateForwarded: null,
+    fetchToTDowntime,
+    typeOfDowntime,
     fetchPAP,
     papData,
     requiredValidator

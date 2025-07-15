@@ -8,12 +8,13 @@ import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
 import { watch } from 'vue';
-
 const validationError = ref("")
 const isSuccess = ref(false)
 const formErrorMessage = ref("")
 const userDivisionId = ref(null)
-const assignableUsers = ref([]);
+const DivisionChiefId = ref(null)
+const selDateForwarded = ref(null);
+const dateForwardedDialog = ref(false);
 
 const props = defineProps({
   dmsReferenceNumber: String,
@@ -30,11 +31,11 @@ const {
   formAction,
  // isSuccess,
   refVForm,
+  options,
   prescribedPeriodValues,
   type_of_transaction,
   //type_of_downtime,
   nature_of_transaction,
-  fetchToTDowntime,
   fetchPAP,
   papData,
   requiredValidator
@@ -42,30 +43,23 @@ const {
 
 const downtimeChecker = ref(false);
 
-
+formData.dateReceivedRecordSection = ref(format(new Date(), 'yyyy-MM-dd'))
+const dateForwardedValue = ref(format(new Date(), 'yyyy-MM-dd'))
 const selectedTimeForwarded = ref(format(new Date(), 'HH:mm'))
 const timeDialogForwarded = ref(false)
 
 const downtimeValue = ref(null);
+const typeDowntime = ref(null);
 const remark = ref(null);
 const downtimeFlag = ref(0); 
 const userUUID = ref(null);
-const selectedAssignee = ref(null);
-const selectedAssigneeRole = ref(null);
-const selDateForwarded = ref(null);
-const dateForwardedDialog = ref(false);
+const processId = props.processId;
+const scoreboardId = props.scoreboardId;
 
 watch(downtimeChecker, (newVal) => {
   downtimeFlag.value = newVal ? 1 : 0;
 });
 
-function handleAssigneeChange(value) {
-  const selected = assignableUsers.value.find(user => user.value === value);
-  if (selected) {
-    selectedAssigneeRole.value = selected.role;
-    console.log("Selected role:", selectedAssigneeRole.value);
-  }
-}
 const fetchLoggedInUser = async () => {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
@@ -76,7 +70,6 @@ const fetchLoggedInUser = async () => {
   console.log("✅ User UUID:", userUUID.value);
 };
 
-
 const fetchUserDivisionId = async () => {
   if (!userUUID.value) {
     console.error("User UUID is not available.");
@@ -85,27 +78,67 @@ const fetchUserDivisionId = async () => {
 
   const { data, error } = await supabase
     .from('technical_division_user')
-    .select('td_id') // Replace 'td_id' with the actual column name if different
+    .select('td_id') 
     .eq('user_id', userUUID.value)
-    .single(); // Use .single() if each user has only one role/row
+    .single(); 
 
   if (error) {
     console.error("Error fetching division ID:", error);
     return;
   }
-
   userDivisionId.value = data?.td_id;
   console.log("✅ Retrieved User Division ID:", userDivisionId.value);
 };
 
+const releasing_id = ref(null);
+const fetchReleasingId = async () => {
+
+  const { data, error } = await supabase
+    .from('user_profile_role')
+    .select('user_id') 
+    .eq('user_role', 'Releasing Data')
+    .single(); 
+
+  if (error) {
+    console.error("Error fetching releasing ID:", error);
+    return;
+  }
+  releasing_id.value = data?.user_id;
+  console.log("✅ Retrieved User releasing ID:",releasing_id.value);
+};
+const fetchDivisionChiefId = async () => {
+  if (!userDivisionId.value) {
+    console.error("User Division ID is not available.");
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('technical_division_user_roles')
+    .select('user_id') 
+    .eq('user_role', 'Division Chief')
+    .eq('division_id', userDivisionId.value);
+
+  if (error) {
+    console.error("Error fetching division chief ID:", error);
+    return;
+  }
+
+  if (data.length === 0) {
+    console.warn("No Division Chief found for this division.");
+    return;
+  }
+
+  DivisionChiefId.value = data[0].user_id;
+  console.log("✅ Retrieved User Division Chief ID:", DivisionChiefId.value);
+};
 const type_of_downtime = ref([])
   // Fetch Type of Transactions from Supabase
-  const fetchTypeOfDowntime = async () => {
+const fetchTypeOfDowntime = async () => {
     try {
      
       const { data, error } = await supabase.from('type_of_downtime').select('id, name')
       if (error) {
-        alert("error1");
+     
         console.error('Error fetching Type of Downtime:', error)
         return
       }
@@ -115,7 +148,7 @@ const type_of_downtime = ref([])
       }))
       console.log("Fetched Downtime Types:", data);
     } catch (err) {
-      alert("error2");
+    
       console.error('Unexpected error fetching Type of downtime:', err)
     }
   } 
@@ -125,43 +158,21 @@ formData.agencyName = props.agencyName;
 formData.scoreboardId = props.scoreboardId;
 formData.processId = props.processId;
 
-
-const fetchUsersByDivision = async () => {
-  if (!userDivisionId.value) {
-    console.error("No division ID available");
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from('technical_division_user_roles') // your view or table
-    .select('user_id, supervisor, user_role')
-    .eq('division_id', userDivisionId.value);
-
-  if (error) {
-    console.error("Error fetching users:", error);
-    return;
-  }
-
-  assignableUsers.value = data
-  .filter(user => user.user_id !== userUUID.value)
-  .map(user => ({
-    title: `[${user.user_role}] - ${user.supervisor}`,
-    value: user.user_id,
-    role: user.user_role  // <-- Add this line
-  }));
-};
-
 // Ensure default values are set on component mount
 onMounted(async () => {
-  await fetchLoggedInUser(); 
-  await fetchUserDivisionId();   
-  await fetchUsersByDivision();
-  await fetchTypeOfDowntime ();
+  formData.dateForwarded = dateForwardedValue.value;
+  fetchTypeOfDowntime();
+  await fetchLoggedInUser();      
+  await fetchUserDivisionId();    
+  await fetchDivisionChiefId();
+  await fetchReleasingId();
   selectedTimeForwarded.value = format(new Date(), 'HH:mm');
 });
 
-const handleFormSubmit = async () => {
-  console.log("Date selected: ", selDateForwarded.value);
+const handleFormSubmit = async () => { 
+
+ // const scoreboardId = formData.scoreboardId.value;
+   console.log("Date selected: ", selDateForwarded.value);
   const dateForFormatting = selDateForwarded.value
       ? format(new Date(selDateForwarded.value), "yyyy-MM-dd") 
       : null; 
@@ -175,113 +186,79 @@ const handleFormSubmit = async () => {
     return;
   }
 
-  console.log("📅 Selected Date (after new Date()):", dateForFormatting);
-console.log("📅 Selected Date:", dateForFormatting);
- const combinedDateTime = `${dateForFormatting}T${selectedTimeForwarded.value}:00`;
+  const combinedDateTime = `${dateForFormatting}T${selectedTimeForwarded.value}:00`;
   console.log("📅 Combined DateTime:", combinedDateTime);
-
+ 
   validationError.value = "";
   formErrorMessage.value = "";
+  // 🆕 Safely extract from formData
 
-  if (!formData.scoreboardId?.value) {
-    validationError.value = "❌ Scoreboard ID is required";
-    return;
-  }
+  //const typeDowntime = formData.typeDowntime || null;
 
-  const scoreboardId = formData.scoreboardId.value;
-
+  console.log("Scoreboard ID is ", scoreboardId);
   const updateData = {
     date_forwarded: combinedDateTime,
-    status: 'Accepted'
+    status: "Accepted"
   };
-
   try {
-    console.log("🔄 Attempting to update scoreboard_technical_process with:", updateData, "for ID:", scoreboardId);
+    const { data, error: updateError } = await supabase
+        .from('scoreboard_technical_process')
+        .update(updateData)
+        .eq('id', formData.processId)
+        .select();
+   
+    if (updateError) throw updateError;
 
-    const { error: updateError } = await supabase
-      .from('scoreboard_technical_process')
-      .update(updateData)
-      .eq('id', formData.processId.value);
-
-    if (updateError) {
-      console.error("❌ Update failed:", updateError);
-      throw updateError;
+    if (!data || data.length === 0) {
+      throw new Error("Update failed: No matching process ID found.");
     }
 
-    console.log("✅ Update successful.");
+    console.log("Downtime ", downtimeValue.value);
+    console.log("Remark:", remark.value);
 
-    // Additional debug info
-    console.log("🕒 Downtime value:", downtimeValue.value);
-    console.log("🗒️ Remark:", remark.value);
-    console.log("🎯 Scoreboard ID Final:", scoreboardId);
+    console.log("Scoreboard ID Final:", scoreboardId);
 
     if (downtimeFlag.value === 1) {
-      const downtimeInsertPayload = {
-        downtime: downtimeValue.value,
-        process_id: formData.processId.value,
-        remark: remark.value
-  };
-
-      console.log("➕ Attempting to insert into technical_downtime with:", downtimeInsertPayload);
-
       const { error: insertError, data: insertedData } = await supabase
-        .from('technical_downtime')
-        .insert([downtimeInsertPayload]);
+      .from('technical_downtime')
+      .insert([{
+        downtime: downtimeValue.value,
+        process_id: formData.processId,
+        remark: remark.value
+      }])
+       .select();
+        console.log("Insert response:", insertedData, insertError);
+        if (insertError) throw insertError;
 
-      if (insertError) {
-        console.error("❌ Insert into technical_downtime failed:", insertError);
-        throw insertError;
-      }
+        const newInsertedId = insertedData[0]?.id;
+        console.log("New technical_individual_downtime ID:", newInsertedId);
 
-      console.log("✅ Insert into technical_downtime successful:", insertedData);
+        isSuccess.value = true;
     }
-
-    const processInsertPayload = {
-      scoreboard_id: scoreboardId,
-      status: 'Pending',
-      owner_id: selectedAssignee.value,
-      from_id: userUUID.value,
-      level: selectedAssigneeRole.value,
-      date_received: combinedDateTime,
-      date_forwarded: null
-    };
-
-    console.log("➕ Attempting to insert into scoreboard_technical_process with:", processInsertPayload);
-
-    const { error: insertProcessError, data: insertedProcessData } = await supabase
+    const { error: insertError, data: insertedData } = await supabase
       .from('scoreboard_technical_process')
-      .insert([processInsertPayload]);
-
-    if (insertProcessError) {
-      console.error("❌ Insert into scoreboard_technical_process failed:", insertProcessError);
-      throw insertProcessError;
-    }
-    console.log("✅ Insert into scoreboard_technical_process successful:", insertedProcessData);
-
-    //adding to for type of transaction and nature of transaction
-    console.log("Nature of transaction id", formData.value.particulars.nature);
-    console.log("Type of transaction id", formData.value.particulars.type);
-    
-    const naturetypeInsertPayload = {
-      not_id: formData.value.particulars.nature,
-      tot_id: formData.value.particulars.type,
-      scoreboard_id: scoreboardId
-    };  
-    const { error: errorTotNature, data: insertedTotNature} = await supabase
-      .from('scoreboard_type_nature')
-      .insert([naturetypeInsertPayload]);
-    if (errorTotNature) {
-      console.error("❌ Insert into scoreboard_type_nature failed:", errorTotNature);
-      throw errorTotNature;
-    }
-    console.log("✅ Insert into scoreboard_type_nature successful:", insertedTotNature);
-    isSuccess.value = true;
-
+      .insert([{
+        scoreboard_id: formData.scoreboardId,
+        status: 'Pending',
+        owner_id: releasing_id.value,
+        from_id: userUUID.value,
+        level: 'Releasing',
+        date_received: combinedDateTime,
+        date_forwarded: null
+      }])
+        .select();
+        console.log("Insert response:", insertedData, insertError);
+        if (insertError) {
+          console.error("Insert error:", insertError);
+          throw insertError;
+        }
+        
+        isSuccess.value = true;
   } catch (err) {
-    console.error("🔥 Form submission error:", err);
-    formErrorMessage.value = err.message || "Failed to submit the form.";
+    formErrorMessage.value = err.message || "Failed to submit the form."; 
   }
 };
+
 </script>
 
 <template>
@@ -290,7 +267,7 @@ console.log("📅 Selected Date:", dateForFormatting);
       <v-form ref="refVForm" @submit.prevent="handleFormSubmit">
         <v-row>
           <v-col>
-           <p class="ms-4 text-wrap">
+            <p class="ms-4 text-wrap">
               Process ID: <b style="padding-left: 10px;">{{ processId }}</b>
             </p>
             <p class="ms-4 text-wrap">
@@ -319,56 +296,6 @@ console.log("📅 Selected Date:", dateForFormatting);
             </span>
           </v-col>
         </v-row>
-        <v-row>
-          <v-col>
-            <v-select 
-              label="Nature of Transaction" 
-              :items="nature_of_transaction" 
-              item-title="title" 
-              item-value="value"
-              :rules="[requiredValidator]" 
-              outlined 
-              v-model="formData.particulars.nature"
-              @update:modelValue="fetchPAP"
-            ></v-select>
-          </v-col>
-          <v-col>
-            <v-text-field
-              :rules="[requiredValidator]"
-              label="PAP"
-              v-model="papData"
-              outlined
-              readonly
-            />
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-select 
-              label="Type of Transaction" 
-              :items="type_of_transaction" 
-              item-title="title" 
-              item-value="value"
-              :rules="[requiredValidator]" 
-              outlined 
-              v-model="formData.particulars.type"
-              @update:modelValue="fetchToTDowntime"
-              >
-            </v-select>
-          </v-col>
-           <v-col>
-            <v-select 
-                label="Assign to" 
-                :items="assignableUsers" 
-                item-title="title" 
-                item-value="value"
-                :rules="[requiredValidator]" 
-                outlined 
-                v-model="selectedAssignee"
-                @update:modelValue="handleAssigneeChange"
-              />
-          </v-col>
-          </v-row>
           <transition name="slide-fade">
           <v-row v-if="downtimeChecker">
             <v-col>
@@ -378,7 +305,7 @@ console.log("📅 Selected Date:", dateForFormatting);
                 type="number"
               ></v-text-field>
             </v-col>
-            <v-col>
+             <v-col>
               <v-text-field
                 v-model="remark"
                 label="Downtime Remark"
@@ -389,25 +316,25 @@ console.log("📅 Selected Date:", dateForFormatting);
           </transition>
         <v-row>
           <v-col cols="5">
-          <v-text-field
-              v-model="selDateForwarded"
-              label="Date Forwarded"
-              prepend-icon="mdi-calendar"
-              readonly
-               :value="selDateForwarded ? format(new Date(selDateForwarded), 'yyyy-MM-dd') : ''"
-              @click="dateForwardedDialog = true"
-            ></v-text-field>
-        <v-dialog v-model="dateForwardedDialog" max-width="400">
-          <v-card>
-            <v-card-title>Select Date Forwarded</v-card-title>
-            <v-card-text>
-              <v-date-picker 
-                v-model="selDateForwarded" 
-                @update:model-value="dateForwardedDialog = false"
-              />
-            </v-card-text>
-          </v-card>
-        </v-dialog>
+            <v-text-field
+                v-model="selDateForwarded"
+                label="Date Forwarded"
+                prepend-icon="mdi-calendar"
+                readonly
+                :value="selDateForwarded ? format(new Date(selDateForwarded), 'yyyy-MM-dd') : ''"
+                @click="dateForwardedDialog = true"
+              ></v-text-field>
+              <v-dialog v-model="dateForwardedDialog" max-width="400">
+                <v-card>
+                  <v-card-title>Select Date Forwarded</v-card-title>
+                  <v-card-text>
+                    <v-date-picker 
+                      v-model="selDateForwarded" 
+                      @update:model-value="dateForwardedDialog = false"
+                    />
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
           </v-col>
           <v-col cols="5">
             <!-- Clickable Time Input -->
@@ -420,6 +347,7 @@ console.log("📅 Selected Date:", dateForFormatting);
             ></v-text-field>
           </v-col>
         </v-row>
+        
         <!-- Time Picker Dialog for Date Forwarded -->
         <v-dialog v-model="timeDialogForwarded" max-width="400">
         <v-card>
@@ -437,6 +365,7 @@ console.log("📅 Selected Date:", dateForFormatting);
           </v-card-actions>
         </v-card>
       </v-dialog>
+
         <v-row v-if="prescribedPeriodValues.length !== 0">
           <v-col v-for="(value, _) in prescribedPeriodValues" :key="value.prescribed_periods_id">
             <ScoreboardFormDialog 
@@ -449,19 +378,21 @@ console.log("📅 Selected Date:", dateForFormatting);
             />
           </v-col>
         </v-row>
+
         <v-row dense>
           <v-spacer></v-spacer>
           <v-alert v-if="validationError" type="error" class="mb-3">
             {{ validationError }}
           </v-alert>
           <v-btn 
-            text="Submit Form" 
+            text="Submit to Releasing" 
             type="submit" 
             color="green-darken-4"
           >
           </v-btn>
         </v-row>
       </v-form>
+
       <SuccessDialog @close-dialog="isSuccess = false" :isActive="isSuccess" />
       <ErrorDialog 
         :isOpen="formAction.formErrorMessage.length !== 0"

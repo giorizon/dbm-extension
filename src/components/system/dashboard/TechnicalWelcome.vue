@@ -48,18 +48,15 @@ const fetchScoreboardData = async () => {
 
   try {
     const { data, error } = await supabase
-      .from('scoreboard_receiving')
-      .select(`
-        dms_reference_number,
-        date_received,
-        agency:agency_id ( agency_name ),
-        scoreboard_individual ( id, user_id, status )
-      `);
+      .from('individualwelcome')
+      .select('*')
+      .eq('owner_id', userUUID.value)  
+      .eq('status', 'Pending');
 
-    console.log("🔍 Raw Supabase response:", JSON.stringify(data, null, 2));
+    console.log("🔍 Raw Supabase view response:", JSON.stringify(data, null, 2));
 
     if (error) {
-      console.error("Error fetching scoreboard data:", error);
+      console.error("❌ Error fetching data from view:", error);
       return;
     }
 
@@ -68,27 +65,17 @@ const fetchScoreboardData = async () => {
       return;
     }
 
-    // ✅ Check if `scoreboard_individual` exists
-    const filteredData = data.filter(row => 
-      row.scoreboard_individual && 
-      Array.isArray(row.scoreboard_individual) && 
-      row.scoreboard_individual.some(tech => 
-        tech.status.toLowerCase() === 'pending' &&
-        tech.user_id === userUUID.value
-      )
-    );
-
-    console.log("✅ Filtered scoreboard data:", JSON.stringify(filteredData, null, 2));
-
-    scoreboardData.value = filteredData.map(row => ({
+    // ✅ Format and assign the filtered data
+    scoreboardData.value = data.map(row => ({
       dms_reference_number: row.dms_reference_number,
-      date_received: formatDate(row.date_received),
-      agency_name: row.agency?.agency_name || "N/A",
-      status: row.scoreboard_individual?.length ? row.scoreboard_individual[0].status : "N/A",
-      scoreboard_individual_id: row.scoreboard_individual?.length ? row.scoreboard_individual[0].id : null
+      date_received: row.date_received, 
+      agency_name: row.agency_name || "N/A",
+      status: "Pending",  // You can customize or include status in the view if needed
+      scoreboard_id: row.scoreboard_id,
+      process_id: row.process_id
     }));
 
-    console.log("✅ Final scoreboardData:", JSON.stringify(scoreboardData.value, null, 2));
+    console.log("✅ Final scoreboardData from view:", JSON.stringify(scoreboardData.value, null, 2));
   } catch (err) {
     console.error("Unexpected error fetching scoreboard data:", err);
   } finally {
@@ -107,8 +94,8 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const goToAddScoreboard = (item) => {
-  if (!item.scoreboard_individual_id) {
-    console.warn("⛔ Missing scoreboard_individual_id, cannot proceed.");
+  if (!item.scoreboard_id) {
+    console.warn("⛔ Missing scoreboard_id, cannot proceed.");
     return;
   }
   router.push({
@@ -117,7 +104,8 @@ const goToAddScoreboard = (item) => {
       dms_reference_number: item.dms_reference_number,
       date_received: item.date_received,
       agency_name: item.agency_name,
-      scoreboard_individual_id: item.scoreboard_individual_id
+      scoreboard_id: item.scoreboard_id,
+      process_id: item.process_id
     }
   });
 };

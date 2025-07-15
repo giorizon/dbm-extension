@@ -44,6 +44,7 @@ export const useScoreboardForm = () => {
     formAction.value.formProcess = true;
   
     refVForm.value?.validate().then(async ({ valid }) => {
+      alert("Hello");
       if (valid) {
         // Insert the new scoreboard data first
        /* const { error } = await scoreboardStore.insertScoreboardData({

@@ -1,0 +1,146 @@
+.styled-scoreboard-table table {
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid #000;
+}
+.styled-scoreboard-table thead th {
+  text-align: center !important; /* Use !important to override Vuetify's default styles */
+  vertical-align: middle !important;
+}
+.styled-scoreboard-table th,
+.styled-scoreboard-table td {
+  border: 1px solid #000;
+  padding: 8px;
+  vertical-align: top;
+  text-align: center;
+}
+
+.styled-scoreboard-table th {
+  background-color: #dbe9f4; /* Light blue */
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.styled-scoreboard-table th small {
+  font-weight: normal;
+  font-size: 12px;
+  display: block;
+  color: #444;
+}
+
+.styled-scoreboard-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+.signatory-container{
+    padding-top: 70px;
+      margin-top: 40px;
+
+}
+.signatory-block{
+  margin-top: 40px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+.signatory-name {
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  display: inline-block;
+  
+}
+.header-name{
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 20px;
+}
+.header-title1{
+     font-weight: bold;
+    text-transform: uppercase;
+    font-size: 15px;
+}
+.header-title2{
+     font-weight: bold;
+    font-size: 15px;
+}
+.header-selector{
+    width: 170px;
+    height: 50px;
+}
+signatory-block {
+  margin-bottom: 5px; /* Adjust as needed */
+}
+
+.signatory-name {
+  font-weight: bold;
+  margin-top: 10px; /* Space between label and name */
+  text-decoration: underline; /* Example for signatory names */
+}
+@media print {
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .v-container,
+  .v-col,
+  .v-row {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .signatory-container {
+    display: flex !important;
+    justify-content: space-between;
+  }
+  .signatory-container .v-col {
+    flex: 1 1 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+    .signatory-block {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ard{
+   position: relative;
+  left: 150px;
+  }
+  .rd{
+      position: relative;
+  left: 300px;
+  }
+  .print-container {
+    max-width: 100% !important; /* Override Vuetify's default max-width for containers */
+    padding: 0 !important; /* Remove any padding that might limit width */
+  }
+  .print-row {
+    width: 100% !important;
+    margin: 0 !important; 
+    flex-wrap: nowrap !important; 
+  }
+  .v-col {
+    flex-basis: 0 !important; 
+    flex-grow: 1 !important; 
+    max-width: 100% !important;
+    box-sizing: border-box; 
+    padding: 0 15px !important; 
+    text-align: left; 
+  }
+  .signatory-block {
+    
+    font-size: 0.9em;
+    margin-bottom: 3px;
+  }
+
+  .signatory-name {
+    font-size: 1em;
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+
+  /* Adjust line height for better readability on print */
+  div {
+    line-height: 1.3;
+  }
+}

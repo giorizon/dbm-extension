@@ -10,61 +10,11 @@ import { format } from 'date-fns';
 
 const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess, refVForm } = useScoreboardForm();
 const { prescribedPeriodValues } = useScoreboardData(formData);
-const timeMenu = ref();
+
 
 const processOwners = ref([]);
 const user = ref(null);
-const fetchProcessOwnersBySubUnit = async (subUnitId) => {
-  try {
-    const { data, error } = await supabase
-      .from('fad_process_owner')
-      .select(`
-        id,
-        pos_id,
-        sub_unit_id,
-        position (
-          id,
-          pos_user_profile (
-            user_id,
-            user_profiles (
-              id,
-              firstname,
-              lastname
-            )
-          )
-        )
-      `)
-      .eq('sub_unit_id', subUnitId);
 
-    if (error) {
-      console.error('❌ Error fetching process owners:', error);
-      processOwners.value = [];
-      return;
-    }
-
-    const owners = [];
-
-    data.forEach(owner => {
-      const position = owner.position;
-      if (position?.pos_user_profile) {
-        position.pos_user_profile.forEach(profile => {
-          const user = profile.user_profiles;
-          if (user) {
-            owners.push({
-              id: user.id,
-              name: `${user.firstname} ${user.lastname}`
-            });
-          }
-        });
-      }
-    });
-
-    processOwners.value = owners;
-  } catch (err) {
-    console.error('❌ Unexpected error:', err);
-    processOwners.value = [];
-  }
-};
 const fetchUser = async () => {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
@@ -77,6 +27,7 @@ const fetchUser = async () => {
 onMounted(() => {
   fetchUser();
   fetchAgencies();
+  fetchProcessOwners();
   fetchStaff();
 });
 
@@ -120,21 +71,6 @@ const fetchStaff = async () => {
     console.error('Unexpected error fetching staff:', err);
   }
 };
-
-const handleSubunitChange = async () => {
-  if (!formData.value.particulars) {
-    formData.value.particulars = {};
-  }
-
-  const selectedSubUnitId = formData.value.particulars.agencyID;
-  await fetchProcessOwnersBySubUnit(selectedSubUnitId);
-
-  // Reset staffID if not matched
-  if (!processOwners.value.find(owner => owner.id === formData.value.particulars.staffID)) {
-    formData.value.particulars.staffID = null;
-  }
-};
-
 const userUUID = ref(null);
 
 // ✅ Fetch the logged-in user's UUID
@@ -149,6 +85,32 @@ const fetchloginUser = async () => {
 };
 const transactionList = ref([]); // Store transactions
 const subtypeList = ref([]);  // For Subtypes
+
+//fetch process owner
+const fetchProcessOwners = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('fad_process_owners_view')
+      .select('*');
+    console.log('Fetched process owner data:', data);
+    if (error) {
+      console.error('Error fetching process owners:', error);
+      return;
+    }
+
+    processOwners.value = data.map(user => {
+      console.log('user_id:', user.user_id); // 👈 Logs the UUID
+      return {
+        id: user.id,
+        name: `${user.pos} - ${user.firstname} ${user.lastname}`.trim()
+      };
+    });
+
+    console.log('🏷️ Owner ID:', user.value.id);
+  } catch (err) {
+    console.error('Unexpected error fetching process owners:', err);
+  }
+};
 
 // ✅ Fetch Type of Transactions from Supabase
 const fetchTransactionTypes = async () => {
@@ -181,15 +143,17 @@ const fetchSubTypes = async () => {
 
   let tableName = '';
 
-  if (formData.value.particulars.transactionID === 2) {
+  if (formData.value.particulars.transactionID === 1) {
+    tableName = 'citizen_charter';
+    
+  } else if (formData.value.particulars.transactionID === 2) {
     tableName = 'internal_reports';
-  } else if (formData.value.particulars.transactionID === 3) {
+  }else if (formData.value.particulars.transactionID === 3) {
     tableName = 'external_reports';
   } else {
     subtypeList.value = []; // No valid transaction type selected
     return;
   }
-
   try {
     const { data, error } = await supabase
       .from(tableName)
@@ -244,74 +208,139 @@ onMounted(() => {
   fetchFADSubUnits(); 
 });
 
-const selectedTime = ref(format(new Date(), 'HH:mm'))
+const selectedTime = ref(format(new Date(), 'HH:mm'));
+const selectedTime2 = ref(format(new Date(), 'HH:mm'));
 const timeDialog = ref(false); 
 
 const submitScoreboard = async () => {
-  if (!formData.value.dateReceivedRecordSection || !selectedTime.value) {
-    alert('❌ Please select both date and time.');
-    return;
-  }
-
   try {
-    const datePart = format(new Date(formData.value.dateReceivedRecordSection), "yyyy-MM-dd");
-    const timePart = selectedTime.value.includes(":") ? selectedTime.value : `${selectedTime.value}:00`;
-    const combinedDateTime = `${datePart}T${timePart}:00`;
-    const parsedDateTime = new Date(combinedDateTime);
-    const formattedDateTime = format(parsedDateTime, "yyyy-MM-dd HH:mm:ss");
+    // Format received datetime
+    const receivedDatePart = format(new Date(formData.value.dateReceivedRecordSection), "yyyy-MM-dd");
+    const receivedTimePart = selectedTime.value.includes(":") ? selectedTime.value : `${selectedTime.value}:00`;
+    const combinedDateTime = `${receivedDatePart}T${receivedTimePart}:00`;
+    const formattedDateTime = format(new Date(combinedDateTime), "yyyy-MM-dd HH:mm:ss");
 
-    console.log("Formatted Date-Time:", formattedDateTime);
-    console.log("DMS Reference Number:", formData.value.dmsReferenceNumber);
-    console.log("Agency ID:", formData.value.particulars.agencyID);
-    console.log("User ID (Creator):", userUUID.value);
-
-    // ✅ Insert into scoreboard_receiving and RETURN the inserted ID
-    const { data: receivingData, error: receivingError } = await supabase
-      .from('scoreboard_receiving')
+    // Format forwarded datetime
+    const forwardedDatePart = format(new Date(formData.value.forwardedRecordSection), "yyyy-MM-dd");
+    const forwardedTimePart = selectedTime2.value.includes(":") ? selectedTime2.value : `${selectedTime2.value}:00`;
+    const forwardedCombinedDateTime = `${forwardedDatePart}T${forwardedTimePart}:00`;
+    const formattedForwardedDateTime = format(new Date(forwardedCombinedDateTime), "yyyy-MM-dd HH:mm:ss");
+    
+    //check if user is logged in
+    if (!user.value?.id) {
+        alert("User not yet loaded. Please wait and try again.");
+    return;
+    }   
+    console.log('User ID:', user.value?.id);
+    console.log('DMS:', formData.dmsReferenceNumber);
+    // 1️⃣ Insert into scoreboard_receiving_fad
+    const { data: fadInsertData, error: fadError } = await supabase
+      .from('scoreboard_receiving_fad')
       .insert([
         {
+          date_received: formattedDateTime,
+          date_forwarded: formattedForwardedDateTime,
+          sub_unit_id: formData.value.particulars.agencyID,
+          owner_id: formData.value.particulars.staffID,
+          receiver_id: user.value?.id,
           dms_reference_number: formData.value.dmsReferenceNumber,
-          agency_id: formData.value.particulars.agencyID,
-          user_id: userUUID.value,
-          date_received: formattedDateTime
+          remark: "Pending"
         }
       ])
-      .select('id'); 
-    if (receivingError) {
-      console.error('🚨 Supabase Insert Error (Receiving):', receivingError.message);
-      alert('❌ Failed to save data! Error: ' + receivingError.message);
+      .select('id')
+      .single(); // Return the inserted row
+ 
+    // console.log('Auth UID match policy will allow this:', userUUID.value === <value you expect>);   
+    if (fadError) {
+      console.error('🚨 Insert Error (FAD Receiving):', fadError.message);
+      alert('❌ Failed to save data in scoreboard_receiving_fad! Error: ' + fadError.message);
       return;
     }
 
-    const newReceivingId = receivingData ? receivingData[0]?.id : null; // ✅ Get the inserted ID
-    if (!newReceivingId) {
-      alert('❌ Error: Could not retrieve new scoreboard_receiving ID.');
-      return;
-    }
+    const insertedScoreboardID = fadInsertData?.id;
+    //Insert function for the scoreboard_fad_process table
 
-    console.log("✅ New scoreboard_receiving ID:", newReceivingId);
+    const { error: fadprocessInsertError } = await supabase
+        .from('scoreboard_fad_process')
+        .insert([
+          {
+            scoreboard_id: insertedScoreboardID,
+            status: 'Pending',
+            sub_unit_id: formData.value.particulars.agencyID,
+            owner_id: formData.value.particulars.staffID,
+            date_received: formattedDateTime,
+            from_id: userUUID.value
+          }
+        ]);
+      if (fadprocessInsertError) {
+        console.error('🚨 Insert Error (FAD Process table):', fadprocessInsertError.message);
+        alert('❌ Failed to save data in scoreboard_fad_process! Error: ' + fadprocessInsertError.message);
+        return;
+      }
+      console.log("✅ Data saved in internal_report_received");
+    // 2️⃣ If "Internal Reports" selected (transactionID === 2), insert into internal_report_received
+    if(formData.value.particulars.transactionID === 1){
+      const { error: internalCitizenCharterError } = await supabase
+          .from('citizen_charter_received')
+          .insert([
+            {
+              scoreboard_id: insertedScoreboardID,
+              cc_id: formData.value.particulars.subTypeID,
+            }
+          ]);
 
-    // ✅ Insert into scoreboard_technical using the newReceivingId
-    const { data: technicalData, error: technicalError } = await supabase
-      .from('scoreboard_technical')
-      .insert([
-        {
-          scoreboard_id: newReceivingId, // ✅ Insert the new ID
-          user_id: formData.value.particulars.staffID,
-          status: 'Pending'
+        if (internalCitizenCharterError) {
+          console.error('🚨 Insert Error (Citizen Charter Report):', internalCitizenCharterError.message);
+          alert('❌ Failed to save data in citizen_charter_received! Error: ' + internalCitizenCharterError.message);
+          return;
         }
-      ]);
 
-    if (technicalError) {
-      console.error('🚨 Supabase Insert Error (Technical):', technicalError.message);
-      alert('❌ Failed to save data in scoreboard_technical! Error: ' + technicalError.message);
-      return;
+        console.log("✅ Data saved in internal_report_received");
     }
+    else if (formData.value.particulars.transactionID === 2) {
+      const { error: internalInsertError } = await supabase
+        .from('internal_report_received')
+        .insert([
+          {
+            scoreboard_id: insertedScoreboardID,
+            internal_id: formData.value.particulars.subTypeID,
+          }
+        ]);
 
-    alert('✅ Data successfully saved to both tables!');
-  } catch (err) {
-    console.error('Unexpected error:', err);
-    alert('❌ Unexpected error occurred while saving to the database.');
+      if (internalInsertError) {
+        console.error('🚨 Insert Error (Internal Report):', internalInsertError.message);
+        alert('❌ Failed to save data in internal_report_received! Error: ' + internalInsertError.message);
+        return;
+      }
+
+      console.log("✅ Data saved in internal_report_received");
+    }
+    else if (formData.value.particulars.transactionID === 3) {
+       console.log("scoreboard_id: ",insertedScoreboardID );
+      console.log("external_id: ",insertedScoreboardID );
+      const { error: externalInsertError } = await supabase
+        .from('external_report_received')
+        .insert([
+          {
+            scoreboard_id: insertedScoreboardID,
+            external_id: formData.value.particulars.subTypeID,
+          }
+        ]);
+
+      if (externalInsertError) {
+        console.error('🚨 Insert Error (External Report):', externalInsertError.message);
+        alert('❌ Failed to save data in external_report_received! Error: ' + externalInsertError.message);
+        return;
+      }
+
+      console.log("✅ Data saved in external_report_received");
+    }
+    // ✅ Show final success message
+    alert('✅ Data successfully submitted New DMS');
+
+  } catch (e) {
+    console.error('Unexpected Error in submitScoreboard:', e);
+    alert('⚠️ An unexpected error occurred: ' + e.message);
   }
 };
 const fadSubUnits = ref([]); // Store FAD Sub Units
@@ -378,7 +407,7 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
           <v-col>
             <v-select
               label="Process Owner"
-              :items="processOwners"
+              :items="processOwners.length ? processOwners : [{ id: null, name: 'No available owners' }]"
               item-title="name"
               item-value="id"
               :rules="[requiredValidator]"
@@ -412,13 +441,13 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
             <v-date-input
               label="Date Forwarded"
               prepend-inner-icon="$calendar"
-              v-model="formData.dateReceivedRecordSection"
+              v-model="formData.forwardedRecordSection"
               :rules="[requiredValidator]"
             />
           </v-col>
           <v-col>
             <v-text-field
-              v-model="selectedTime"
+              v-model="selectedTime2"
               label="Time Forwarded"
               prepend-icon="mdi-clock"
               readonly
@@ -434,6 +463,8 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
           <v-card-text>
             <v-time-picker 
               v-model="selectedTime"
+              format="ampm"               
+              ampm-in-title               
               @update:model-value="timeDialog = false"
             ></v-time-picker>
           </v-card-text>
@@ -442,8 +473,6 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
           </v-card-actions>
         </v-card>
       </v-dialog>
-
-
         <v-row v-if="prescribedPeriodValues.length !== 0">
           <v-col v-for="(value, index) in prescribedPeriodValues" :key="index">
             <ScoreboardFormDialog
@@ -456,16 +485,8 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
             />
           </v-col>
         </v-row>
-
         <v-row dense>
           <v-spacer></v-spacer>
-          <!-- <v-btn
-            text="Submit Form"
-            type="submit"
-            color="red-darken-4"
-            :loading="formAction.formProcess"
-            :disabled="formAction.formProcess"
-          /> -->
           <v-btn color="primary" @click="submitScoreboard">Submit FAD Scoreboard</v-btn>
         </v-row>
       </v-form>

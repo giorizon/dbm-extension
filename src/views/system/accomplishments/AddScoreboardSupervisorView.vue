@@ -10,7 +10,8 @@ const route = useRoute();
 const dmsReferenceNumber = ref(route.query.dms_reference_number || '');
 const dateReceived = ref(route.query.date_received || '');
 const agencyName = ref(route.query.agency_name || '');
-const scoreboardId = ref(route.query.scoreboard_supervising_id || '');
+const scoreboardId = ref(route.query.scoreboard_id || '');
+const processId = ref(route.query.process_id || '');
 console.log("✅ Received query parameters:", route.query);
 
 const isDrawerVisible = ref(true)
@@ -19,7 +20,8 @@ const formProps = computed(() => ({
   dmsReferenceNumber: dmsReferenceNumber.value,
   dateReceived: dateReceived.value,
   agencyName: agencyName.value,
-  scoreboardId: scoreboardId
+  scoreboardId: scoreboardId.value,
+  processId: processId.value
 }));
 
 </script>

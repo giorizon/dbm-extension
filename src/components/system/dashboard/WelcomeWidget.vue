@@ -7,7 +7,10 @@ import { useAuthUserStore } from '@/stores/authUser'
 import receiving_dashboard from '@/components/system/dashboard/ReceivingWelcome.vue'
 import technical_dashboard from '@/components/system/dashboard/TechnicalWelcome.vue'
 import supervisor_dashboard from '@/components/system/dashboard/SupervisorWelcome.vue'
+import division_dashboard from '@/components/system/dashboard/DivisionWelcome.vue'
+import releasing_dashboard from '@/components/system/dashboard/ReleasingWelcome.vue'
 import admin_dashboard from '@/components/system/dashboard/AdminWelcome.vue'
+import fad_dashboard from '@/components/system/dashboard/FadWelcome.vue'
 import { computed } from 'vue'
 // Use Pinia Store
 const authStore = useAuthUserStore()
@@ -20,17 +23,25 @@ const userRole = computed(() => authStore.userRole)
 
 const SelectedForm = computed(() => {
   if (userRole.value === 'Technical') {
-    //alert("Hello");
-    return technical_dashboard
+    return technical_dashboard;
   } else if (userRole.value === 'Administrator') {
-    return admin_dashboard  // ✅ Show Admin Form
-  } 
-  else if (userRole.value === 'Supervisor') {
-    return supervisor_dashboard  // ✅ Show Admin Form
+    return admin_dashboard;
+  } else if (
+    userRole.value === 'Supervising BMS' ||
+    userRole.value === 'Senior BMS' ) 
+  {
+    return supervisor_dashboard;
+  }  else if (userRole.value === 'FAD') {
+    return fad_dashboard;
+  }  else if (userRole.value === 'Division Chief') {
+    return division_dashboard;
+  }  else if (userRole.value === 'Releasing Data') {
+    return releasing_dashboard;
   }else {
-    return receiving_dashboard  // Default: Receiving Form
+    return receiving_dashboard;
   }
-})
+});
+
 </script>
 
 <template>

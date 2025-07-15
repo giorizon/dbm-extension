@@ -9,9 +9,14 @@ import AgenciesView from '@/views/system/manage-agencies/AgenciesView.vue'
 import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
 import AddScoreBoardIndividualView from '@/views/system/accomplishments/AddScoreboardIndividualView.vue'
 import AddScoreBoardSuperovisorView from '@/views/system/accomplishments/AddScoreboardSupervisorView.vue'
+import AddScoreBoardDivisionView from '@/views/system/accomplishments/AddScoreboardDivision.vue'
+import AddScoreBoardReleasingView from '@/views/system/accomplishments/AddScoreboardReleasing.vue'
 import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
 import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
-
+import ScoreboardMonitoringView from '@/views/system/accomplishments/ScoreboardMonitoringView.vue'
+import AddScoreBoardFadInternalView from '@/views/system/accomplishments/AddScoreBoardFadInternalView.vue'
+import AddScoreBoardFadExternalView from '@/views/system/accomplishments/AddScoreboardFadExternalView.vue'
+import AddScoreBoardFadCitizenCharterView from '@/views/system/accomplishments/AddScoreBoardFadCitizenCharterView.vue'
 // 👉 Routes
 export const routes = [
   // Auth Pages
@@ -58,6 +63,36 @@ export const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/add-scoreboard-division',
+    name: 'add-scoreboard-division',
+    component: AddScoreBoardDivisionView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-releasing',
+    name: 'add-scoreboard-releasing',
+    component: AddScoreBoardReleasingView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-fad-internal',
+    name: 'add-scoreboard-fad-internal',
+    component: AddScoreBoardFadInternalView,
+    meta: { requiresAuth: true }
+  },
+   {
+    path: '/add-scoreboard-fad-external',
+    name: 'add-scoreboard-fad-external',
+    component: AddScoreBoardFadExternalView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-fad-citizen-charter',
+    name: 'add-scoreboard-fad-citizen-charter',
+    component: AddScoreBoardFadCitizenCharterView,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/add-scoreboard-fad',
     name: 'add-scoreboard-fad',
     component: AddScoreBoardFAD,
@@ -67,6 +102,12 @@ export const routes = [
     path: '/scoreboard',
     name: 'scoreboard',
     component: ScoreboardView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/scoreboard-monitoring',
+    name: 'scoreboard-monitoring',
+    component: ScoreboardMonitoringView,
     meta: { requiresAuth: true }
   },
 

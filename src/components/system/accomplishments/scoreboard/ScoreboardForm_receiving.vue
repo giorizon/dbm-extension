@@ -43,7 +43,7 @@ const fetchAgencies = async () => {
       return;
     }
 
-    agencies.value = data; 
+  agencies.value = data; 
   } catch (err) {
     console.error('Unexpected error fetching agencies:', err);
   }
@@ -174,12 +174,16 @@ const submitScoreboard = async () => {
 
     // ✅ Insert into scoreboard_individual using the newReceivingId
     const { data: technicalData, error: technicalError } = await supabase
-      .from('scoreboard_individual')
+      .from('scoreboard_technical_process')
       .insert([
         {
           scoreboard_id: newReceivingId, // ✅ Insert the new ID
-          user_id: formData.value.particulars.staffID,
-          status: 'Pending'
+          owner_id: formData.value.particulars.staffID,
+          from_id: userUUID.value,
+          date_received: finalReceivedDateTime,
+          date_forwarded: null,
+          status: 'Pending',
+          level: 'Individual'
         }
       ]);
 

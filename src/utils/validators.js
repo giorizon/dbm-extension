@@ -1,3 +1,5 @@
+import { supabase } from '@/utils/supabase'
+
 // 👉 IsEmpty
 export const isEmpty = (value) => {
   if (value === null || value === undefined || value === '') return true
@@ -132,4 +134,24 @@ export const imageValidator = (value) => {
   if (isEmpty(value)) return true
 
   return !value || !value.length || value[0].size < 2000000 || 'Image size should be less than 2 MB'
+}
+
+// 👉 Agency Name Unique Validator
+export const agencyNameValidator = async (agencyName) => {
+  if (isEmpty(agencyName)) return 'Agency name is required'
+
+  try {
+    const { data, error } = await supabase
+      .from('agency')
+      .select('agency_name')
+      .eq('agency_name', agencyName)
+
+    if (error) throw new Error(error.message)
+
+    if (data.length > 0) return 'Agency name already exists.'
+
+    return true
+  } catch (err) {
+    return `Error checking agency name: ${err.message}`
+  }
 }
