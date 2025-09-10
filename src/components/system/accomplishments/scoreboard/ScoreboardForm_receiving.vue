@@ -15,6 +15,7 @@ const timeMenu = ref();
 
 const user = ref(null);
 
+//
 const fetchUser = async () => {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
@@ -55,7 +56,8 @@ const fetchStaff = async () => {
   try {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('id, firstname, lastname');
+      .select('id, firstname, lastname')
+      .order('lastname', { ascending: true }); 
 
     if (error) {
       console.error('Error fetching staff:', error);
@@ -131,19 +133,28 @@ const submitScoreboard = async () => {
     console.log("✅ Time Received:", formattedReceivedTime);
     console.log("✅ Time Forwarded:", formattedForwardedTime);
   try {
+    // ✅ Received Date + Time
     const formattedReceivedDate = format(new Date(selectedDateReceived.value), "yyyy-MM-dd");
-    const formattedReceivedTime = selectedTimeReceived.value.includes(":") ? selectedTimeReceived.value : `${selectedTimeReceived.value}:00`;
-    const formattedForwardedDate = selectedDateForwarded.value 
-      ? format(new Date(selectedDateForwarded.value), "yyyy-MM-dd") 
-      : null; 
-    const receivedDateTime = `${formattedReceivedDate}T${formattedReceivedTime}:00`;
+    const formattedReceivedTime = selectedTimeReceived.value.includes(":") 
+      ? selectedTimeReceived.value 
+      : `${selectedTimeReceived.value}:00`;
+    const receivedDateTime = `${formattedReceivedDate}T${formattedReceivedTime}:00Z`;
     const finalReceivedDateTime = format(new Date(receivedDateTime), "yyyy-MM-dd HH:mm:ss");
+
+    // ✅ Forwarded Date + Time 
+    let finalForwardedDateTime = null;
+    if (selectedDateForwarded.value && selectedTimeForwarded.value) {
+      const formattedForwardedDate = format(new Date(selectedDateForwarded.value), "yyyy-MM-dd");
+      const formattedForwardedTime = selectedTimeForwarded.value.includes(":") 
+        ? selectedTimeForwarded.value 
+        : `${selectedTimeForwarded.value}:00`;
+      const forwardedDateTime = `${formattedForwardedDate}T${formattedForwardedTime}:00Z`;
+      finalForwardedDateTime = format(new Date(forwardedDateTime), "yyyy-MM-dd HH:mm:ss");
+    }
 
 
     console.log("✅ Date-Time Received:", finalReceivedDateTime);
-    console.log("✅ Date Forwarded:", selectedDateForwarded.value);
-    console.log("✅ Time Forwarded:", selectedTimeForwarded.value);
-
+    console.log("✅ Date-Time Forwarded:", finalForwardedDateTime );
 
     // ✅ Insert into scoreboard_receiving and RETURN the inserted ID
     const { data: receivingData, error: receivingError } = await supabase
@@ -153,8 +164,8 @@ const submitScoreboard = async () => {
           dms_reference_number: formData.value.dmsReferenceNumber,
           agency_id: formData.value.particulars.agencyID,
           user_id: userUUID.value,
-          date_received: formattedReceivedDate, // ✅ Store as YYYY-MM-DD
-          date_forwarded: formattedForwardedDate // ✅ Store as YYYY-MM-DD
+          date_received: finalReceivedDateTime, // ✅ Store as YYYY-MM-DD
+          date_forwarded: finalForwardedDateTime  // ✅ Store as YYYY-MM-DD
         }
       ])
       .select('id'); 
@@ -218,7 +229,6 @@ const submitScoreboard = async () => {
           <v-col> 
           </v-col>
         </v-row>
-
         <v-row>
           <v-col>
             <v-select

@@ -18,10 +18,7 @@ const emit = defineEmits(['closeDialog'])
         <v-divider></v-divider>
         <v-card-actions class="mt-2">
           <v-spacer></v-spacer>
-          <v-btn color="indigo-darken-2" variant="elevated" @click="() => {
-            router.replace('/scoreboard')
-          }
-            ">View Scoreboard</v-btn>
+       
           <v-btn color="red-darken-4" variant="elevated" @click="() => {
             emit('closeDialog')
           }

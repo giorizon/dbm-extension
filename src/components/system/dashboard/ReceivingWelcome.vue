@@ -6,7 +6,7 @@ import '@/assets/dashboard.css';
 
 const userUUID = ref(null);
 const PendingReceiving = ref([]);
-const ProcesedFadDMS = ref([]);
+const TechnicalDMS = ref([]);
 const loading = ref(true);
 //const tdId = ref(null);
 
@@ -50,13 +50,18 @@ const fetchpendingreceiving = async () => {
     }
     PendingReceiving.value = data.map(row => ({
       dms_reference_number: row.dms_reference_number,
+      date_received: formatDate(row.date_received),
       date_forwarded: formatDate(row.date_forwarded),
       owner: row.owner,
       receiving: row.receiving,
       owner_id: row.owner_id,
       receiving_id: row.receiving_id,
-      remark: row.remark,
-      scoreboard_id: row.scoreboard_id
+      status: row.status,
+      sub_unit: row.sub_unit,
+      current_owner_id: row.current_owner_id,
+      current_owner: row.current_owner,
+      scoreboard_id: row.scoreboard_id,
+      proess_id: row.process_id
     }));
 
     console.log("Fetch row :", PendingReceiving);
@@ -72,22 +77,23 @@ const fetchprocesseddms = async () => {
 
   try {
     const { data, error } = await supabase
-      .from('processed_fad_monitor')
+      .from('view_technical_tracker')
       .select('*');
     if (error) {
       console.error("❌ Error fetching scoreboard data:", error);
       return;
     }
-    ProcesedFadDMS.value = data.map(row => ({
+    TechnicalDMS.value = data.map(row => ({
       dms_reference_number: row.dms_reference_number,
       date_forwarded: formatDate(row.date_forwarded),
-      owner_user: row.owner_user,
-      from_user: row.from_user,
+      date_received: formatDate(row.date_received),
+      owner: row.owner,
+      status: row.status,
       owner_id: row.owner_id,
-      sub_unit: row.sub_unit
+      level: row.level
     }));
 
-    console.log("Fetch row :", ProcesedFadDMS);
+    console.log("Fetch row :", TechnicalDMS);
   } catch (err) {
     console.error("❌ Unexpected error fetching Pending Receving Report data:", err);
   } finally {
@@ -111,52 +117,62 @@ onMounted(async () => {
         <v-col>        
           <v-container>
                 <v-card>
-                <v-card-title><b>FAD : Received DMS</b></v-card-title>
+                <v-card-title><b>FAD DMS</b></v-card-title>
                 <v-card-text>
                  <v-data-table :items="PendingReceiving" class="elevation-1">
                   <template v-slot:headers>
                     <tr>
                       <th>DMS Reference Number</th>
+                      <th>Sub Unit</th>
+                      <th>Current Owner</th>
+                      <th>Date Received</th>
                       <th>Date Forwarded</th>
-                      <th>Process Owner</th>
+                      <th>Status</th>
+                    
+                    </tr>
+                  </template>
+                  <template v-slot:body="{ items }">
+                    <tr v-for="item in items" :key="item.dms_reference_number">
+                      <td>{{ item.dms_reference_number }}</td>
+                      <td>{{ item.sub_unit }}</td>   
+                      <td>{{ item.current_owner }}</td> 
+                      <td>{{ item.date_received }}</td>
+                      <td>{{ item.date_forwarded }}</td>
+                      <td>{{ item.status }}</td>
+                    </tr>
+                  </template>
+                 </v-data-table>
+                </v-card-text>
+                </v-card>
+            </v-container>
+          </v-col>
+         
+      </v-row>
+      <v-row>
+        <v-col>
+              <v-container>
+                <v-card>
+                <v-card-title><b>Technical DMS</b></v-card-title>
+                <v-card-text>
+                 <v-data-table :items="TechnicalDMS" :search="search" class="elevation-1">
+                  <template v-slot:headers>
+                    <tr>
+                      <th>DMS Reference Number</th>
+                      <th>Owner</th>
+                      <th>Level</th>
+                      <th>Date Received</th>
+                      <th>Date Forwarded</th>
                       <th>Status</th>
                     </tr>
                   </template>
                   <template v-slot:body="{ items }">
                     <tr v-for="item in items" :key="item.dms_reference_number">
                       <td>{{ item.dms_reference_number }}</td>
-                      <td>{{ item.date_forwarded }}</td>
                       <td>{{ item.owner }}</td>
-                      <td>{{ item.remark}}</td>
-                    </tr>
-                  </template>
-                 </v-data-table>
-                </v-card-text>
-                </v-card>
-            </v-container>
-          </v-col>
-          <v-col>
-              <v-container>
-                <v-card>
-                <v-card-title><b>FAD : Processed DMS</b></v-card-title>
-                <v-card-text>
-                 <v-data-table :items="ProcesedFadDMS" class="elevation-1">
-                  <template v-slot:headers>
-                    <tr>
-                      <th>DMS Reference Number</th>
-                      <th>Date Forwarded</th>
-                      <th>Previous Owner</th>
-                      <th>Current Owner</th>
-                      <th>Sub Unit</th>
-                    </tr>
-                  </template>
-                  <template v-slot:body="{ items }">
-                    <tr v-for="item in items" :key="item.dms_reference_number">
-                      <td>{{ item.dms_reference_number }}</td>
+                      <td>{{ item.level }}</td>
+                      <td>{{ item.date_received }}</td>
                       <td>{{ item.date_forwarded }}</td>
-                      <td>{{ item.from_user }}</td>
-                      <td>{{ item.owner_user }}</td>
-                      <td>{{ item.sub_unit}}</td>
+                      <td>{{ item.status }}</td>
                     </tr>
                   </template>
                  </v-data-table>
@@ -164,16 +180,6 @@ onMounted(async () => {
                 </v-card>
             </v-container>
           </v-col>
-      </v-row>
-      <v-row>
-        <v-container>
-                <v-card>
-                <v-card-title>Technical DNS Processes:</v-card-title>
-                <v-card-text>
-                 
-                </v-card-text>
-                </v-card>
-            </v-container>
       </v-row>
     </v-card-text>
 </template>

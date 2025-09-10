@@ -70,7 +70,9 @@
 signatory-block {
   margin-bottom: 5px; /* Adjust as needed */
 }
-
+.bold-header{
+  font-weight: bold;
+}
 .signatory-name {
   font-weight: bold;
   margin-top: 10px; /* Space between label and name */

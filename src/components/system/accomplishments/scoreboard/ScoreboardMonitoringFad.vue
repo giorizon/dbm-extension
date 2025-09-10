@@ -179,32 +179,44 @@ onMounted(async () => {
                 :items-per-page="-1"  
                 >
                 <template v-slot:headers>
+                    <tr>                        
+                      <th colspan ="3" rowspan="3"><b>Name of Service/Agency Name/Nature of Reques/Report Description(1)</b></th>
+                        <th colspan ="3" rowspan="3"><b>DMS Reference Number (2)</b></th>
+                        <th colspan ="3" rowspan="3"><b>Data Receibed by the Records Section (3)</b></th>
+                        <th  colspan="6" rowspan="1"><b>IPCR (4)</b></th>
+                         <th  colspan="6" rowspan="1"><b>DPCR (5)</b></th>
+                         <th  colspan="6" rowspan="1"><b>OPCR (6)</b></th>
+                        <th  rowspan="3"><b>QL Rating (7)</b></th>
+                          <th  rowspan="3"><b>Remarks (e.g. Reply Document) (8)</b></th>
+                    </tr>
                     <tr>
-                        <th>No</th>
-                        <th>DMS No.</th>
-                        <th>Agency</th>
-                         <th>Date Received</th>
-                        <th>Date Received</th>
-                        <th>Date Forwarded</th>
-                        <th>Prescribed Period</th>
-                        <th>No. of working hours/days/calendar days acted upon</th>
-                        <th>Remark (e.g. downtime)</th>
-                        <th>Date and Time released</th>
+                      <th rowspan = "2" ><b>Prescribed Period</b></th>
+                       <th rowspan = "2"><b>Received by SO for review</b></th>
+                        <th colspan = "2"><b>Forwarded to Process Owner/DC (4.2)</b></th>
+                      <th rowspan = "2"><b>No. of <u>Working Day/s</u> Acted Upon (4.3)</b></th>
+                       <th rowspan = "2"><b>No. of <u>Calendar Day/s</u> Acted Upon (4.4)</b></th>
+                        <th rowspan = "2"><b>Prescribed Period (5.1)</b></th>
+                        <th colspan = "2"><b>Forwarded to ARD/RD (5.2)</b></th>
+                        <th rowspan = "2"><b>No. of <u>Working Day/s</u> Acted Upon (5.3)</b></th>
+                       <th rowspan = "2"><b>No. of <u>Calendar Day/s</u> Acted Upon (5.4)</b></th>
+                        <th rowspan = "2"><b>Prescribed Period (6.1)</b></th>
+                        <th colspan = "2"><b>Forwarded to ARD/RD (6.2)</b></th>
+                        <th rowspan = "2"><b>No. of <u>Working Day/s</u> Acted Upon (6.3)</b></th>
+                       <th rowspan = "2"><b>No. of <u>Calendar Day/s</u> Acted Upon (6.4)</b></th>
+                    </tr>
+                      <tr>
+                      <th >Date (4.2a)</th>
+                       <th>Time (4.2b)</th>
+                      <th >Date (5.2a)</th>
+                       <th>Time (5.2b)</th>
+                      <th >Date (6.2a)</th>
+                      <th>Time (6.2b)</th>
                     </tr>
                 </template>
-                <template v-slot:body="{ items }">
+                     <template v-slot:body="{ items }">
                     <tr v-for="(item, index) in items" :key="item.dms_reference_number">
-                        <td>{{ index + 1 }}</td>
-                        <td contenteditable="true">{{ item.dms_reference_number }}</td>
-                        <td contenteditable="true">{{ item.agency_name }}</td>   
-                        <td contenteditable="true">{{ item.not_name }}</td>  
-                        <td contenteditable="true">{{ item.date_received }}</td>
-                        <td contenteditable="true">{{ item.date_forwarded }}</td>
-                         <td contenteditable="true">{{ item.prescribed_period }}</td>
-                        <td contenteditable="true">{{ item.number_days_work }}</td>
-                        <td  contenteditable="true">{{ item.downtime_remark }}</td>
-                        <td contenteditable="true" >{{ item.date_released }} - {{ item.time_released }} </td>
-                       
+                      
+        
                     </tr>
                     </template>
               </v-data-table>

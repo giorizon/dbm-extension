@@ -11,6 +11,7 @@ import AddScoreBoardIndividualView from '@/views/system/accomplishments/AddScore
 import AddScoreBoardSuperovisorView from '@/views/system/accomplishments/AddScoreboardSupervisorView.vue'
 import AddScoreBoardDivisionView from '@/views/system/accomplishments/AddScoreboardDivision.vue'
 import AddScoreBoardReleasingView from '@/views/system/accomplishments/AddScoreboardReleasing.vue'
+import AddScoreBoardReleasingFAD from '@/views/system/accomplishments/AddScoreboardReleasingFAD.vue'
 import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
 import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
 import ScoreboardMonitoringView from '@/views/system/accomplishments/ScoreboardMonitoringView.vue'
@@ -72,6 +73,12 @@ export const routes = [
     path: '/add-scoreboard-releasing',
     name: 'add-scoreboard-releasing',
     component: AddScoreBoardReleasingView,
+    meta: { requiresAuth: true }
+  },
+   {
+    path: '/add-scoreboard-releasing-fad',
+    name: 'add-scoreboard-releasing-FAD',
+    component: AddScoreBoardReleasingFAD,
     meta: { requiresAuth: true }
   },
   {

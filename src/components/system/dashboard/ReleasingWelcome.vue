@@ -9,6 +9,9 @@ const formErrorMessage = ref("")
 
 const userUUID = ref(null);
 const scoreboardData = ref([]);
+const internalFAD = ref([]);
+const externalFAD = ref([]);
+const ccFAD = ref([]);
 const loading = ref(true);
 const tdId = ref(null);
 
@@ -59,7 +62,6 @@ const fetchLoggedInUser = async () => {
     await fetchScoreboardData();
   }
 };
-
 const formatDate = (timestamp) => {
   if (!timestamp) return "N/A"; // Handle empty cases
 
@@ -107,7 +109,90 @@ const fetchScoreboardData = async () => {
     loading.value = false;
   }
 };
+const fetchInternalFAD = async () => {
+  loading.value = true;
 
+  try {
+    const { data, error } = await supabase
+      .from('view_fad_internal_released')
+      .select('*')
+    if (error) {
+      console.error("❌ Error fetching fad scoreboard (internal reports):", error);
+      return;
+    }
+
+    internalFAD.value = data.map(row => ({
+     dms_reference_number: row.dms_reference_number,
+      date_received: formatDate(row.date_received),
+      dmsName: row.transaction,
+      dms_title: row.dms_title,
+      process_id: row.process_id,
+      scoreboard_id: row.scoreboard_id
+    }));
+
+   console.log("✅ Internal FAD data:", JSON.stringify(internalFAD.value, null, 2));
+  } catch (err) {
+    console.error("❌ Unexpected error fetching scoreboard data:", err);
+  } finally {
+    loading.value = false;
+  }
+};
+const fetchExternalFAD = async () => {
+  loading.value = true;
+
+  try {
+    const { data, error } = await supabase
+      .from('view_fad_external_released')
+      .select('*')
+    if (error) {
+      console.error("❌ Error fetching fad scoreboard (external reports):", error);
+      return;
+    }
+
+    externalFAD.value = data.map(row => ({
+      dms_reference_number: row.dms_reference_number,
+      date_received: formatDate(row.date_received),
+      dmsName: row.transaction,
+      dms_title: row.dms_title,
+      process_id: row.process_id,
+      scoreboard_id: row.scoreboard_id
+    }));
+
+   console.log("✅ External FAD data:", JSON.stringify(externalFAD.value, null, 2));
+  } catch (err) {
+    console.error("❌ Unexpected error fetching scoreboard data:", err);
+  } finally {
+    loading.value = false;
+  }
+};
+const fetchCCFAD = async () => {
+  loading.value = true;
+
+  try {
+    const { data, error } = await supabase
+      .from('view_fad_cc_released')
+      .select('*')
+    if (error) {
+      console.error("❌ Error fetching fad scoreboard (internal reports):", error);
+      return;
+    }
+
+    ccFAD.value = data.map(row => ({
+      dms_reference_number: row.dms_reference_number,
+      date_received: formatDate(row.date_received),
+      dmsName: row.transaction,
+      dms_title: row.dms_title,
+      process_id: row.process_id,
+      scoreboard_id: row.scoreboard_id
+    }));
+
+   console.log("✅ Citizen Charter FAD data:", JSON.stringify(ccFAD.value, null, 2));
+  } catch (err) {
+    console.error("❌ Unexpected error fetching scoreboard data:", err);
+  } finally {
+    loading.value = false;
+  }
+};
 console.log(scoreboardData.value);
 import { useRouter } from 'vue-router';
 
@@ -123,6 +208,21 @@ const goToAddScoreboard = (item) => {
       agency_name: item.agency_name,
       scoreboard_id: item.scoreboard_id,
       process_id: item.process_id
+    }
+  });
+};
+
+const goToFadreleasing = (item) => {
+ 
+  router.push({
+    path: '/add-scoreboard-releasing-fad',
+    query: {
+      dms_reference_number: item.dms_reference_number,
+      date_received: item.date_received,
+      dmsName: item.dmsName,
+      scoreboard_id: item.scoreboard_id,
+      process_id: item.process_id,
+      dms_title: item.dms_title
     }
   });
 };
@@ -367,16 +467,32 @@ const handleAction = (action, row) => {
 onMounted(async () => {
   await fetchLoggedInUser();
   await fetchScoreboardData();
+  await fetchInternalFAD();
+  await fetchExternalFAD();
+  await fetchCCFAD();
 });
 
+// Track which row is currently visible
+const activeRow = ref('row1') // default to row 1
 </script>
+
 <template>
+  
  <v-card-text>
-       <v-row>
+        <v-row>
+              <!-- Control Buttons -->
+            <v-btn @click="activeRow = 'row1'" :color="activeRow === 'row1' ? 'primary' : 'default'" class="me-2">
+              Technical
+            </v-btn>
+            <v-btn @click="activeRow = 'row2'" :color="activeRow === 'row2' ? 'primary' : 'default'">
+              FAD
+            </v-btn>
+    </v-row>
+       <v-row  v-if="activeRow === 'row1'" class="mt-4">
         <v-col>
             <v-container>
                 <v-card>
-                <v-card-title>Pending DMS:</v-card-title>
+                <v-card-title>Pending Technical DMS:</v-card-title>
                 <v-card-text>
                   <v-data-table :items="scoreboardData" class="elevation-1">
                 <template v-slot:headers>
@@ -474,5 +590,134 @@ onMounted(async () => {
         </v-col>
        
       </v-row>
+
+      <!-- Start For FAD section -->
+
+      <!-- Internal Report-->
+      <v-row v-if="activeRow === 'row2'" class="mt-4">
+        <v-col>
+            <v-container>
+                <v-card>
+                <v-card-title>Internal Reports DMS:</v-card-title>
+                <v-card-text>
+                  <v-data-table :items="internalFAD" class="elevation-1">
+                <template v-slot:headers>
+                  <tr>
+                    <th>DMS Reference Number</th>
+                    <th>Date Received</th>
+                    <th>DMS Title</th>
+                    <th>Transaction</th>
+                    <th>Action</th>
+                  </tr>
+                </template>
+                <template v-slot:body="{ items }">
+                  <tr v-for="item in items" :key="item.scoreboard_id">
+                    <td>{{ item.dms_reference_number }}</td>
+                    <td>{{ item.date_received }}</td>
+                    <td>{{ item.dms_title }}</td>
+                    <td>{{ item.dmsName }}</td>
+                    <td>
+                      <v-btn 
+                        color="primary" 
+                        size="small" 
+                        class="me-2" 
+                        @click="goToFadreleasing(item)"
+                      >
+                        Accept
+                      </v-btn>
+                      </td>
+                  </tr>
+                </template>
+              </v-data-table>
+                </v-card-text>
+                </v-card>
+            </v-container>
+        </v-col>
+       
+      </v-row>
+      <!-- For External-->
+      <v-row v-if="activeRow === 'row2'" class="mt-4">
+        <v-col>
+            <v-container>
+                <v-card>
+                <v-card-title>External Reports DMS:</v-card-title>
+                <v-card-text>
+                  <v-data-table :items="externalFAD" class="elevation-1">
+                <template v-slot:headers>
+                  <tr>
+                    <th>DMS Reference Number</th>
+                    <th>Date Received</th>
+                    <th>DMS Title</th>
+                    <th>Transaction</th>
+                    <th>Action</th>
+                  </tr>
+                </template>
+                <template v-slot:body="{ items }">
+                  <tr v-for="item in items" :key="item.scoreboard_id">
+                    <td>{{ item.dms_reference_number }}</td>
+                    <td>{{ item.date_received }}</td>
+                    <td>{{ item.dms_title }}</td>
+                    <td>{{ item.dmsName }}</td>
+                    <td>
+                      <v-btn 
+                        color="primary" 
+                        size="small" 
+                        class="me-2" 
+                        @click="goToFadreleasing(item)"
+                      >
+                        Accept
+                      </v-btn>
+                      </td>
+                  </tr>
+                </template>
+              </v-data-table>
+                </v-card-text>
+                </v-card>
+            </v-container>
+        </v-col>
+      </v-row>
+      <!-- For Citizen Charter-->
+      <v-row v-if="activeRow === 'row2'" class="mt-4">
+        <v-col>
+            <v-container>
+                <v-card>
+                <v-card-title>Citizen Charter Reports DMS:</v-card-title>
+                <v-card-text>
+                  <v-data-table :items="ccFAD" class="elevation-1">
+                <template v-slot:headers>
+                  <tr>
+                    <th>DMS Reference Number</th>
+                    <th>Date Received</th>
+                    <th>DMS Title</th>
+                    <th>Transaction</th>
+                    <th>Action</th>
+                  </tr>
+                </template>
+                <template v-slot:body="{ items }">
+                  <tr v-for="item in items" :key="item.scoreboard_id">
+                    <td>{{ item.dms_reference_number }}</td>
+                    <td>{{ item.date_received }}</td>
+                    <td>{{ item.dms_title }}</td>
+                    <td>{{ item.dmsName }}</td>
+                    <td>
+                      <v-btn 
+                        color="primary" 
+                        size="small" 
+                        class="me-2" 
+                        @click="goToFadreleasing(item)"
+                      >
+                        Accept
+                      </v-btn>
+                      </td>
+                      
+                  </tr>
+                </template>
+              </v-data-table>
+                </v-card-text>
+                </v-card>
+            </v-container>
+        </v-col>
+      </v-row>
+       <!-- End For FAD section -->
     </v-card-text>
 </template>

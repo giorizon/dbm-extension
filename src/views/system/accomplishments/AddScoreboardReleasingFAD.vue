@@ -4,15 +4,16 @@ import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useRoute } from 'vue-router';
 import { ref, computed } from 'vue'
-import ScoreboardForm_releasing from '@/components/system/accomplishments/scoreboard/ScoreboardForm_releasing.vue';
+import ScoreboardForm_releasing from '@/components/system/accomplishments/scoreboard/ScoreboardForm_releasingFAD.vue';
 
 
 const route = useRoute();
 const dmsReferenceNumber = ref(route.query.dms_reference_number || '');
 const dateReceived = ref(route.query.date_received || '');
-const agencyName = ref(route.query.agency_name || '');
+const dmsName = ref(route.query.dmsName || '');
 const scoreboardId = ref(route.query.scoreboard_id || '');
 const processId = ref(route.query.process_id || '');
+const dmsTitle = ref(route.query.dms_title || '');
 console.log("✅ Received query parameters:", route.query);
 
 const isDrawerVisible = ref(true)
@@ -20,9 +21,10 @@ const isDrawerVisible = ref(true)
 const formProps = computed(() => ({
   dmsReferenceNumber: dmsReferenceNumber.value,
   dateReceived: dateReceived.value,
-  agencyName: agencyName.value,
+  dmsName: dmsName.value,
   scoreboardId: scoreboardId.value,
-  processId: processId.value
+  processId: processId.value,
+  dmsTitle: dmsTitle.value
 }));
 
 </script>
