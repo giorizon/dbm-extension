@@ -8,6 +8,8 @@ import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
 import { watch } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter(); 
 const validationError = ref("")
 const isSuccess = ref(false)
 const formErrorMessage = ref("")
@@ -18,7 +20,8 @@ const dateForwardedDialog = ref(false);
 const props = defineProps({
   dmsReferenceNumber: String,
   dateReceived: String,
-  dmsName: String,
+  unformatted_date: String,
+  type_of_transaction: String,
   dmsTitle: String,
   scoreboardId: String,
   processId: String
@@ -43,6 +46,7 @@ const selectedTimeForwarded = ref(format(new Date(), 'HH:mm'))
 const timeDialogForwarded = ref(false)
 
 const downtimeValue = ref(null);
+const typeDowntime = ref(null);
 const remark = ref(null);
 const downtimeFlag = ref(0); 
 const userUUID = ref(null);
@@ -52,7 +56,6 @@ const releasedDocuments = ref([]);
 const dmsName= props.dmsName;
 const scoreboardId = props.scoreboardId;
 const dmsTitle = props.dmsTitle;
-const processId = props.processId;
 
 watch(downtimeChecker, (newVal) => {
   downtimeFlag.value = newVal ? 1 : 0;
@@ -91,10 +94,11 @@ const fetchTypeOfDowntime = async () => {
   } 
 formData.dmsReferenceNumber = props.dmsReferenceNumber;
 formData.dateReceived = props.dateReceived;
+formData.unformatted_date = props.unformatted_date;
 formData.dmsName = props.dmsName;
 formData.dmsTitle = props.dmsTitle;
+formData.type_of_transaction = props.type_of_transaction;
 formData.scoreboardId = props.scoreboardId;
-formData.processId = props.processId;
 
 console.log("Process_id : ",props.processId);
 
@@ -105,7 +109,7 @@ onMounted(async () => {
   await fetchLoggedInUser();      
   selectedTimeForwarded.value = format(new Date(), 'HH:mm');
 });
-const successMessage = ref("");
+const successMessage = ref("Successfull Released DMS");
 
 
 const handleFormSubmit = async () => {
@@ -141,57 +145,63 @@ const handleFormSubmit = async () => {
   console.log("formData.processId:", formData.processId);
 
   const updateData = {
-    end_date: combinedDateTime,
+    date_released: combinedDateTime,
     status: "Released"
   };
 
   try {
-    console.log("Attempting to update scoreboard_technical_process...");
+    console.log("Attempting to update scoreboard_technical_process with scoreboard ID",formData.scoreboardId );
     const { data: updatedProcessData, error: updateError } = await supabase
-      .from('scoreboard_fad_process')
+      .from('releasing_fad')
       .update(updateData)
-      .eq('id', formData.processId)
-      .select(); // Add .select() to get the updated data back, useful for debugging
-
+      .eq('scoreboard_id', formData.scoreboardId)
+      .select()
+       .throwOnError();
     if (updateError) {
       console.error("Supabase Update Error:", updateError.message);
       throw updateError;
     }
     if (!updatedProcessData || updatedProcessData.length === 0) {
-      console.error("Update failed: No matching process ID found for update.");
+      console.error("Update failed: No matching ID found for update.");
       throw new Error("Update failed: No matching process ID found.");
     }
     console.log("scoreboard_technical_process updated successfully:", updatedProcessData);
-    successMessage.value = "✅ DMS Released Successfully";
-    isSuccess.value = true;
+    
+    const { error: insertError2, data: insertedData2 } = await supabase
+      .from('scoreboard_fad_process')
+      .insert([{
+        scoreboard_id: formData.scoreboardId,
+        status: 'Released',
+        date_forwarded: combinedDateTime,
+        date_received: formData.unformatted_date,
+        owner_id: userUUID.value,
+      }])
+       .select()
+    .throwOnError();
+        console.log("Insert response:", insertedData2, insertError2);
+        if (insertError2) {
+          console.error("Insert error:", insertError2);
+          throw insertError2;
+        }
+    const ProcessId = insertedData2?.[0]?.id;
+    
+
 
     // --- Downtime Section ---
-    console.log("downtimeFlag.value:", downtimeFlag.value);
     if (downtimeFlag.value === 1) {
-      console.log("Entering downtime insert block.");
-      console.log("downtimeValue.value:", downtimeValue.value);
-      console.log("remark.value:", remark.value);
-
-      const { error: insertError, data: insertedData } = await supabase
-        .from('fad_downtime')
-        .insert([{
-          downtime: downtimeValue.value,
-          process_id: formData.processId,
-          remark: remark.value
-        }])
-        .select(); // Add .select() to get the inserted data back
-
-      console.log("Insert technical_downtime response:", insertedData, insertError);
-      if (insertError) {
-        console.error("Supabase Downtime Insert Error:", insertError.message);
-        throw insertError;
-      }
-      const newInsertedId = insertedData[0]?.id;
-      console.log("New technical_downtime ID:", newInsertedId);
-      console.log("Downtime data inserted successfully.");
-    } else {
-      console.log("downtimeFlag.value is not 1. Skipping downtime insert.");
-    }
+    const { error: insertError, data: insertedData } = await supabase
+      .from('fad_downtime')
+      .insert([{
+        downtime_id: typeDowntime.value,
+        downtime: downtimeValue.value,
+        process_id: ProcessId,
+        remark: remark.value
+      }]);
+    console.log("Insert response:", insertedData, insertError);
+    if (insertError) throw insertError;
+    isSuccess.value = true;
+  console.log("✅ Passed downtime insert successfully"); 
+  }
     successMessage.value = "✅ DMS Released Successfully";
     isSuccess.value = true;
   } catch (err) {
@@ -200,9 +210,12 @@ const handleFormSubmit = async () => {
     formErrorMessage.value = err.message || "Failed to submit the form due to an unknown error.";
     isSuccess.value = false; 
   }
+
 };
 
-
+  const routePage = async () => {
+      router.push('/dashboard');
+}
 </script>
 
 <template>
@@ -211,12 +224,7 @@ const handleFormSubmit = async () => {
       <v-form ref="refVForm" @submit.prevent="handleFormSubmit">
         <v-row>
           <v-col>
-              <p class="ms-4 text-wrap">
-              Process ID: <b style="padding-left: 10px;">{{processId }}</b>
-            </p>
-            <p class="ms-4 text-wrap">
-              Scoreboard ID: <b style="padding-left: 10px;">{{ scoreboardId }}</b>
-            </p>
+        
             <p class="ms-4 text-wrap">
               DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>
             </p>
@@ -224,7 +232,7 @@ const handleFormSubmit = async () => {
               Date Received: <b style="padding-left: 10px;">{{ dateReceived }}</b>
             </p>
             <p class="ms-4 text-wrap">
-              Transaction: <b style="padding-left: 10px;">{{ dmsName }}</b>
+              Type of Transaction: <b style="padding-left: 10px;">{{ type_of_transaction }}</b>
             </p>
             <p class="ms-4 text-wrap">
               DMS Title/Details: <b style="padding-left: 10px;">{{ dmsTitle }}</b>
@@ -253,11 +261,28 @@ const handleFormSubmit = async () => {
               ></v-text-field>
             </v-col>
              <v-col>
+              <v-select 
+                label="Type of Downtime" 
+                :items="type_of_downtime" 
+                item-title="title" 
+                item-value="value"
+                outlined 
+                v-model="typeDowntime"
+              ></v-select>
+            </v-col>
+          </v-row>
+          </transition>
+            <transition name="slide-fade">
+          <v-row v-if="downtimeChecker">
+              <v-col>
               <v-text-field
                 v-model="remark"
                 label="Downtime Remark"
                 type="text"
               ></v-text-field>
+            </v-col>
+            <v-col>
+
             </v-col>
           </v-row>
           </transition>
@@ -312,7 +337,6 @@ const handleFormSubmit = async () => {
           </v-card-actions>
         </v-card>
       </v-dialog>
-
         <v-row v-if="prescribedPeriodValues.length !== 0">
           <v-col v-for="(value, _) in prescribedPeriodValues" :key="value.prescribed_periods_id">
             <ScoreboardFormDialog 
@@ -345,7 +369,7 @@ const handleFormSubmit = async () => {
       </v-form>
 
      <SuccessDialog
-        @close-dialog="isSuccess = false"
+        @close-dialog="routePage"
         :isActive="isSuccess"
         :message="successMessage"
         />

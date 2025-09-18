@@ -10,10 +10,11 @@ import ScoreboardForm_releasing from '@/components/system/accomplishments/scoreb
 const route = useRoute();
 const dmsReferenceNumber = ref(route.query.dms_reference_number || '');
 const dateReceived = ref(route.query.date_received || '');
-const dmsName = ref(route.query.dmsName || '');
+const unformattedDate = ref(route.query.unformatted_date || '');
+const name = ref(route.query.name || '');
 const scoreboardId = ref(route.query.scoreboard_id || '');
-const processId = ref(route.query.process_id || '');
-const dmsTitle = ref(route.query.dms_title || '');
+const TypeofTransactionId = ref(route.query.type_of_transaction || '');
+const dmsTitle = ref(route.query.dms_title || 'N/A');
 console.log("✅ Received query parameters:", route.query);
 
 const isDrawerVisible = ref(true)
@@ -21,10 +22,11 @@ const isDrawerVisible = ref(true)
 const formProps = computed(() => ({
   dmsReferenceNumber: dmsReferenceNumber.value,
   dateReceived: dateReceived.value,
-  dmsName: dmsName.value,
+  unformatted_date: unformattedDate.value,
+  dmsName: name.value,
   scoreboardId: scoreboardId.value,
-  processId: processId.value,
-  dmsTitle: dmsTitle.value
+  type_of_transaction: TypeofTransactionId.value,
+  dmsTitle: dmsTitle.value 
 }));
 
 </script>

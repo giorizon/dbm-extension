@@ -23,6 +23,7 @@ import {
   RD_name,
   RD_pos,
   divisionChief,
+  ExtensionName,
 } from '@/utils/scoreboardHelpers';
 
 const dialog = ref(false);

@@ -110,8 +110,10 @@ export const fetchDivisionChief = async () => {
     .eq('division_id', userDivisionId.value)
     .eq('user_role', 'Division Chief');
 
-  if (error || !data?.length) return console.error("Error fetching division chief:", error);
-  divisionChief.value = data[0].supervisor;
+  if (error || !data?.length) 
+     return console.error("Error fetching division chief:", error);
+     divisionChief.value = data[0].supervisor;
+     return console.log("Successfully Fetch DivisionChief");
 };
 
 export const fetchARD = async () => {
@@ -119,10 +121,13 @@ export const fetchARD = async () => {
     .from('view_signatory')
     .select('*')
     .eq('pos_id', '4');
+    
+    console.log("Data from query:", data);
 
   if (error || !data?.length) return console.error("Error fetching ARD:", error);
   ARD_name.value = data[0].name;
   ARD_pos.value = data[0].position;
+  return console.log("Successfully Fetch ARD");
 };
 
 export const fetchRD = async () => {
@@ -130,11 +135,11 @@ export const fetchRD = async () => {
     .from('view_signatory')
     .select('*')
     .eq('pos_id', '5');
-
   if (error || !data?.length) return console.error("Error fetching RD:", error);
   RD_name.value = data[0].name;
   RD_pos.value = data[0].position;
-   ExtensionName.value = data[0].extension;
+  ExtensionName.value = data[0].extension;
+  return console.log("Successfully Fetch RD");
 };
 
 

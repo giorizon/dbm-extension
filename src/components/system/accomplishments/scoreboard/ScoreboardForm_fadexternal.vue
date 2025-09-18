@@ -29,6 +29,7 @@ const {
   formAction,
   refVForm,
   prescribedPeriodValues,
+  insertReleasingFad,
   requiredValidator
 } = useScoreboardLogic();
 
@@ -175,7 +176,7 @@ const dateForwarded = combinedDate.toISOString();
     console.log("Insert response:", insertedData, insertError);
     if (insertError) throw insertError;
     isSuccess.value = true;
-  console.log("✅ Passed downtime insert successfully"); // ← add this
+  console.log("✅ Passed downtime insert successfully"); 
   }
     const { error: insertError, data: insertedData } = await supabase
       .from('scoreboard_fad_process')
@@ -215,7 +216,7 @@ const fetchProcessOwners = async () => {
     }
 
     processOwners.value = data.map(user => {
-      console.log('user_id:', user.user_id); // 👈 Logs the UUID
+      console.log('user_id:', user.user_id); 
       return {
         id: user.id,
         name: `${user.pos} - ${user.firstname} ${user.lastname}`.trim()
@@ -294,7 +295,7 @@ if (isNaN(combinedDate.getTime())) {
    showEndProcessDialog.value = true;
 };
 const routePage = async () => {
-      router.push('/scoreboard');
+      router.push('/dashboard');
 }
 const handleEndProcess = async () => {
    if (!formData.value.dateForwarded) {
@@ -343,13 +344,13 @@ if (isNaN(combinedDate.getTime())) {
     // 🔁 1. UPDATE: scoreboard_fad_process
     const updateData = {
       date_forwarded: dateForwarded,
-      status: "Released"
+      status: "Pending for Releasing"
     };
 
     const { data: updatedRows, error: updateError } = await supabase
       .from('scoreboard_fad_process')
       .update(updateData)
-      .eq('id', props.processId.value)
+      .eq('scoreboard_id', props.scoreboardId.value)
       .select();
 
     if (updateError) {
@@ -377,14 +378,16 @@ if (isNaN(combinedDate.getTime())) {
 
       console.log("✅ Inserted into fad_downtime:", insertedDowntime);
     }
+     const typeId = 3;
+    await insertReleasingFad({ formData, dateForwarded, userUUID, typeId });
     isSuccess.value = true;
-
   } catch (err) {
     console.error("❌ Caught error in handleRelease:", err);
     formErrorMessage.value = err.message || "An unknown error occurred while submitting the form.";
   }
 };
 watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
+
 </script>
 
 <template>
@@ -393,12 +396,6 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
       <v-form ref="refVForm" @submit.prevent="handleFormSubmit">
         <v-row>
           <v-col>
-             <p class="ms-4 text-wrap">
-              Process ID: <b style="padding-left: 10px;">{{ processId }}</b>
-            </p>
-            <p class="ms-4 text-wrap">
-              Scoreboard ID: <b style="padding-left: 10px;">{{ scoreboardId }}</b>
-            </p>
             <p class="ms-4 text-wrap">
               DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>
             </p>
@@ -440,7 +437,6 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
                 :items="type_of_downtime" 
                 item-title="title" 
                 item-value="value"
-                :rules="[requiredValidator]" 
                 outlined 
                 v-model="typeDowntime"
               ></v-select>
@@ -564,7 +560,7 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
         </v-col>
         </v-row>
       </v-form>
-      <SuccessDialog @close-dialog="isSuccess = false" :isActive="isSuccess" />
+      <SuccessDialog  @close-dialog="routePage" :isActive="isSuccess" />
       <SuccessDialog
   :isActive="showEndProcessDialog"
   @close-dialog="routePage"

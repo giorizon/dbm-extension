@@ -8,12 +8,25 @@ import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
 import { watch } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 const validationError = ref("")
 const isSuccess = ref(false)
 const formErrorMessage = ref("")
 const userDivisionId = ref(null)
 const assignableUsers = ref([]);
+const formatDate = (timestamp) => {
+  if (!timestamp) return "N/A"; // Handle empty cases
+
+  const date = new Date(timestamp);
+
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(date);
+};
 
 const props = defineProps({
   dmsReferenceNumber: String,
@@ -277,11 +290,15 @@ console.log("📅 Selected Date:", dateForFormatting);
     console.log("✅ Insert into scoreboard_type_nature successful:", insertedTotNature);
     isSuccess.value = true;
 
+
   } catch (err) {
     console.error("🔥 Form submission error:", err);
     formErrorMessage.value = err.message || "Failed to submit the form.";
   }
 };
+const routePage = async () => {
+    router.push('/dashboard');
+}
 </script>
 
 <template>
@@ -290,17 +307,12 @@ console.log("📅 Selected Date:", dateForFormatting);
       <v-form ref="refVForm" @submit.prevent="handleFormSubmit">
         <v-row>
           <v-col>
-           <p class="ms-4 text-wrap">
-              Process ID: <b style="padding-left: 10px;">{{ processId }}</b>
-            </p>
-            <p class="ms-4 text-wrap">
-              Scoreboard ID: <b style="padding-left: 10px;">{{ scoreboardId }}</b>
-            </p>
+          
             <p class="ms-4 text-wrap">
               DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>
             </p>
             <p class="ms-4 text-wrap">
-              Date Received: <b style="padding-left: 10px;">{{ dateReceived }}</b>
+              Date Received: <b style="padding-left: 10px;">{{ formatDate(dateReceived)  }}</b>
             </p>
             <p class="ms-4 text-wrap">
               Agency Name: <b style="padding-left: 10px;">{{ agencyName }}</b>
@@ -462,7 +474,7 @@ console.log("📅 Selected Date:", dateForFormatting);
           </v-btn>
         </v-row>
       </v-form>
-      <SuccessDialog @close-dialog="isSuccess = false" :isActive="isSuccess" />
+      <SuccessDialog @close-dialog="routePage" :isActive="isSuccess" />
       <ErrorDialog 
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

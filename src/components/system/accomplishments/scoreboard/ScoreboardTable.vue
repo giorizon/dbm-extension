@@ -449,7 +449,7 @@ const fetchScoreboardDataBasedOnRole = async () => {
       .from('scoreboard_monitor_fad')
       .select('*')
       .eq('owner_id', userUUID.value)
-      .eq('status','Accepted')
+      .neq('status','Pending')
       .order('date_forwarded', { ascending: false })
 
     }else if(userRole.value==='Receiving'){
@@ -784,7 +784,7 @@ onMounted(async () => {
   <v-btn class="my-1" prepend-icon="mdi-account-plus" color="green-darken-1" @click="dialog = true">
             Add Received DMS
           </v-btn>
-
+ 
   <v-text-field
     v-model="search"
     label="Search"

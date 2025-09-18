@@ -173,6 +173,41 @@ const fetchUsersByDivision = async () => {
     role: user.user_role  // <-- Add this line
   }));
 };
+
+const insertReleasingFad = async ({ formData, dateForwarded, userUUID, typeId }) => {
+    try {
+      const { data: insertedData, error: insertError } = await supabase
+        .from("releasing_fad")
+        .insert([
+          {
+            scoreboard_id: formData.scoreboardId?.value ?? null,
+            status: "Pending",
+            date_received: dateForwarded,
+            from_id: userUUID.value,
+            type_of_transaction: typeId,
+          },
+        ])
+        .throwOnError();
+
+      console.log(
+        "Insert to table releasing_fad response:",
+        insertedData,
+        insertError
+      );
+
+      if (insertError) {
+        console.error("Error inserting into releasing_fad:", insertError);
+        throw insertError;
+      }
+
+      return insertedData; // let caller use the result
+    } catch (err) {
+      console.error("❌ insertReleasingFad failed:", err);
+      throw err;
+    }
+  };
+
+
 const staffList = ref([]);
 
 // ✅ Fetch Staff from Supabase
@@ -227,6 +262,7 @@ const fetchStaff = async () => {
     papData,
     fetchUsersByDivision,
     staffList,
+    insertReleasingFad,
     requiredValidator
   }
 }

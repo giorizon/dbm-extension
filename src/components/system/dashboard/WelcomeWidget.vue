@@ -54,16 +54,13 @@ const SelectedForm = computed(() => {
 
         <v-col cols="12" md="8">
           <h2 class="mb-5">
-            Welcome Aboard,
+            Hello,
             <span class="font-weight-black">
               {{ authStore.userData.firstname + ' ' + authStore.userData.lastname }}!
             </span>
           </h2>
           <p class="text-justify">
-            Welcome to the DBM HRPMS System! Lorem ipsum dolor, sit amet consectetur adipisicing
-            elit. Rem minima quam nobis. Rem quibusdam, laudantium veniam aliquid repudiandae
-            temporibus, cupiditate eos officiis dolorem suscipit repellendus doloribus ipsum iste
-            placeat odit!
+            Welcome to the DBM Caraga Performance Management System!
           </p>
         </v-col>
       </v-row>

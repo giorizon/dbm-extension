@@ -8,6 +8,9 @@ import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
 import { watch } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+
 const validationError = ref("")
 const isSuccess = ref(false)
 const formErrorMessage = ref("")
@@ -105,7 +108,7 @@ onMounted(async () => {
   await fetchDivisionChiefId();
   selectedTimeForwarded.value = format(new Date(), 'HH:mm');
 });
-const successMessage = ref("");
+const successMessage = ref("DMS Successfully Released");
 
 const addDocument = () => {
   if (newDocument.value.trim()) {
@@ -249,8 +252,9 @@ const handleFormSubmit = async () => {
     isSuccess.value = false; 
   }
 };
-
-
+const routePage = async () => {
+    router.push('/dashboard');
+}
 </script>
 
 <template>
@@ -437,11 +441,7 @@ const handleFormSubmit = async () => {
         </v-row>
       </v-form>
 
-     <SuccessDialog
-        @close-dialog="isSuccess = false"
-        :isActive="isSuccess"
-        :message="successMessage"
-        />
+      <SuccessDialog @close-dialog="routePage" :isActive="isSuccess"  :message="successMessage" />
       <ErrorDialog 
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

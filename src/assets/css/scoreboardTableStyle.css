@@ -47,6 +47,7 @@
   margin-bottom: 5px;
   text-transform: uppercase;
   display: inline-block;
+   border-bottom: 3px solid black;
   
 }
 .header-name{
@@ -76,7 +77,7 @@ signatory-block {
 .signatory-name {
   font-weight: bold;
   margin-top: 10px; /* Space between label and name */
-  text-decoration: underline; /* Example for signatory names */
+ /* text-decoration: underline;  Example for signatory names */
 }
 @media print {
   body, html {
@@ -139,6 +140,7 @@ signatory-block {
     font-size: 1em;
     margin-top: 8px;
     margin-bottom: 2px;
+    border-bottom: 3px solid black;
   }
 
   /* Adjust line height for better readability on print */

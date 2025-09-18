@@ -30,6 +30,7 @@ const {
   formAction,
   refVForm,
   prescribedPeriodValues,
+  insertReleasingFad,
   requiredValidator
 } = useScoreboardLogic();
 
@@ -179,10 +180,9 @@ const dateForwarded = combinedDate.toISOString();
     
 
     if (downtimeFlag.value === 1) {
-      console.log("Downtime ", downtimeValue.value);
+    console.log("Downtime ", downtimeValue.value);
     console.log("Downtime type:", typeDowntime.value);
     console.log("Remark:", remark.value);
-    alert("Inserting with downtime");
     const { error: insertError, data: insertedData } = await supabase
       .from('fad_downtime')
       .insert([{
@@ -309,7 +309,7 @@ const combinedDate = new Date(combinedDatetimeStr);
    showEndProcessDialog.value = true;
 };
 const routePage = async () => {
-      router.push('/scoreboard');
+      router.push('/dashboard');
 }
 const handleEndProcess = async () => {
   if (!formData.value.dateForwarded) {
@@ -331,10 +331,6 @@ const releaseWarning = async () => {
   
 };
 const handleRelease = async () => {
-
-
-
-
 showReleaseDialog.value = false;
 const dateform = new Date(formData.value.dateForwarded);
 const datePart = format(dateform, 'yyyy-MM-dd');
@@ -352,7 +348,7 @@ const combinedDate = new Date(combinedDatetimeStr);
 
     const updateData = {
       date_forwarded: dateForwarded,
-      status: "Released"
+      status: "Pending in Releasing"
     };
 
     const { data: updatedRows, error: updateError } = await supabase
@@ -386,9 +382,9 @@ const combinedDate = new Date(combinedDatetimeStr);
 
       console.log("✅ Inserted into fad_downtime:", insertedDowntime);
     }
-
+    const typeId = 1;
+    await insertReleasingFad({ formData, dateForwarded, userUUID, typeId });
     isSuccess.value = true;
-     router.push('/scoreboard');
   } catch (err) {
     console.error("❌ Caught error in handleRelease:", err);
     formErrorMessage.value = err.message || "An unknown error occurred while submitting the form.";
@@ -578,7 +574,7 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
         </v-col>
         </v-row>
       </v-form>
-      <SuccessDialog @close-dialog="isSuccess = false" :isActive="isSuccess" />
+      <SuccessDialog  @close-dialog="routePage" :isActive="isSuccess" />
       <SuccessDialog
   :isActive="showEndProcessDialog"
   @close-dialog="routePage"

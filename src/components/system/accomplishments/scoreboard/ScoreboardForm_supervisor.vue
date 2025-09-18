@@ -8,7 +8,8 @@ import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
 import { watch } from 'vue';
-
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 
 const validationError = ref("")
@@ -307,7 +308,9 @@ const handleFormSubmit = async () => {
     formErrorMessage.value = err.message || "Failed to submit the form.";
   } 
 };
-
+const routePage = async () => {
+    router.push('/dashboard');
+}
 </script>
 
 <template>
@@ -460,7 +463,7 @@ const handleFormSubmit = async () => {
         </v-row>
       </v-form>
 
-      <SuccessDialog @close-dialog="isSuccess = false" :isActive="isSuccess" />
+      <SuccessDialog @close-dialog="routePage" :isActive="isSuccess" />
       <ErrorDialog 
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

@@ -30,6 +30,7 @@ const {
   //formAction,
   refVForm,
   prescribedPeriodValues,
+  insertReleasingFad,
   requiredValidator
 } = useScoreboardLogic();
 const dateForwardedRef = ref(null)
@@ -175,7 +176,6 @@ if (isNaN(combinedDate.getTime())) {
     console.log("Remark:", remark.value);
 
     if (downtimeFlag.value === 1) {
-    alert("Inserting with downtime");
     const { error: insertError, data: insertedData } = await supabase
       .from('fad_downtime')
       .insert([{
@@ -291,7 +291,7 @@ const confirmEndProcess = async () => {
    showEndProcessDialog.value = true;
 };
 const routePage = async () => {
-      router.push('/scoreboard');
+      router.push('/dashboard');
 }
 const handleEndProcess = async () => {
   if (!formData.value.dateForwarded) {
@@ -331,7 +331,7 @@ const combinedDate = new Date(combinedDatetimeStr);
     // 🔁 1. UPDATE: scoreboard_fad_process
     const updateData = {
       date_forwarded: dateForwarded,
-      status: "Released"
+      status: "Accepted"
     };
 
     const { data: updatedRows, error: updateError } = await supabase
@@ -365,9 +365,9 @@ const combinedDate = new Date(combinedDatetimeStr);
 
       console.log("✅ Inserted into fad_downtime:", insertedDowntime);
     }
+    const typeId = 2;
+    await insertReleasingFad({ formData, dateForwarded, userUUID, typeId });
     isSuccess.value = true;
-    router.push('/scoreboard');
-
   } catch (err) {
     console.error("❌ Caught error in handleRelease:", err);
     formErrorMessage.value = err.message || "An unknown error occurred while submitting the form.";
@@ -558,7 +558,7 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
         </v-col>
         </v-row>
       </v-form>
-      <SuccessDialog @close-dialog="isSuccess = false" :isActive="isSuccess" />
+      <SuccessDialog  @close-dialog="routePage" :isActive="isSuccess" />
       <SuccessDialog
   :isActive="showEndProcessDialog"
   @close-dialog="routePage"

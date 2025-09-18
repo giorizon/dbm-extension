@@ -51,7 +51,7 @@ const fetchInternalReport = async () => {
 
     InternalReportData.value = data.map(row => ({
       dms_reference_number: row.dms_reference_number,
-      date_received: formatDate(row.date_forwarded),
+      date_received: formatDate(row.date_received),
       report: row.report,
       status: row.status,
       sub_unit: row.sub_unit,
@@ -84,7 +84,7 @@ const fetchExternalReport = async () => {
 
     ExternalReportData.value = data.map(row => ({
       dms_reference_number: row.dms_reference_number,
-      date_received: formatDate(row.date_forwarded),
+      date_received: formatDate(row.date_received),
       report: row.report,
       status: row.status,
       sub_unit: row.sub_unit,
@@ -116,7 +116,7 @@ const fetchCitizenCharterReport = async () => {
 
     CitizenCharterData.value = data.map(row => ({
       dms_reference_number: row.dms_reference_number,
-      date_received: formatDate(row.date_forwarded),
+      date_received: formatDate(row.date_received),
       report: row.report,
       status: row.status,
       sub_unit: row.sub_unit,
@@ -209,7 +209,7 @@ onMounted(async () => {
                   <tr v-for="item in items" :key="item.dms_reference_number">
                     <td>{{ item.dms_reference_number }}</td>
                     <td>{{ item.report }}</td>
-                    <td>{{ item.date_forwarded }}</td>
+                    <td>{{ item.date_received }}</td>
                     <td>{{ item.sub_unit }}</td>
                     <td>
                       <v-btn 
@@ -248,7 +248,7 @@ onMounted(async () => {
                   <tr v-for="item in items" :key="item.dms_reference_number">
                     <td>{{ item.dms_reference_number }}</td>
                     <td>{{ item.report }}</td>
-                    <td>{{ item.date_forwarded }}</td>
+                    <td>{{ item.date_received }}</td>
                     <td>{{ item.sub_unit }}</td>
                     <td>
                       <v-btn 
@@ -285,7 +285,7 @@ onMounted(async () => {
                   <tr v-for="item in items" :key="item.dms_reference_number">
                     <td>{{ item.dms_reference_number }}</td>
                     <td>{{ item.report }}</td>
-                    <td>{{ item.date_forwarded }}</td>
+                    <td>{{ item.date_received }}</td>
                     <td>{{ item.sub_unit }}</td>
                     <td>
                       <v-btn 
