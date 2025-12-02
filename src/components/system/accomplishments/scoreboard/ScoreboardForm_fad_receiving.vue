@@ -291,6 +291,7 @@ const timeDialog2 = ref(false);
 function reloadPage() {
   window.location.reload();
 }
+
 const submitScoreboard = async () => {
   try {
     // Format received datetime

@@ -6,10 +6,12 @@ import AccountSettingsView from '@/views/system/AccountSettingsView.vue'
 import UserRolesView from '@/views/system/manage-users/UserRolesView.vue'
 import UsersView from '@/views/system/manage-users/UsersView.vue'
 import AgenciesView from '@/views/system/manage-agencies/AgenciesView.vue'
+import TypeOfTransactionView from '@/views/system/type-of-transaction/TypeOfTransactionView.vue'
 import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
 import AddScoreBoardIndividualView from '@/views/system/accomplishments/AddScoreboardIndividualView.vue'
 import AddScoreBoardSuperovisorView from '@/views/system/accomplishments/AddScoreboardSupervisorView.vue'
 import AddScoreBoardDivisionView from '@/views/system/accomplishments/AddScoreboardDivision.vue'
+import AddScoreBoardSecretaryView from '@/views/system/accomplishments/AddScoreboardSecretary.vue'
 import AddScoreBoardReleasingView from '@/views/system/accomplishments/AddScoreboardReleasing.vue'
 import AddScoreBoardReleasingFAD from '@/views/system/accomplishments/AddScoreboardReleasingFAD.vue'
 import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
@@ -21,7 +23,7 @@ import AddScoreBoardFadCitizenCharterView from '@/views/system/accomplishments/A
 // 👉 Routes
 export const routes = [
   // Auth Pages
-  {
+  {   
     path: '/',
     name: 'home'
   },
@@ -67,6 +69,12 @@ export const routes = [
     path: '/add-scoreboard-division',
     name: 'add-scoreboard-division',
     component: AddScoreBoardDivisionView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-secretary-level',
+    name: 'add-scoreboard-secretery-level',
+    component: AddScoreBoardSecretaryView,
     meta: { requiresAuth: true }
   },
   {
@@ -137,7 +145,12 @@ export const routes = [
     component: AgenciesView,
     meta: { requiresAuth: true }
   },
-
+    {
+    path: '/manage/type-of-transaction',
+    name: 'manage-type-of-transaction',
+    component: TypeOfTransactionView,
+    meta: { requiresAuth: true }
+  },
   // Errors Pages
   {
     path: '/forbidden',

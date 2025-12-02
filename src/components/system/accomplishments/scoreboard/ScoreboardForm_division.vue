@@ -16,6 +16,7 @@ const isSuccess = ref(false)
 const formErrorMessage = ref("")
 const userDivisionId = ref(null)
 const DivisionChiefId = ref(null)
+const SecretaryId = ref(null)
 const selDateForwarded = ref(null);
 const dateForwardedDialog = ref(false);
 
@@ -134,6 +135,26 @@ const fetchDivisionChiefId = async () => {
   DivisionChiefId.value = data[0].user_id;
   console.log("✅ Retrieved User Division Chief ID:", DivisionChiefId.value);
 };
+const fetchSecretaryId = async () => {
+  
+  const { data, error } = await supabase
+    .from('user_profile_role')
+    .select('user_id') 
+    .eq('user_role', 'Secretary');
+
+  if (error) {
+    console.error("Error fetching Secretary ID:", error);
+    return;
+  }
+
+  if (data.length === 0) {
+    console.warn("No Secretary ID was found");
+    return;
+  }
+
+  SecretaryId.value = data[0].user_id;
+  console.log("✅ Retrieved User Secretary ID:", SecretaryId.value);
+};
 const type_of_downtime = ref([])
   // Fetch Type of Transactions from Supabase
 const fetchTypeOfDowntime = async () => {
@@ -168,6 +189,7 @@ onMounted(async () => {
   await fetchLoggedInUser();      
   await fetchUserDivisionId();    
   await fetchDivisionChiefId();
+  await fetchSecretaryId();
   await fetchReleasingId();
   selectedTimeForwarded.value = format(new Date(), 'HH:mm');
 });
@@ -175,7 +197,7 @@ onMounted(async () => {
 const handleFormSubmit = async () => { 
 
  // const scoreboardId = formData.scoreboardId.value;
-   console.log("Date selected: ", selDateForwarded.value);
+  console.log("Date selected: ", selDateForwarded.value);
   const dateForFormatting = selDateForwarded.value
       ? format(new Date(selDateForwarded.value), "yyyy-MM-dd") 
       : null; 
@@ -194,14 +216,11 @@ const handleFormSubmit = async () => {
  
   validationError.value = "";
   formErrorMessage.value = "";
-  // 🆕 Safely extract from formData
-
-  //const typeDowntime = formData.typeDowntime || null;
 
   console.log("Scoreboard ID is ", scoreboardId);
   const updateData = {
     date_forwarded: combinedDateTime,
-    status: "Accepted"
+    status: "Forwarded"
   };
   try {
     const { data, error: updateError } = await supabase
@@ -243,9 +262,9 @@ const handleFormSubmit = async () => {
       .insert([{
         scoreboard_id: formData.scoreboardId,
         status: 'Pending',
-        owner_id: releasing_id.value,
+        owner_id: SecretaryId.value,
         from_id: userUUID.value,
-        level: 'Releasing',
+        level: 'Secretary',
         date_received: combinedDateTime,
         date_forwarded: null
       }])
@@ -390,7 +409,7 @@ const routePage = async () => {
             {{ validationError }}
           </v-alert>
           <v-btn 
-            text="Submit to Releasing" 
+            text="Forward to Secretary" 
             type="submit" 
             color="green-darken-4"
           >

@@ -170,7 +170,7 @@ const fetchUsersByDivision = async () => {
   .map(user => ({
     title: `[${user.user_role}] - ${user.supervisor}`,
     value: user.user_id,
-    role: user.user_role  // <-- Add this line
+    role: user.user_role 
   }));
 };
 

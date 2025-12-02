@@ -7,12 +7,14 @@ import { ref, onMounted } from 'vue';
 import ErrorDialog from './ErrorDialog.vue';
 import supabase from './supabase'; 
 import { format, parse } from 'date-fns';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
-const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, isSuccess, refVForm } = useScoreboardForm();
+
+const { handleDialogFormSubmit, handleFormSubmit, formData, formAction, refVForm } = useScoreboardForm();
 const { prescribedPeriodValues } = useScoreboardData(formData);
-const timeMenu = ref();
 
-
+const isSuccess = ref(false);
 const user = ref(null);
 
 //
@@ -204,12 +206,15 @@ const submitScoreboard = async () => {
       return;
     }
 
-    alert('✅ Data successfully saved to both tables!');
+      isSuccess.value = true;
   } catch (err) {
     console.error('Unexpected error:', err);
     alert('❌ Unexpected error occurred while saving to the database.');
   }
 };
+const routePage = async () => {
+    router.push('/add-scoreboard');
+}
 </script>
 
 <template>
@@ -231,23 +236,20 @@ const submitScoreboard = async () => {
         </v-row>
         <v-row>
           <v-col>
-            <v-select
-              label="Agency Name"
-              :items="agencies"
-              item-title="agency_name"
-              item-value="id"
-              :rules="[requiredValidator]"
-              outlined
-              v-model="formData.particulars.agencyID"   
-              @update:model-value="handleAgencyChange"
-            >     
-              <template v-slot:prepend-item>
-               
-              </template>
-            </v-select>
+           <v-autocomplete
+            label="Agency Name"
+            :items="agencies"
+            item-title="agency_name"
+            item-value="id"
+            v-model="formData.particulars.agencyID"
+            :rules="[requiredValidator]"
+            outlined
+            clearable
+            @change="handleAgencyChange"
+          />
           </v-col>
           <v-col>
-            <v-select
+            <v-autocomplete
               label="Assign to"
               :items="staffList"
               item-title="name"
@@ -255,7 +257,7 @@ const submitScoreboard = async () => {
               :rules="[requiredValidator]"
               outlined
               v-model="formData.particulars.staffID"
-          ></v-select>
+          />
           </v-col>
         </v-row>
         <!-- DATE RECEIVED -->
@@ -382,11 +384,8 @@ const submitScoreboard = async () => {
           <v-btn color="primary" @click="submitScoreboard">Submit Scoreboard</v-btn>
         </v-row>
       </v-form>
+      <SuccessDialog @close-dialog="routePage" :isActive="isSuccess" />
 
-      <SuccessDialog
-        @close-dialog="() => { isSuccess = false }"
-        :isActive="isSuccess"
-      />
       <ErrorDialog
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

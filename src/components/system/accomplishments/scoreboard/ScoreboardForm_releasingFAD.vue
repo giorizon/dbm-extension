@@ -51,9 +51,6 @@ const remark = ref(null);
 const downtimeFlag = ref(0); 
 const userUUID = ref(null);
 
-const releasedDocuments = ref([]);
-
-const dmsName= props.dmsName;
 const scoreboardId = props.scoreboardId;
 const dmsTitle = props.dmsTitle;
 

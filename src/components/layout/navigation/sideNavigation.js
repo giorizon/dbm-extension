@@ -2,14 +2,13 @@
 export const mainNav = [
   ['Monitoring  Scoreboard', 'mdi-account-box-multiple'],
   ['Accomplishments', 'mdi-account'],
-  ['Report', 'mdi-file-chart']
+  ['Report', 'mdi-file-chart'],
+  ['Administrator Panel', 'mdi-cog'] 
 ]
 
 // 👉 Sub Navigations; Title, Icon, Subtitle, Redirect Path
 export const menuItemsNav1 = [
-   ['Scoreboard Monitoring', 'mdi-developer-board', 'PMS Report', '/scoreboard-monitoring'],
-//  ['User Roles', 'mdi-tag-multiple', '', '/manage/user/roles'],
- // ['Users Management', 'mdi-account-multiple', '', '/manage/users'],
+   ['Scoreboard Monitoring', 'mdi-developer-board', 'PMS Report', '/scoreboard-monitoring']
  // ['Agency Name', 'mdi-office-building-cog', '', '/manage/agencies']
 ]
 export const menuItemsNav2 = [
@@ -20,6 +19,10 @@ export const menuItemsNav2 = [
 ]
 export const menuItemsNav3 = [
   ['Audit Trail', 'mdi-list-box', 'Record Keeping and Logging', '/report/ipcr'],
- // ['Division Performance', 'mdi-domain', 'Contract & Rating', '/report/dpcr'],
- // ['Office Performance', 'mdi-office-building', 'Contract & Rating', '/report/opcr']
+]
+export const menuItemsNav4 = [
+  ['User Roles', 'mdi-tag-multiple', '', '/manage/user/roles'],
+  ['Users Management', 'mdi-account-multiple', '', '/manage/users'],
+  ['Agency Management', 'mdi-office-building', '', '/manage/agencies'],
+  ['Transcation Type Management', 'mdi-shape-outline', '', '/manage/type-of-transaction'],
 ]

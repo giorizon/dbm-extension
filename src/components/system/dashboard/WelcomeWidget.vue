@@ -3,11 +3,13 @@
 //import { useAuthUserStore } from '@/stores/authUser'
 import { useDisplay } from 'vuetify'
 import '@/assets/dashboard.css'
+import '@/assets/css/scoreboardTableStyle.css'
 import { useAuthUserStore } from '@/stores/authUser'
 import receiving_dashboard from '@/components/system/dashboard/ReceivingWelcome.vue'
 import technical_dashboard from '@/components/system/dashboard/TechnicalWelcome.vue'
 import supervisor_dashboard from '@/components/system/dashboard/SupervisorWelcome.vue'
 import division_dashboard from '@/components/system/dashboard/DivisionWelcome.vue'
+import secretary_dashboard from '@/components/system/dashboard/SecretaryWelcome.vue'
 import releasing_dashboard from '@/components/system/dashboard/ReleasingWelcome.vue'
 import admin_dashboard from '@/components/system/dashboard/AdminWelcome.vue'
 import fad_dashboard from '@/components/system/dashboard/FadWelcome.vue'
@@ -37,7 +39,10 @@ const SelectedForm = computed(() => {
     return division_dashboard;
   }  else if (userRole.value === 'Releasing Data') {
     return releasing_dashboard;
-  }else {
+  }  else if (userRole.value === 'Secretary') {
+    return secretary_dashboard;
+  }
+  else {
     return receiving_dashboard;
   }
 });
@@ -59,7 +64,7 @@ const SelectedForm = computed(() => {
               {{ authStore.userData.firstname + ' ' + authStore.userData.lastname }}!
             </span>
           </h2>
-          <p class="text-justify">
+          <p class="text-justify welcome-message">
             Welcome to the DBM Caraga Performance Management System!
           </p>
         </v-col>

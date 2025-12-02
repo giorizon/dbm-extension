@@ -1,0 +1,5 @@
+.my-custom-table .v-data-table-header__content {
+  font-weight: 800 !important; 
+  font-size: 1rem; 
+  color: #000; /* I assumed #500 was a typo for red, fixed to hex */
+}

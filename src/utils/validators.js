@@ -155,3 +155,24 @@ export const agencyNameValidator = async (agencyName) => {
     return `Error checking agency name: ${err.message}`
   }
 }
+
+//Validate transaction type
+export const TransactionTypeValidator = async (transactionType) => {
+  if (isEmpty(transactionType)) return 'Transaction type is required'
+
+  try {
+    const { data, error } = await supabase
+      .from('type_of_transactions')
+      .select('transaction_type')
+      .eq('transaction_type', transactionType)
+
+    if (error) throw new Error(error.message)
+
+    if (data.length > 0) return 'Transaction Type already exists.'
+
+    return true
+  } catch (err) {
+    return `Error checking agency name: ${err.message}`
+  }
+}
+

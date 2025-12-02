@@ -146,7 +146,9 @@ onMounted(async () => {
                 </v-card>
             </v-container>
           </v-col>
-         
+          <v-col>
+
+          </v-col>
       </v-row>
       <v-row>
         <v-col>
@@ -179,6 +181,9 @@ onMounted(async () => {
                 </v-card-text>
                 </v-card>
             </v-container>
+          </v-col>
+          <v-col>
+            
           </v-col>
       </v-row>
     </v-card-text>
