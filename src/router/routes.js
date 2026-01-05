@@ -6,7 +6,9 @@ import AccountSettingsView from '@/views/system/AccountSettingsView.vue'
 import UserRolesView from '@/views/system/manage-users/UserRolesView.vue'
 import UsersView from '@/views/system/manage-users/UsersView.vue'
 import AgenciesView from '@/views/system/manage-agencies/AgenciesView.vue'
+import DivisionView from '@/views/system/manage-division/DivisionView.vue'
 import TypeOfTransactionView from '@/views/system/type-of-transaction/TypeOfTransactionView.vue'
+import NatureOfTransactionView from '@/views/system/nature-of-transaction/NatureOfTransactionView.vue'
 import AddScoreBoardRecordView from '@/views/system/accomplishments/AddScoreBoardRecordView.vue'
 import AddScoreBoardIndividualView from '@/views/system/accomplishments/AddScoreboardIndividualView.vue'
 import AddScoreBoardSuperovisorView from '@/views/system/accomplishments/AddScoreboardSupervisorView.vue'
@@ -146,9 +148,21 @@ export const routes = [
     meta: { requiresAuth: true }
   },
     {
+    path: '/manage/division',
+    name: 'manage-division',
+    component: DivisionView,
+    meta: { requiresAuth: true }
+  },
+    {
     path: '/manage/type-of-transaction',
     name: 'manage-type-of-transaction',
     component: TypeOfTransactionView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/manage/nature-of-transaction',
+    name: 'manage-nature-of-transaction',
+    component: NatureOfTransactionView,
     meta: { requiresAuth: true }
   },
   // Errors Pages

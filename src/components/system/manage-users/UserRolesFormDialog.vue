@@ -49,7 +49,6 @@ const onSubmit = async () => {
   // Reset Form Action utils
   formAction.value = { ...formActionDefault, formProcess: true }
 
-  // Check if isUpdate is true, then do update, if false do add
   const { data, error } = isUpdate.value
     ? await userRolesStore.updateUserRole(formData.value)
     : await userRolesStore.addUserRole(formData.value)

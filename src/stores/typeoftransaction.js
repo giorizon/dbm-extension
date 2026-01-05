@@ -14,20 +14,31 @@ export const useToTStore = defineStore('typeoftransaction', () => {
   }
 
   // Retrieve Type of Transaction
- async function getToTTable({ page, itemsPerPage }) {
+ async function getToTTable({ page, itemsPerPage, search = ''  }) {
   try {
-    // 1. Get Data AND Count in one request
-    const { data, count, error } = await supabaseAdmin
+      // 1. Start with the base query
+    let query = supabaseAdmin
       .from('type_of_transactions')
-      // { count: 'exact' } tells Supabase to return the total rows too
-      .select('*', { count: 'exact' }) 
+     .select('*', { count: 'exact' }) 
       .eq('remark','active')
       .order('transaction_type', { ascending: true })
       .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
 
+       // 2. APPLY SEARCH FILTER IF A SEARCH TERM IS PRESENT
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`
+      
+      // FIX: Only search across the desired text columns (noq_name, description)
+      // pap_id has been removed.
+      query = query.or(
+        `transaction_type.ilike.${searchTerm}`
+      )
+    }
+    // 3. Apply pagination/range
+    const { data, count, error } = await query
+      .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
     if (error) throw error
-
-    // 2. Assign both values to your state
+        // 4. Assign both values to your state
     ToTTable.value = data
     ToTTotal.value = count || 0
 

@@ -2,22 +2,22 @@
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import '@/assets/css/adminPage.css'
-import { useToTStore } from '@/stores/typeoftransaction'
+import { useStore } from '@/stores/natureoftransaction'
 import AlertNotification from '@/components/common/AlertNotification.vue'
-import AddFormDialog from './ToTFormDialog.vue'
+import AddFormDialog from './NoTFormDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import { formActionDefault } from '@/utils/supabase'
-import { tableHeaders } from './ToTTableUtils'
+import { tableHeaders } from './NoTTableUtils'
 import { useDate } from 'vuetify'
 
 // Utilize pre-defined vue functions
 const date = useDate()
 
 // Use Pinia Store for Agencies
-const tblStore = useToTStore()
+const tblStore = useStore()
 const deleteId = ref('')
 // ADD THIS: Destructure state variables safely
-const { ToTTable, ToTTotal } = storeToRefs(tblStore)
+const { NoTTable, NoTTotal } = storeToRefs(tblStore)
 
 // Load Variables
 const tableOptions = ref({
@@ -42,9 +42,9 @@ const onAdd = () => {
 //for Update 
 const onUpdate = (item) => {
   const data = item.raw || item 
-  const { top_id, transaction_type, prescribed_period, pp_spcr, pp_dpcr, pp_opcr, downtime_type } = data
+  const { noq_id, noq_name, pap_id} = data
 
-  itemData.value = { top_id, transaction_type, prescribed_period, pp_spcr, pp_dpcr, pp_opcr, downtime_type}
+  itemData.value = {  noq_id, noq_name, pap_id}
   isDialogVisible.value = true
 }
 //for search input
@@ -73,20 +73,18 @@ const onConfirmDelete = async () => {
   formAction.value = { ...formActionDefault, formProcess: true }
 
   try {
-    const { error } = await tblStore.deleteTransactionType(deleteId.value)
+    const { error } = await tblStore.deleteTransactionNature(deleteId.value)
 
     // Turn off processing
     formAction.value.formProcess = false
-
     if (error) {
       // Add Error Message and Status Code
       formAction.value.formErrorMessage = error.message
       formAction.value.formStatus = error.status
       return
     }
-
     // Add Success Message
-    formAction.value.formSuccessMessage = 'Successfully Deleted Transation Type.'
+    formAction.value.formSuccessMessage = 'Successfully Archived Transation Nature.'
 
     // Retrieve Data
     onLoadItems(tableOptions.value)
@@ -96,14 +94,12 @@ const onConfirmDelete = async () => {
   }
 }
 
-
-// Load Tables Data
-const onLoadItems = async ({page, itemsPerPage, sortBy, search }) => {
+const onLoadItems = async ({ page, itemsPerPage, sortBy, search }) => {
   // Trigger Loading
   tableOptions.value.isLoading = true
 
   try {
-    await tblStore.getToTTable({ page, itemsPerPage, sortBy, search })
+    await tblStore.getNoTTable({ page, itemsPerPage, sortBy, search })
   } catch (err) {
     formAction.value.formErrorMessage = 'Error loading agencies: ' + err.message
   } finally {
@@ -111,6 +107,8 @@ const onLoadItems = async ({page, itemsPerPage, sortBy, search }) => {
     tableOptions.value.isLoading = false
   }
 }
+
+
 </script>
 
 <template>
@@ -128,14 +126,14 @@ const onLoadItems = async ({page, itemsPerPage, sortBy, search }) => {
         v-model:sort-by="tableOptions.sortBy"
         :loading="tableOptions.isLoading"
         :headers="tableHeaders"
-        :items="ToTTable"
-        :items-length="ToTTotal"
+        :items="NoTTable"
+        :items-length="NoTTotal"
         
         @update:options="onLoadItems"
       >
         <template #top>
           <v-row dense>
-              <v-col cols="12" md="4">
+             <v-col cols="12" md="4">
               <v-text-field
                 v-model="tableOptions.search"
                 label="Search…"
@@ -156,7 +154,7 @@ const onLoadItems = async ({page, itemsPerPage, sortBy, search }) => {
                 block
                 @click="onAdd"
               >
-                Add Transaction Type
+                Add Transaction Nature
               </v-btn>
             </v-col>
           </v-row>
@@ -164,29 +162,19 @@ const onLoadItems = async ({page, itemsPerPage, sortBy, search }) => {
           <v-divider class="my-5"></v-divider>
         </template>
 
-        <template #item.transaction_type="{ item }">
-          <span class="font-weight-bold">{{ item.transaction_type }}</span>
+        <template #item.noq_name="{ item }">
+          <span class="font-weight-bold">{{ item.noq_name }}</span>
         </template>
 
-        <template #item.prescribed_period="{ item }">
+        <template #item.pap_id="{ item }">
           <span>
-            {{ item.prescribed_period || 'No IPCR Prescribed Period' }}
+            {{ item.pap_id|| 'No PAP' }}
           </span>
         </template>
         
-        <template #item.pp_spcr="{ item }">
+        <template #item.description="{ item }">
           <span>
-            {{ item.pp_spcr || 'No SPCR Prescribed Period' }}
-          </span>
-        </template>
-        <template #item.pp_dpcr="{ item }">
-          <span>
-            {{ item.pp_dpcr || 'No DPCR Prescribed Period' }}
-          </span>
-        </template>
-        <template #item.pp_opcr="{ item }">
-          <span>
-            {{ item.pp_opcr || 'No OPCR Prescribed Period' }}
+            {{ item.description || 'No SPCR Prescribed Period' }}
           </span>
         </template>
         <template #item.actions="{ item }">
@@ -196,7 +184,7 @@ const onLoadItems = async ({page, itemsPerPage, sortBy, search }) => {
               <v-tooltip activator="parent" location="top">Edit Agency</v-tooltip>
             </v-btn>
 
-            <v-btn variant="text" density="comfortable" @click="onDelete(item.top_id)" icon>
+            <v-btn variant="text" density="comfortable" @click="onDelete(item.noq_id)" icon>
               <v-icon icon="mdi-trash-can" color="red-darken-4"></v-icon>
               <v-tooltip activator="parent" location="top">Delete Agency</v-tooltip>
             </v-btn>
