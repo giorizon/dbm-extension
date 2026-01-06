@@ -40,7 +40,7 @@ const formAction = ref({
 const onUpdate = (item) => {
   const { id, email, phone, user_metadata } = item
 
-  itemData.value = { id, email, phone, ...user_metadata }
+  userFormData.value = { id, email, phone, ...user_metadata } // update the correct ref
   isDialogVisible.value = true
 }
 
@@ -185,7 +185,7 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
   </v-row>
 
 <UsersFormDialog
-  v-if="isDialogVisible"
+  v-show="isDialogVisible"
   v-model:is-dialog-visible="isDialogVisible"
   :item-data="userFormData"
   :table-options="tableOptions"
