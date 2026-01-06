@@ -63,6 +63,8 @@ const fetchUser = async () => {
       .from('view_user_division')
       .select('user_id, firstname, middlename, lastname, user_role')
       .neq('user_role', 'FAD')
+      .neq('user_role', 'Administrator')
+      .order('firstname', { ascending: true })
 
     if (error) {
       console.error('Error fetching user', error)
@@ -74,8 +76,8 @@ const fetchUser = async () => {
         user.middlename,
         user.lastname
       ]
-        .filter(Boolean)      // removes null / empty values
-        .join(' ')            // joins with space
+        .filter(Boolean)      
+        .join(' ')          
       return {
         id: user.user_id,
         firstname: user.firstname,
