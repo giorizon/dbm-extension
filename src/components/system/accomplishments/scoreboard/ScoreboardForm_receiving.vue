@@ -3,7 +3,7 @@ import ScoreboardFormDialog from './ScoreboardFormDialog.vue';
 import { requiredValidator } from '@/utils/validators';
 import SuccessDialog from './SuccessDialog.vue';
 import { useScoreboardData, useScoreboardForm } from '@/composables/scoreboard/scoreboard';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import ErrorDialog from './ErrorDialog.vue';
 import supabase from './supabase'; 
 import { format, parse } from 'date-fns';
@@ -26,7 +26,11 @@ const fetchUser = async () => {
   }
   user.value = data?.user;
 };
-
+watch(isSuccess, (val) => {
+  if (val === false) {
+    router.go(0)
+  }
+})
 onMounted(() => {
   fetchUser();
   fetchAgencies();
@@ -213,8 +217,8 @@ const submitScoreboard = async () => {
   }
 };
 const onCloseSuccess = () => {
-  isSuccess.value = false   // 🔥 REQUIRED — closes dialog
-  routePage()               // ✅ navigation logic
+  isSuccess.value = false 
+  routePage()            
 }
 const routePage = async () => {
     router.push('/add-scoreboard');
@@ -388,10 +392,7 @@ const routePage = async () => {
           <v-btn color="primary" @click="submitScoreboard">Submit Scoreboard</v-btn>
         </v-row>
       </v-form>
-      <SuccessDialog
-        :isActive="isSuccess"
-        @close-dialog="onCloseSuccess"
-      />
+      <SuccessDialog v-model="isSuccess" />
       <ErrorDialog
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"
