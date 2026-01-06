@@ -2,9 +2,11 @@
 import { useUsersStore } from '@/stores/users'
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import UsersFormDialog from './UsersFormDialog.vue'
+import UserAssignDialog from './UserAssignDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import { formActionDefault } from '@/utils/supabase'
 import { tableHeaders } from './usersTableUtils'
+import { supabase } from '@/utils/supabase'
 import { useDate } from 'vuetify'
 import { ref } from 'vue'
 
@@ -13,7 +15,11 @@ const date = useDate()
 
 // Use Pinia Store
 const usersStore = useUsersStore()
-
+const onAssigned = ({ message }) => {
+  formAction.value.formSuccessMessage = message
+}
+const userFormData = ref(null)
+const assignFormData = ref(null)
 // Load Variables
 const tableOptions = ref({
   page: 1,
@@ -22,6 +28,7 @@ const tableOptions = ref({
   isLoading: false
 })
 const isDialogVisible = ref(false)
+const isDialogVisible2 = ref(false)
 const isConfirmDeleteDialog = ref(false)
 const itemData = ref(null)
 const deleteId = ref('')
@@ -74,6 +81,32 @@ const onConfirmDelete = async () => {
   onLoadItems(tableOptions.value)
 }
 
+// Assign User
+const assignDiv = async (item) => {
+  try {
+    const userId = item.id
+
+    const { data, error } = await supabase
+      .from('technical_division_user')
+      .select('td_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error fetching division:', error)
+      return
+    }
+
+    assignFormData.value = {
+      user_id: userId,
+      td_id: data?.td_id ?? null
+    }
+
+    isDialogVisible2.value = true
+  } catch (err) {
+    console.error('Unexpected error:', err)
+  }
+}
 // Load Tables Data
 const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
   // Trigger Loading
@@ -136,7 +169,10 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
               <v-icon icon="mdi-pencil"></v-icon>
               <v-tooltip activator="parent" location="top">Edit User</v-tooltip>
             </v-btn>
-
+            <v-btn variant="text" density="comfortable" @click="assignDiv(item)" icon>
+              <v-icon icon="mdi-clipboard-account"></v-icon>
+              <v-tooltip activator="parent" location="top">Assign Division</v-tooltip>
+            </v-btn> 
             <v-btn variant="text" density="comfortable" :disabled="item.user_metadata.is_admin"
               @click="onDelete(item.id)" icon>
               <v-icon icon="mdi-trash-can" color="red-darken-4"></v-icon>
@@ -148,9 +184,18 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
     </v-col>
   </v-row>
 
-  <UsersFormDialog v-model:is-dialog-visible="isDialogVisible" :item-data="itemData" :table-options="tableOptions">
-  </UsersFormDialog>
+<UsersFormDialog
+  v-if="isDialogVisible"
+  v-model:is-dialog-visible="isDialogVisible"
+  :item-data="userFormData"
+  :table-options="tableOptions"
+/>
 
+<UserAssignDialog
+  v-show="isDialogVisible2"
+  v-model:is-dialog-visible="isDialogVisible2"
+  :item-data="assignFormData"
+/>
   <ConfirmDialog v-model:is-dialog-visible="isConfirmDeleteDialog" title="Confirm Delete"
     text="Are you sure you want to delete user?" @confirm="onConfirmDelete"></ConfirmDialog>
 </template>

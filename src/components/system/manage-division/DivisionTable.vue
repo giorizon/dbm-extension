@@ -2,15 +2,12 @@
 import { usedbStore } from '@/stores/division'
 import AlertNotification from '@/components/common/AlertNotification.vue'
 import FormDialog from './DivisionFormDialog.vue'
+import FormDialog2 from './UserDivisionDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import { formActionDefault } from '@/utils/supabase'
 import { tableHeaders } from './divisionTableUtils'
-import { useDate } from 'vuetify'
 import { onMounted } from 'vue'
 import { ref } from 'vue'
-
-// Utilize pre-defined vue functions
-const date = useDate()
 
 // Use Pinia Store
 const divisionStore = usedbStore()
@@ -23,6 +20,7 @@ const tableOptions = ref({
   isLoading: false
 })
 const isDialogVisible = ref(false)
+const isDialogVisible2 = ref(false)
 const isConfirmDeleteDialog = ref(false)
 const itemData = ref(null)
 const deleteId = ref('')
@@ -45,6 +43,13 @@ const onUpdate = (item) => {
 const onAdd = () => {
   itemData.value = null
   isDialogVisible.value = true
+}
+
+
+// Trigger Assign user to a division
+const assignUser = () => {
+  itemData.value = null
+  isDialogVisible2.value = true
 }
 // Trigger Delete Btn
 const onDelete = (id) => {
@@ -109,7 +114,7 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
           <v-row dense>
             <v-spacer></v-spacer>
              <v-col cols="12" md="3">
-                <v-btn class="my-1" prepend-icon="mdi-plus" color="blue-darken-4" block @click="onAdd">
+                <v-btn class="my-1" prepend-icon="mdi-plus" color="blue-darken-4" block @click="assignUser">
                 Assign User to Division
               </v-btn>
             </v-col>
@@ -146,7 +151,6 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
               <v-icon icon="mdi-pencil"></v-icon>
               <v-tooltip activator="parent" location="top">Edit Division</v-tooltip>
             </v-btn>
-
             <v-btn variant="text" density="comfortable"
               @click="onDelete(item.td_id)" icon>
               <v-icon icon="mdi-trash-can" color="red-darken-4"></v-icon>
@@ -160,6 +164,8 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
 
   <FormDialog v-model:is-dialog-visible="isDialogVisible" :item-data="itemData" :table-options="tableOptions">
   </FormDialog>
+    <FormDialog2 v-model:is-dialog-visible="isDialogVisible2" :item-data="itemData" :table-options="tableOptions">
+  </FormDialog2>
 
   <ConfirmDialog v-model:is-dialog-visible="isConfirmDeleteDialog" title="Confirm Delete"
     text="Are you sure you want to delete this Division?" @confirm="onConfirmDelete"></ConfirmDialog>

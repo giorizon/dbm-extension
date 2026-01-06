@@ -75,5 +75,20 @@ async function getDivisionTable({ page, itemsPerPage }) {
     return await supabaseAdmin.from('technical_division').delete().eq('id', id)
   }
 
-  return { divisionTable, divisionTotal, $reset, getDivisionTable, addDivision, updateDivision, deleteDivision }
+  //Assign User to Division
+    async function addUserDivision(formData) {
+    const { td_id, user_id } = formData
+    const { data, error } = await supabaseAdmin.from('technical_division_user').insert([{ td_id, user_id }])
+
+    if (error) {
+      console.error('Error assigning division to user:', error.message)
+      return
+    }
+
+    // Refresh the agencies table with updated data
+
+    return data
+  }
+
+  return { divisionTable, divisionTotal, $reset, getDivisionTable, addDivision, updateDivision, deleteDivision, addUserDivision }
 })
