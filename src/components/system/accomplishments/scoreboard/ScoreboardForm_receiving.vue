@@ -212,6 +212,10 @@ const submitScoreboard = async () => {
     alert('❌ Unexpected error occurred while saving to the database.');
   }
 };
+const onCloseSuccess = () => {
+  isSuccess.value = false   // 🔥 REQUIRED — closes dialog
+  routePage()               // ✅ navigation logic
+}
 const routePage = async () => {
     router.push('/add-scoreboard');
 }
@@ -384,8 +388,10 @@ const routePage = async () => {
           <v-btn color="primary" @click="submitScoreboard">Submit Scoreboard</v-btn>
         </v-row>
       </v-form>
-      <SuccessDialog @close-dialog="routePage" :isActive="isSuccess" />
-
+      <SuccessDialog
+        :isActive="isSuccess"
+        @close-dialog="onCloseSuccess"
+      />
       <ErrorDialog
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

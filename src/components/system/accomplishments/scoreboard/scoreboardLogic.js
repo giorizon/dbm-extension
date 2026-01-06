@@ -57,6 +57,7 @@ const typeOfDowntime = ref(null)
 
   // Fetch PAP Data
   const fetchPAP = async (natureId) => {
+   console.log('fetchPAP called with:', natureId)
     try {
       const { data: notPapData, error: notPapError } = await supabase
         .from('not_pap')
@@ -67,14 +68,13 @@ const typeOfDowntime = ref(null)
         console.error('Error fetching not_pap:', notPapError)
         return
       }
-
+      console.log("Here");
       if (notPapData.length === 0) {
         papData.value = ""
         return
       }
-
+      console.log("Here2");
       const papIds = notPapData.map(item => item.pap_id)
-
       const { data: papInfo, error: papError } = await supabase
         .from('pap')
         .select('code, description')

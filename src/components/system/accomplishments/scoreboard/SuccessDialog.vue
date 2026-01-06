@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const props = defineProps(['isActive'])
-const emit = defineEmits(['closeDialog'])
+const emit = defineEmits(['update:isActive'])
 </script>
 
 <template>
@@ -19,10 +19,7 @@ const emit = defineEmits(['closeDialog'])
         <v-card-actions class="mt-2">
           <v-spacer></v-spacer>
        
-          <v-btn color="red-darken-4" variant="elevated" @click="() => {
-            emit('closeDialog')
-          }
-            ">Close</v-btn>
+          <v-btn color="red-darken-4" variant="elevated" @click="emit('update:isActive', false)">Close</v-btn>
         </v-card-actions>
       </v-card-text>
     </v-card>
