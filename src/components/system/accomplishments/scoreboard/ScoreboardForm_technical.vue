@@ -3,7 +3,7 @@ import { ref, defineProps, onMounted } from 'vue'
 import { format } from 'date-fns'
 import '@/assets/scoreboard.css'
 import ScoreboardFormDialog from './ScoreboardFormDialog.vue'
-import SuccessDialog from './SuccessDialog.vue'
+import SuccessDialog from './SuccessDialog2.vue'
 import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
@@ -287,9 +287,9 @@ console.log("📅 Selected Date:", dateForFormatting);
       console.error("❌ Insert into scoreboard_type_nature failed:", errorTotNature);
       throw errorTotNature;
     }
-    console.log("✅ Insert into scoreboard_type_nature successful:", insertedTotNature);
     isSuccess.value = true;
-
+    console.log("✅ Insert into scoreboard_type_nature successful:", insertedTotNature);
+   
 
   } catch (err) {
     console.error("🔥 Form submission error:", err);
@@ -474,7 +474,7 @@ const routePage = async () => {
           </v-btn>
         </v-row>
       </v-form>
-      <SuccessDialog @close-dialog="routePage" :isActive="isSuccess" />
+     <SuccessDialog v-model="isSuccess" @closed="routePage" />
       <ErrorDialog 
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

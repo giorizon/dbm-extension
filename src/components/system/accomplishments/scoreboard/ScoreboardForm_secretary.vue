@@ -3,7 +3,7 @@ import { ref, defineProps, onMounted } from 'vue'
 import { format } from 'date-fns'
 import '@/assets/scoreboard.css'
 import ScoreboardFormDialog from './ScoreboardFormDialog.vue'
-import SuccessDialog from './SuccessDialog.vue'
+import SuccessDialog from './SuccessDialog2.vue'
 import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
@@ -472,7 +472,7 @@ const confirmedfunction = async () => {
           </v-card-actions>
         </v-card>
       </v-dialog>  
-   <SuccessDialog @close-dialog="routePage" :isActive="isSuccess" />
+   <SuccessDialog v-model="isSuccess" @closed="routePage" />      
       <ErrorDialog 
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

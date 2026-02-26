@@ -1,5 +1,10 @@
 export const tableHeaders = [
   {
+    title: '#',
+    key: 'index',
+    sortable: false
+  },
+  {
     title: 'Position',
     key: 'pos_name',
     sortable: false,

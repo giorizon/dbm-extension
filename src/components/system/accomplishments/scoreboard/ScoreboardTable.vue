@@ -2,6 +2,8 @@
 import { ref, onMounted, watch } from "vue";
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
 import AlertNotification from "@/components/common/AlertNotification.vue";
+import DeleteSuccessDialog from "@/components/common/DeleteSuccessDialog.vue";
+import DeleteErrorDialog from "@/components/common/DeleteErrorDialog.vue";
 import supabase from '@/components/system/accomplishments/scoreboard/supabase'
 import { useScoreboardTable } from "@/composables/scoreboard/scoreboardTable";
 import { useScoreboardLogic } from './scoreboardLogic.js'
@@ -11,7 +13,8 @@ import { scoreboardUpdate_receiving } from './scoreboardupdate_receiving.js'
 import { scoreboardUpdate_receivingfad } from './scoreboardupdate_receivingfad.js'
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router';
-import { useScoreboardStore } from "@/stores/scoreboard";
+import { useScoreboardStore } from "@/stores/scoreboard2";
+import { formActionDefault } from '@/utils/supabase';
 const router = useRouter();
 
 const {
@@ -24,11 +27,21 @@ const {
   staffList,
 }= useScoreboardLogic();
 
+const scoreboardStore = useScoreboardStore()
+const formAction2 = ref({
+  ...formActionDefault
+})
+
+const deleteSuccessDialog = ref(false)
+const deleteErrorDialog = ref(false)
+const deleteErrorMessage = ref("")
+
 const { onLoadItems, tableOptions, formAction } = useScoreboardTable();
 const dialog = ref(false);
 const userUUID = ref(null);
 const userRole = ref(null);
 const search = ref("");
+const onConfirmDelete= ref(false);
 const scoreboardData = ref([]);
 const scoreboardDataFad = ref([]);
 const showDialog1 = ref(false);
@@ -117,7 +130,6 @@ const formatDate = (timestamp) => {
     year: "numeric"
   }).format(date);
 };
-
 
 const updateTechnical = async () => {
   const result = await scoreboardUpdate({
@@ -499,10 +511,10 @@ const fetchScoreboardDataBasedOnRole = async () => {
       showReceivingTable.value = false;
       showReceivingselector.value = false;
       query = supabase
-      .from('scoreboad_monitor')
+      .from('scoreboard_monitor')
       .select('*')
       .eq('owner_id', userUUID.value)
-      .eq('status','Accepted')
+      .in('status',['Accepted', 'Forwarded'])
     } 
     const { data, error } = await query;
 
@@ -510,8 +522,7 @@ const fetchScoreboardDataBasedOnRole = async () => {
       console.error(`❌ Error fetching data from :`, error);
       return;
     }
-    console.log("Here");
-    // 🛠 Normalize the data for consistent table rendering
+    
     scoreboardData.value = data.map(row => {
         
       if (userRole.value === 'FAD') {
@@ -554,8 +565,9 @@ const fetchScoreboardDataBasedOnRole = async () => {
           name: row.name ?? '—',
           agency_name: row.agency_name ?? '—',
           level: row.level ?? '—',
-          status: row.status ?? '—',
+          status: row.next_level_status ?? '—',
           process_id: row.process_id ?? null,
+          next_process_id: row.next_process_id ?? null,
           scoreboard_id: row.scoreboard_id ?? null
         };
       }
@@ -674,6 +686,38 @@ const updateScoreboard = async (item) => {
   }
   
 };
+const deleteScoreboard = async (item) => {
+  formAction2.value = { ...formActionDefault, formProcess: true }
+
+  console.log("For Delete Owner_id:", userUUID.value);
+  console.log("For Delete scoreboard_id:", item.scoreboard_id);
+  console.log("For Delete process_id:", item.process_id);
+  console.log("For Delete next process_id:", item.next_process_id);
+  console.log("For Delete Status:", item.status);
+  console.log("For Delete User Role:", userRole.value);
+
+  try {
+    if (item.status === 'Accepted') {
+      deleteErrorMessage.value = "Accepted records cannot be deleted."
+      deleteErrorDialog.value = true
+      return
+    }
+    const { error } = await scoreboardStore.deleteScoreboardrow(item.scoreboard_id, item.next_process_id, userRole.value)
+    if (error) {
+      deleteErrorMessage.value = error.message
+      deleteErrorDialog.value = true
+      return
+    }
+
+    deleteSuccessDialog.value = true
+    await fetchScoreboardDataBasedOnRole();
+
+  } catch (err) {
+    deleteErrorMessage.value = err.message || "Unknown error occurred"
+    deleteErrorDialog.value = true
+  } 
+}
+
 const display_others = async () => {
  
   const selectedId = ssItems.value;
@@ -814,6 +858,7 @@ onMounted(async () => {
                     <th>Date Received</th>
                     <th>Agency/Sub Unit</th>
                     <th>Level</th>
+                    <th>Status</th>
                     <th style = "text-align: center;" colspan ="2">Action</th>
                   </tr>
                 </template>
@@ -823,6 +868,7 @@ onMounted(async () => {
                     <td>{{ item.date_received }}</td>
                     <td>{{ item.agency_name }}</td>
                     <td>{{ item.level }}</td>
+                     <td>{{ item.status }}</td>
                     <td>
                       <v-btn 
                         color="lime-darken-1" 
@@ -838,7 +884,7 @@ onMounted(async () => {
                       <v-btn 
                         color="red-lighten-1" 
                         size="small" 
-                        @click="goToAddScoreboard(item)"
+                        @click="deleteScoreboard(item)"
                       ><v-icon left>mdi-delete</v-icon>
                         Delete
                       </v-btn>
@@ -887,6 +933,7 @@ onMounted(async () => {
                   </tr>
                 </template>
     </v-data-table>
+    <!-- Receiving Account here -->
         <v-data-table :items="scoreboardData"   :search="search" class="elevation-1"  v-if="showReceivingTable">
                 <template v-slot:headers>
                   <tr>
@@ -920,7 +967,7 @@ onMounted(async () => {
                       <v-btn 
                         color="red-lighten-1" 
                         size="small" 
-                        @click="goToAddScoreboard(item)"
+                        @click="deleteScoreboard(item)"
                       ><v-icon left>mdi-delete</v-icon>
                         Delete
                       </v-btn>
@@ -1650,4 +1697,14 @@ onMounted(async () => {
   <ConfirmDialog v-model:is-dialog-visible="isDialogVisible"  
     text="Are you sure you want to delete scoreboard record?" title="Delete Scoreboard"
     @confirm="onConfirmDelete"></ConfirmDialog>
+    <DeleteSuccessDialog 
+      v-model="deleteSuccessDialog"
+      @after-close="router.push('/scoreboard')" 
+    />
+
+    <DeleteErrorDialog 
+      v-model="deleteErrorDialog"
+      :message="deleteErrorMessage"
+    />
+
 </template>

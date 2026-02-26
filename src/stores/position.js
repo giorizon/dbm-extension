@@ -2,101 +2,121 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { supabaseAdmin } from '@/utils/supabase'
 
-export const usePositionStore = defineStore('agencies', () => {
+export const usedbStore = defineStore('position', () => {
   // States
-  const agenciesTable = ref([])
-  const agenciesTotal = ref(0)
+  const positionTable = ref([])
+  const positionTotal = ref(0)
 
   // Reset State Action
   function $reset() {
-    agenciesTable.value = []
-    agenciesTotal.value = 0
+    positionTable.value = []
+    positionTotal.value = 0
   }
 
-  // Retrieve Agencies
-  async function getAgenciesTable({ page, itemsPerPage }) {
-    const { data: agencies, error } = await supabaseAdmin
-      .from('agency')
-      .select('*, user_profiles(*)')
-      .order('created_at', { ascending: false })
-      .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)
+  // Retrieve Position
+  async function getPositionTable({ page, itemsPerPage }) { 
+    const from = (page - 1) * itemsPerPage
+    const to = page * itemsPerPage - 1
+
+    const { data, error, count } = await supabaseAdmin
+      .from('view_position')
+      .select('*', { count: 'exact' })
+      .order('pos_name', { ascending: true })
+      .range(from, to)
 
     if (error) {
-      console.error('Error fetching agencies:', error.message)
+      console.error('Error fetching division:', error.message)
       return
     }
 
-    const { count, error: countError } = await supabaseAdmin
-      .from('agency')
-      .select('*', { count: 'exact' })
-
-    if (countError) {
-      console.error('Error fetching agency count:', countError.message)
-      return
-    }
-
-    agenciesTotal.value = count || 0
-
-    // Map over agencies to get the staff name
-    agenciesTable.value = agencies.map((agency) => ({
-      ...agency,
-      staff_name: agency.user_profiles
-        ? `${agency.user_profiles.lastname}, ${agency.user_profiles.firstname}`
-        : 'No staff assigned'
-    }))
+    positionTable.value = data
+    positionTotal.value = count
   }
 
   // Add Agency
-  async function addAgency(formData) {
-    const { agency_name, user_id } = formData
+ async function addPosition({ positionName }) {
+  const { data, error } = await supabaseAdmin
+    .from('position')
+    .insert([{ name: positionName }])
 
-    const { data, error } = await supabaseAdmin.from('agency').insert([{ agency_name, user_id }])
+  if (!error) {
+    await getPositionTable({ page: 1, itemsPerPage: 10 })
+  }
+
+  return { data, error }
+}
+
+  // Update Position
+async function updatePosition({ id, positionName }) {
+  if (!id) {
+    return { error: { message: 'ID is required.' } }
+  }
+  return await supabaseAdmin
+    .from('position')
+    .update({ name: positionName }) // DB column
+    .eq('id', id)
+    .single()
+  
+}
+  // Update Position Personnel link
+async function updateUserPosition({ id, pos_id, user_id }) {
+  if (!id) {
+    return { error: { message: 'Missing ID.' } }
+  }
+
+  return await supabaseAdmin
+    .from('position')
+    .update({ pos_id, user_id })
+    .eq('id', id)
+    .single()
+}
+  // Delete Position
+  async function deletePosition(id) {
+    return await supabaseAdmin.from('position').delete().eq('id', id)
+  }
+
+
+    //Assign Personnel to a position
+    async function addUserPosition(formData) {
+    const { pos_id, user_id } = formData
+    const { data, error } = await supabaseAdmin.from('pos_user_profile').insert([{ pos_id, user_id }])
 
     if (error) {
-      console.error('Error adding agency:', error.message)
+      console.error('Error assigning  Position to Personnel:', error.message)
       return
     }
 
     // Refresh the agencies table with updated data
-    await getAgenciesTable({ page: 1, itemsPerPage: 10 })
 
     return data
   }
 
-  // Update Agency
-  async function updateAgency(formData) {
-    const { id, agency_name, user_id } = formData
-
-    if (!id) {
-      console.error('Cannot update agency: ID is missing.')
-      return { error: { message: 'ID is required to update agency.' } }
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from('agency')
-      .update({ agency_name, user_id })
-      .eq('id', id)
-      .single()
+  
+  //Assign User to Division
+    async function assignUserPosition(formData) {
+    const { pos_id, user_id } = formData
+    const { data, error } = await supabaseAdmin.from('pos_user_profile').insert([{ pos_id, user_id }])
 
     if (error) {
-      console.error('Error updating agency:', error.message)
+      console.error('Error assigning position to personnel:', error.message)
+      return
     }
 
-    return { data, error }
-  }
+    // Refresh the agencies table with updated data
 
-  // Delete Agency
-  async function deleteAgency(id) {
-    return await supabaseAdmin.from('agency').delete().eq('id', id)
+    return data
   }
 
   return {
-    agenciesTable,
-    agenciesTotal,
+    positionTable,
+    positionTotal,
     $reset,
-    getAgenciesTable,
-    addAgency,
-    updateAgency,
-    deleteAgency
+    getPositionTable,
+    addPosition,
+    updatePosition,
+    deletePosition,
+    addUserPosition,
+    updateUserPosition,
+    assignUserPosition
   }
 })

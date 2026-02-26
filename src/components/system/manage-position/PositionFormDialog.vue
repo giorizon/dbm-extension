@@ -1,9 +1,8 @@
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
-import { requiredValidator, agencyNameValidator } from '@/utils/validators'
+import { ref, watch, computed } from 'vue'
+import { requiredValidator, PositionValidator } from '@/utils/validators'
 import { formActionDefault } from '@/utils/supabase.js'
-import { useAgenciesStore } from '@/stores/agencies'
-import { supabase } from '@/utils/supabase'
+import { usedbStore } from '@/stores/position'
 import AlertNotification from '@/components/common/AlertNotification.vue'
 
 // Props and emit
@@ -22,54 +21,15 @@ const props = defineProps({
 const emit = defineEmits(['update:isDialogVisible'])
 
 // Pinia store
-const agenciesStore = useAgenciesStore()
+const PositionStore = usedbStore()
 
 // Default form values
 const formDataDefault = {
-  agencyName: '',
-  particulars: {
-    staffID: null
-  }
+  positionName: '',
 }
 const formData = ref({ ...formDataDefault })
 const formAction = ref({ ...formActionDefault })
 const refVForm = ref()
-const staffList = ref([])
-
-// Watch for itemData changes
-watch(
-  () => props.itemData,
-  (newData) => {
-    if (newData) {
-      formData.value = {
-        agencyName: newData.agency_name || '',
-        particulars: { staffID: newData.user_id || null }
-      }
-    } else {
-      formData.value = { ...formDataDefault }
-    }
-  },
-  { immediate: true }
-)
-
-// Fetch staff from Supabase
-const fetchStaff = async () => {
-  if (staffList.value.length) return
-
-  try {
-    const { data, error } = await supabase.from('user_profiles').select('id, firstname, lastname')
-    if (error) throw new Error(error.message)
-
-    staffList.value = data.map((user) => ({
-      id: user.id,
-      name: [user.lastname, user.firstname].filter(Boolean).join(', ') || 'No Name'
-    }))
-  } catch (err) {
-    formAction.value.formErrorMessage = `Error fetching staff: ${err.message}`
-  }
-}
-
-onMounted(() => fetchStaff())
 
 // Computed for handling form state
 const isUpdate = computed(() => Boolean(props.itemData))
@@ -81,36 +41,30 @@ const dialogVisible = computed({
 
 // Submit Functionality
 const onSubmit = async () => {
-  if (!formData.value.particulars.staffID) {
-    formAction.value.formErrorMessage = 'Staff ID is required.'
-    formAction.value.formProcess = false
-    return
-  }
 
-  if (!formData.value.agencyName) {
-    formAction.value.formErrorMessage = 'Agency name is required.'
+  if (!formData.value.positionName) {
+    formAction.value.formErrorMessage = 'Position name is required.'
     formAction.value.formProcess = false
     return
   }
 
   formAction.value = { ...formActionDefault, formProcess: true }
 
-  const agencyData = {
-    id: props.itemData?.id,
-    agency_name: formData.value.agencyName,
-    user_id: formData.value.particulars.staffID
-  }
+const positionData = {
+  id: props.itemData?.id,
+  positionName: formData.value.positionName
+}
 
   try {
     const response = isUpdate.value
-      ? await agenciesStore.updateAgency(agencyData)
-      : await agenciesStore.addAgency(agencyData, props.tableOptions)
+      ? await PositionStore.updatePosition(positionData)
+      : await PositionStore.addPosition(positionData, props.tableOptions)
 
     if (response?.error) throw new Error(response.error.message)
 
     formAction.value.formSuccessMessage = isUpdate.value
-      ? 'Agency successfully updated.'
-      : 'Agency successfully added.'
+      ? 'Position successfully updated.'
+      : 'Position successfully added.'
 
     setTimeout(() => {
       onFormReset()
@@ -128,15 +82,26 @@ const onFormSubmit = async () => {
   const { valid } = await refVForm.value?.validate()
   if (!valid) return
 
-  // Manually run agencyNameValidator
-  const agencyNameValidation = await agencyNameValidator(formData.value.agencyName)
-  if (agencyNameValidation !== true) {
-    formAction.value.formErrorMessage = agencyNameValidation
+  // Manually run PositionValidator
+  const positionNameValidation = await PositionValidator(formData.value.positionName)
+  if (positionNameValidation !== true) {
+    formAction.value.formErrorMessage = positionNameValidation
     return
   }
 
   await onSubmit()
 }
+watch(
+  () => props.itemData,
+  (val) => {
+    if (val) {
+      formData.value.positionName = val.positionName
+    } else {
+      formData.value = { ...formDataDefault }
+    }
+  },
+  { immediate: true }
+)
 
 // Form Reset
 const onFormReset = () => {
@@ -148,7 +113,7 @@ const onFormReset = () => {
 
 <template>
   <v-dialog max-width="800" v-model="dialogVisible" persistent>
-    <v-card prepend-icon="mdi-office-building-cog" title="Agency Information">
+    <v-card prepend-icon="mdi-office-building-cog" title="Enter Position Name">
       <AlertNotification
         :form-success-message="formAction.formSuccessMessage"
         :form-error-message="formAction.formErrorMessage"
@@ -160,24 +125,10 @@ const onFormReset = () => {
             <!-- Agency Name -->
             <v-col>
               <v-text-field
-                label="Agency Name"
+                label="Position"
                 outlined
                 clearable
-                v-model="formData.agencyName"
-                :rules="[requiredValidator]"
-              />
-            </v-col>
-
-            <!-- Assign to Dropdown -->
-            <v-col>
-              <v-select
-                label="Assign to"
-                :items="staffList"
-                item-title="name"
-                item-value="id"
-                outlined
-                clearable
-                v-model="formData.particulars.staffID"
+                v-model="formData.positionName"
                 :rules="[requiredValidator]"
               />
             </v-col>
@@ -196,7 +147,7 @@ const onFormReset = () => {
             :disabled="formAction.formProcess"
             :loading="formAction.formProcess"
           >
-            {{ isUpdate ? 'Update Agency' : 'Add Agency' }}
+            {{ isUpdate ? 'Update Position' : 'Add Position' }}
           </v-btn>
         </v-card-actions>
       </v-form>

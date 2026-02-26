@@ -20,6 +20,7 @@ export const menuItemsNav3 = [
 export const menuItemsNav4 = [
   ['Agency Management', 'mdi-office-building', '', '/manage/agencies'],
   ['Division Management', 'mdi-account-multiple', '', '/manage/division'],
+  ['Position', 'mdi-file-tree-outline', '', '/manage/position'],
   ['Transcation Type Management', 'mdi-shape-outline', '', '/manage/type-of-transaction'],
   ['Transcation Nature Management', 'mdi-clover-outline', '', '/manage/nature-of-transaction'],
   ['User Roles', 'mdi-tag-multiple', '', '/manage/user/roles'],

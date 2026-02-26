@@ -131,7 +131,7 @@ const onLoadItems = async ({ page, itemsPerPage, sortBy }) => {
             {{
               (tableOptions.page - 1) * tableOptions.itemsPerPage + index + 1
             }}
-          </template>
+        </template>
         <template #item.name="{ item }">
           <span class="font-weight-bold">
             {{ item.name }}

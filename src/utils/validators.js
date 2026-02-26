@@ -156,6 +156,26 @@ export const agencyNameValidator = async (agencyName) => {
   }
 }
 
+
+// 👉 Position Name Unique Validator
+export const PositionValidator = async (positionName) => {
+  if (isEmpty(positionName)) return 'Agency name is required'
+
+  try {
+    const { data, error } = await supabase
+      .from('position')
+      .select('name')
+      .eq('name', positionName)
+
+    if (error) throw new Error(error.message)
+
+    if (data.length > 0) return 'Position name already exists.'
+
+    return true
+  } catch (err) {
+    return `Error checking position name: ${err.message}`
+  }
+}
 //Validate transaction type
 export const TransactionTypeValidator = async (transactionType) => {
   if (isEmpty(transactionType)) return 'Transaction type is required'
