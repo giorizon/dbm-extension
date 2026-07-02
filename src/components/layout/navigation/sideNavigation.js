@@ -8,7 +8,10 @@ export const mainNav = [
 
 // 👉 Sub Navigations; Title, Icon, Subtitle, Redirect Path
 export const menuItemsNav1 = [
-   ['Scoreboard Monitoring', 'mdi-developer-board', 'PMS Report', '/scoreboard-monitoring']
+   ['Scoreboard Monitoring', 'mdi-developer-board', 'PMS Report', '/scoreboard-monitoring'],
+   ['Monitoring tool 1', 'mdi-developer-board', 'LGU Budget Review', '/monitoring-tool-one'],
+   ['Monitoring tool 2', 'mdi-developer-board', 'Requests for Budget Authorization and Variation', '/monitoring-tool-two'],
+   ['Monitoring tool 3', 'mdi-developer-board', 'Agency Performance Review', '/monitoring-tool-three']
  // ['Agency Name', 'mdi-office-building-cog', '', '/manage/agencies']
 ]
 export const menuItemsNav2 = [

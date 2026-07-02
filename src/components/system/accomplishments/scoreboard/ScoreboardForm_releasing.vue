@@ -3,7 +3,7 @@ import { ref, defineProps, onMounted } from 'vue'
 import { format } from 'date-fns'
 import '@/assets/scoreboard.css'
 import ScoreboardFormDialog from './ScoreboardFormDialog.vue'
-import SuccessDialog from './SuccessDialog.vue'
+import SuccessDialog from './SuccessDialog2.vue'
 import ErrorDialog from './ErrorDialog.vue'
 import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
@@ -215,8 +215,7 @@ const handleFormSubmit = async () => {
       console.log("Start inserting for released documents.");
       try {
         console.log("Inside the try block for released documents insert.");
-        // The check for length === 0 here is redundant if the outer `if` passed.
-        // But keeping it for clarity based on your original code.
+        
         if (releasedDocuments.value.length === 0) {
             console.log('No documents to save in inner check. This should not be reached if outer check passed.');
             return;
@@ -224,18 +223,18 @@ const handleFormSubmit = async () => {
         console.log("Scoreboard ID for the released Document:", formData.scoreboardId);
         const dataToInsert = releasedDocuments.value.map(docName => ({
             name: docName,
-            scoreboard_id: formData.scoreboardId, // Ensure scoreboardId.value is defined
+            scoreboard_id: formData.scoreboardId, 
         }));
         console.log("Data to insert for released_document:", dataToInsert);
 
         const { data: insertedDocs, error: docsInsertError } = await supabase
             .from('released_document')
             .insert(dataToInsert)
-            .select(); // Add .select() to get the inserted data back
+            .select(); 
 
         if (docsInsertError) {
             console.error('Supabase Released Documents Insert Error:', docsInsertError.message);
-            throw docsInsertError; // Throw to be caught by the outer catch, or handle locally
+            throw docsInsertError;
         }
         console.log('Documents successfully inserted:', insertedDocs);
       } catch (e) {
@@ -243,6 +242,7 @@ const handleFormSubmit = async () => {
           formErrorMessage.value = `Error saving documents: ${e.message}`;
       }
     }
+    isSuccess.value = true; 
     console.log("--- handleFormSubmit finished successfully (or with handled errors) ---");
 
   } catch (err) {
@@ -386,10 +386,8 @@ const routePage = async () => {
                     </v-table>
             </v-col>
             <v-col>
-           
             </v-col>
             <v-col>
-
             </v-col>
           </v-row>
         <!-- Time Picker Dialog for Date Forwarded -->
@@ -441,7 +439,7 @@ const routePage = async () => {
         </v-row>
       </v-form>
 
-      <SuccessDialog @close-dialog="routePage" :isActive="isSuccess"  :message="successMessage" />
+      <SuccessDialog v-model="isSuccess" @closed="routePage" />
       <ErrorDialog 
         :isOpen="formAction.formErrorMessage.length !== 0"
         :errorMessage="formAction.formErrorMessage"

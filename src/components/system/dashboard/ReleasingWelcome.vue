@@ -80,7 +80,6 @@ const fetchScoreboardData = async () => {
     const { data, error } = await supabase
       .from('technical_individual_monitor')
       .select('*')
-      .eq('owner_id', userUUID.value)
       .eq('level','Releasing')
       .eq('status', 'Pending')
     if (error) {

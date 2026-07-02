@@ -23,7 +23,10 @@ export const quarter = ref([
   { id: 3, name: 'July 1 to September 30' },
   { id: 4, name: 'October 1 to December 31' }
 ]);
-
+export const role_select = ref([
+  { id: 1, name: 'Senior BMS' },
+  { id: 2, name: 'Individual' }
+]);
 export const formatDate = (timestamp) => {
   if (!timestamp) return "N/A";
   const date = new Date(timestamp);

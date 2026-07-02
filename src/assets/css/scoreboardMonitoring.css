@@ -37,6 +37,89 @@
 .styled-scoreboard-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+.table-container {
+  width: 100%;
+  overflow-x: auto; 
+}
+
+.scoreboard-native-table {
+  width: 100%;
+  border-collapse: collapse; 
+  font-family: sans-serif;
+}
+
+
+.scoreboard-native-table th,
+.scoreboard-native-table td {
+  border: 1px solid #000000;
+  padding: 2px 2px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 11px;
+}
+
+/* Unique styling for the header block */
+.scoreboard-native-table thead th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.text-left {
+  text-align: left !important;
+}
+.section-row td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  background-color: #fafafa; 
+}
+.text-bold td {
+  font-weight: bold !important;
+}
+.text-large td {
+  font-size: 14px !important; 
+}
+
+/* Strip away input styles so they blend into your native table layout */
+.table-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center; /* Centers numbers */
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+  padding: 6px 0;
+}
+
+/* Aligns the particulars column text to the left */
+.table-input.text-left {
+  text-align: left;
+  padding-left: 8px;
+}
+
+/* Highlights the cell row cleanly when clicked into */
+.table-input:focus {
+  background-color: #f1f8ff; 
+  box-shadow: inset 0 0 0 1px #0366d6;
+  border-radius: 2px;
+}
+
+/* Hides default native up/down sizing arrows inside number fields */
+.table-input::-webkit-outer-spin-button,
+.table-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.table-input[type=number] {
+  -moz-appearance: textfield;
+}
+.text-italic {
+  font-style: italic;
+}
+/*--------END Custom table */
+
 .signatory-container{
     padding-top: 70px;
       margin-top: 40px;
@@ -45,6 +128,7 @@
 .signatory-block{
   margin-top: 40px;
   margin-bottom: 10px;
+  height: 15px;
   font-weight: bold;
 }
 .signatory-name {

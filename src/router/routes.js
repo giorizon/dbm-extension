@@ -20,6 +20,9 @@ import AddScoreBoardReleasingFAD from '@/views/system/accomplishments/AddScorebo
 import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
 import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
 import ScoreboardMonitoringView from '@/views/system/accomplishments/ScoreboardMonitoringView.vue'
+import MonitoringToolOne from '@/views/system/accomplishments/MonitoringToolOne.vue'
+import MonitoringToolTwo from '@/views/system/accomplishments/MonitoringToolTwo.vue'
+import MonitoringToolThree from '@/views/system/accomplishments/MonitoringToolThree.vue'
 import AddScoreBoardFadInternalView from '@/views/system/accomplishments/AddScoreBoardFadInternalView.vue'
 import AddScoreBoardFadExternalView from '@/views/system/accomplishments/AddScoreboardFadExternalView.vue'
 import AddScoreBoardFadCitizenCharterView from '@/views/system/accomplishments/AddScoreBoardFadCitizenCharterView.vue'
@@ -128,7 +131,24 @@ export const routes = [
     component: ScoreboardMonitoringView,
     meta: { requiresAuth: true }
   },
-
+    {
+    path: '/monitoring-tool-one',
+    name: 'monitoring-tool-one',
+    component: MonitoringToolOne,
+    meta: { requiresAuth: true }
+  },
+   {
+    path: '/monitoring-tool-two',
+    name: 'monitoring-tool-two',
+    component: MonitoringToolTwo,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/monitoring-tool-three',
+    name: 'monitoring-tool-three',
+    component: MonitoringToolThree,
+    meta: { requiresAuth: true }
+  },
   // Admin Pages
   {
     path: '/manage/user/roles',

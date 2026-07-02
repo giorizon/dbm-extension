@@ -167,7 +167,44 @@ onMounted(async () => {
         <v-col cols="12" md="6">
             <v-container>
                 <v-card>
-                <v-card-title>Pending DMS</v-card-title>
+                <v-card-title>Pending DMS as Individual</v-card-title>
+                <v-card-text>
+                  <v-data-table :items="scoreboardData2" class="elevation-1">
+                <template v-slot:headers>
+                  <tr>
+                    <th>DMS Reference Number</th>
+                    <th>Date Received</th>
+                    <th>Name</th>
+                    <th>Agency</th>
+                    <th>Status</th>
+                  </tr>
+                </template>
+                <template v-slot:body="{ items }">
+                  <tr v-for="item in items" :key="item.dms_reference_number">
+                    <td>{{ item.dms_reference_number }}</td>
+                    <td>{{ item.date_received }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.agency_name }}</td>
+                    <td>
+                      <v-btn 
+                        color="primary" 
+                        size="small" 
+                        @click="goToAddScoreboard2(item)"
+                      >
+                        Pending
+                      </v-btn>
+                    </td>
+                  </tr>
+                </template>
+              </v-data-table>
+                </v-card-text>
+                </v-card>
+            </v-container>
+        </v-col>
+        <v-col cols="12" md="6">
+            <v-container>
+                <v-card>
+                <v-card-title>Pending DMS as Supervising</v-card-title>
                 <v-card-text>
                   <v-data-table :items="scoreboardData" class="elevation-1">
                 <template v-slot:headers>
