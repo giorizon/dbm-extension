@@ -206,7 +206,24 @@ const insertReleasingFad = async ({ formData, dateForwarded, userUUID, typeId })
       throw err;
     }
   };
+const trackProcess = async (targetOwnerId, targetScoreboardId) => {
+  try {
+    const { data, error } = await supabase
+      .from('view_document_tracking')
+      .select('*')
+      .eq('pending_with_id', targetOwnerId)   // 👤 Filters by the specific owner
+      .eq('scoreboard_id', targetScoreboardId) // 📄 Filters by the specific process/document
+      .single();                              // Returns a single object instead of an array
 
+    if (error) throw error;
+    return data; 
+    /* Returns: { scoreboard_id: 12, current_status: 'Under Review', current_level: 'spcr', ... }
+    */
+  } catch (err) {
+    console.error(`Error tracking process ${targetScoreboardId} for user ${targetOwnerId}:`, err);
+    return null;
+  }
+};
 
 const staffList = ref([]);
 
@@ -263,6 +280,7 @@ const fetchStaff = async () => {
     fetchUsersByDivision,
     staffList,
     insertReleasingFad,
-    requiredValidator
+    requiredValidator,
+    trackProcess
   }
 }

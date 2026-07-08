@@ -15,7 +15,8 @@ export const menuItemsNav1 = [
  // ['Agency Name', 'mdi-office-building-cog', '', '/manage/agencies']
 ]
 export const menuItemsNav2 = [
-  ['MyDMS', 'mdi-note-edit', 'Add DMS | Update DMS', '/scoreboard'],
+  ['My DMS', 'mdi-note-edit', 'Add DMS | Update DMS', '/scoreboard'],
+  ['DMS Tracker', 'mdi-file-search', 'Add DMS | Update DMS', '/track-scoreboard'],
 ]
 export const menuItemsNav3 = [
   ['Audit Trail', 'mdi-list-box', 'Record Keeping and Logging', '/report/ipcr'],

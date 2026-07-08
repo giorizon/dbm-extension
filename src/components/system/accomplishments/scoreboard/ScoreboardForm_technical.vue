@@ -9,6 +9,7 @@ import { useScoreboardLogic } from './scoreboardLogic.js'
 import supabase from './supabase'; 
 import { watch } from 'vue';
 import { useRouter } from 'vue-router';
+
 const router = useRouter();
 
 const validationError = ref("")

@@ -4,9 +4,14 @@ import supabase from '@/components/system/accomplishments/scoreboard/supabase'
 //import supabase from './supabase';  // Ensure Supabase is properly configured
 import '@/assets/dashboard.css';
 
+
+
 const userUUID = ref(null);
 const scoreboardData = ref([]);
 const loading = ref(true);
+
+const trackingData = ref([]);
+const loading2 = ref(false);
 
 // ✅ Fetch the logged-in user
 const fetchLoggedInUser = async () => {
@@ -21,6 +26,16 @@ const fetchLoggedInUser = async () => {
   if (userUUID.value) {
     await fetchScoreboardData();  // Fetch only after UUID is set
   }
+};
+const formatDate2 = (dateString) => {
+  if (!dateString) return 'N/A';
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
 };
 const formatDate = (timestamp) => {
   if (!timestamp) return "N/A"; // Handle empty cases
@@ -64,13 +79,11 @@ const fetchScoreboardData = async () => {
       console.error("❌ Supabase returned an invalid format:", data);
       return;
     }
-
-    // ✅ Format and assign the filtered data
     scoreboardData.value = data.map(row => ({
       dms_reference_number: row.dms_reference_number,
       date_received: row.date_received, 
       agency_name: row.agency_name || "N/A",
-      status: "Pending",  // You can customize or include status in the view if needed
+      status: "Pending", 
       scoreboard_id: row.scoreboard_id,
       process_id: row.process_id
     }));
@@ -82,6 +95,7 @@ const fetchScoreboardData = async () => {
     loading.value = false;
   }
 };
+
 const headers = ref([
   { text: 'DMS Reference Number', value: 'dms_reference_number' },
   { text: 'Date Received', value: 'date_received' },
@@ -119,7 +133,7 @@ onMounted(async () => {
 <template>
  <v-card-text>
        <v-row>
-        <v-col cols="12" md="8">
+        <v-col cols="12" md="">
             <v-container>
                 <v-card>
                 <v-card-title>📊 Scoreboard Receiving Data</v-card-title>
@@ -141,16 +155,25 @@ onMounted(async () => {
                       Process
                     </v-btn>
                   </template>
+                   <template #[`item.date_received`]="{ item }">
+                    {{ formatDate2(item.date_received) }}
+                  </template>
                 </v-data-table>
                 </v-card-text>
                 </v-card>
             </v-container>
+              <v-container>
+          <v-card>
+          
+          </v-card>
+         </v-container>
         </v-col>
-        <v-col cols="12" md="4">
-          <h3 class = "text-center">
-            Breakdown of Transaction/Request <br>
-            Acted per Nature of Transaction as of
-          </h3>
+        <v-col cols="12" md="6">
+         <v-container>
+          <v-card>
+             
+          </v-card>
+         </v-container>
           <div class="pie-chart"></div>
         </v-col>
       </v-row>

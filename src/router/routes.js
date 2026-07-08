@@ -19,6 +19,7 @@ import AddScoreBoardReleasingView from '@/views/system/accomplishments/AddScoreb
 import AddScoreBoardReleasingFAD from '@/views/system/accomplishments/AddScoreboardReleasingFAD.vue'
 import AddScoreBoardFAD from '@/views/system/accomplishments/AddScoreboardFAD.vue'
 import ScoreboardView from '@/views/system/accomplishments/ScoreboardView.vue'
+import TrackScoreboardView from '@/views/system/accomplishments/TrackScoreboardView.vue'
 import ScoreboardMonitoringView from '@/views/system/accomplishments/ScoreboardMonitoringView.vue'
 import MonitoringToolOne from '@/views/system/accomplishments/MonitoringToolOne.vue'
 import MonitoringToolTwo from '@/views/system/accomplishments/MonitoringToolTwo.vue'
@@ -123,6 +124,12 @@ export const routes = [
     path: '/scoreboard',
     name: 'scoreboard',
     component: ScoreboardView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/track-scoreboard',
+    name: 'track-scoreboard',
+    component: TrackScoreboardView,
     meta: { requiresAuth: true }
   },
   {
