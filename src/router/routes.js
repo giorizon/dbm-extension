@@ -27,6 +27,7 @@ import MonitoringToolThree from '@/views/system/accomplishments/MonitoringToolTh
 import AddScoreBoardFadInternalView from '@/views/system/accomplishments/AddScoreBoardFadInternalView.vue'
 import AddScoreBoardFadExternalView from '@/views/system/accomplishments/AddScoreboardFadExternalView.vue'
 import AddScoreBoardFadCitizenCharterView from '@/views/system/accomplishments/AddScoreBoardFadCitizenCharterView.vue'
+import AddScoreBoardFadSupportServicesView from '@/views/system/accomplishments/AddScoreBoardFadSupportServicesView.vue'
 // 👉 Routes
 export const routes = [
   // Auth Pages
@@ -112,6 +113,12 @@ export const routes = [
     path: '/add-scoreboard-fad-citizen-charter',
     name: 'add-scoreboard-fad-citizen-charter',
     component: AddScoreBoardFadCitizenCharterView,
+    meta: { requiresAuth: true }
+  },
+   {
+    path: '/add-scoreboard-fad-support-services',
+    name: 'add-scoreboard-fad-support-services',
+    component: AddScoreBoardFadSupportServicesView,
     meta: { requiresAuth: true }
   },
   {

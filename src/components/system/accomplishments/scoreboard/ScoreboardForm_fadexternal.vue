@@ -294,8 +294,15 @@ if (isNaN(combinedDate.getTime())) {
   } 
    showEndProcessDialog.value = true;
 };
-const routePage = async () => {
-      router.push('/dashboard');
+const handleDialogClose = (isOpen) => {
+  // When isOpen becomes false (the user dismissed the dialog)
+  if (!isOpen) {
+    routePage()
+  }
+}
+
+const routePage = () => {
+  router.push('/dashboard')
 }
 const handleEndProcess = async () => {
    if (!formData.value.dateForwarded) {
@@ -499,6 +506,17 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
             />
           </v-col>
         </v-row>
+        <v-row>
+            <v-col>
+             <v-text-field
+              label="DMS Remark"
+              v-model="formData.remark"
+              type= "text"
+              outlined
+              clearable
+            />
+          </v-col>
+        </v-row>
         <!-- Time Picker Dialog for Date Forwarded -->
         <v-dialog v-model="timeDialogForwarded" max-width="400">
         <v-card>
@@ -560,7 +578,10 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
         </v-col>
         </v-row>
       </v-form>
-      <SuccessDialog  @close-dialog="routePage" :isActive="isSuccess" />
+    <SuccessDialog 
+      v-model="isSuccess" 
+      @update:model-value="handleDialogClose" 
+    />
       <SuccessDialog
   :isActive="showEndProcessDialog"
   @close-dialog="routePage"

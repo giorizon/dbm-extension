@@ -16,7 +16,8 @@ const processOwners = ref([]);
 const user = ref(null);
 const service_others = ref(null); 
 const othersFlag = ref(false);
-
+const dialogFAD = ref(false);
+const dmsRemark = ref('');
 const fetchUser = async () => {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
@@ -25,14 +26,6 @@ const fetchUser = async () => {
   }
   user.value = data?.user;
 };
-
-onMounted(() => {
-  fetchUser();
-  fetchAgencies();
-  fetchStaff();
-});
-
-// ✅ Reactive Variable to Store Agencies
 const agencies = ref([]);
 
 // ✅ Fetch Agencies from Supabase
@@ -87,7 +80,6 @@ const fetchloginUser = async () => {
 const transactionList = ref([]); // Store transactions
 const subtypeList = ref([]);  // For Subtypes
 
-const supportservices = ref([]);
 const supportservicesitems = ref([]);
 //fetch process owner
 const fetchProcessOwners = async () => {
@@ -156,6 +148,8 @@ const fetchSubTypes = async () => {
     tableName = 'internal_reports';
   }else if (formData.value.particulars.transactionID === 3) {
     tableName = 'external_reports';
+  } else if (formData.value.particulars.transactionID === 4) {
+    tableName = 'support_services';
   } else {
     subtypeList.value = []; // No valid transaction type selected
     return;
@@ -179,40 +173,18 @@ const fetchSubTypes = async () => {
     console.error(`Unexpected error fetching ${tableName}:`, err);
   }
 };
-//Fetching support services
-const fetchSupportServices = async () => {
 
-  try {
-    const { data, error } = await supabase
-      .from('support_services')
-      .select('id, name');
-
-    if (error) {
-      alert('Error fetching Support Servics:', error);
-      return;
-    }
-    console.log("Support Services result:", data); // 
-    // Map the fetched data
-    supportservices.value = data.map(item => ({
-      id: item.id,
-      support_services: item.name,
-    }));
-
-  } catch (err) {
-    console.error('Unexpected error fetching transaction types:', err);
-  }
-};
 const fetchSupportServicesItems = async () => {
-  if (!formData.value.particulars.ssID) {
+  if (!formData.value.particulars.subTypeID) {
     subtypeList.value = []; // Clear sub-type list if no transaction selected
     return;
   }
-  console.log("Support Services ID", formData.value.particulars.ssID);
+  console.log("Support Services ID", formData.value.particulars.subTypeID);
   try {
     const { data, error } = await supabase
       .from('support_services_items')
       .select('id, name')
-      .eq('ss_id',formData.value.particulars.ssID );
+      .eq('ss_id',formData.value.particulars.subTypeID);
 
     if (error) {
       console.error('Error fetching  support_services_items:', error);
@@ -228,10 +200,24 @@ const fetchSupportServicesItems = async () => {
     console.error('Unexpected error fetchingsupport_services_items:', err);
   }
 };
-// Watch for changes in "Type of Transaction" to trigger fetchSubTypes
 watch(() => formData.value.particulars.transactionID, fetchSubTypes);
 watch(() => formData.value.particulars.ssID, fetchSupportServicesItems);
+//watch(() => formData.value.particulars.subTypeID, fetchSupportServicesItems);
 
+watch(
+  [
+    () => formData.value.particulars.subTypeID,
+    () => formData.value.particulars.transactionID
+  ],
+  async ([, newTransactionID]) => {
+    if (Number(newTransactionID) === 4) {
+      console.log("🎯 Transaction ID is 4. Fetching items...");
+      await fetchSupportServicesItems();
+    } else {
+      supportservicesitems.value = [];
+    }
+  }
+);
 watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
 
 const display_others = async () => {
@@ -276,12 +262,22 @@ const fetchFADSubUnits = async () => {
 
 watch(() => formData.value.particulars.ssItems, display_others);
 onMounted(() => {
+  fetchUser();
+  fetchAgencies();
+  fetchStaff();
   fetchTransactionTypes();
-  fetchSupportServices();
   fetchloginUser();
   fetchAgencies();
   fetchStaff(); 
   fetchFADSubUnits(); 
+  if (!formData.value.forwardedRecordSection) {
+    formData.value.forwardedRecordSection = new Date();
+  }
+  
+  // Optional: If you want to make sure Date Received is always fresh too
+  if (!formData.value.dateReceivedRecordSection) {
+    formData.value.dateReceivedRecordSection = new Date();
+  }
 });
 
 const selectedTime = ref(format(new Date(), 'HH:mm'));
@@ -292,7 +288,13 @@ function reloadPage() {
   window.location.reload();
 }
 
-const submitScoreboard = async () => {
+const submitScoreboard = async (approval) => {
+  if(approval){
+    dmsRemark.value = 'Approval_Needed';
+  }
+  else{
+     dmsRemark.value = 'Pending';
+  }
   try {
     // Format received datetime
     const receivedDatePart = format(new Date(formData.value.dateReceivedRecordSection), "yyyy-MM-dd");
@@ -311,8 +313,7 @@ const submitScoreboard = async () => {
         alert("User not yet loaded. Please wait and try again.");
     return;
     }   
-    console.log('User ID:', user.value?.id);
-    console.log('DMS Title:', formData.value.dmsTitle);
+
     // 1️⃣ Insert into scoreboard_receiving_fad
     const { data: fadInsertData, error: fadError } = await supabase
       .from('scoreboard_receiving_fad')
@@ -325,7 +326,11 @@ const submitScoreboard = async () => {
           receiver_id: user.value?.id,
           dms_reference_number: formData.value.dmsReferenceNumber,
           dms_title: formData.value.dmsTitle,
-          remark: "Pending"
+          remark: dmsRemark.value,
+          dms_remark: formData.value.remark,
+          type_id: formData.value.particulars.transactionID,
+          subtype_id: formData.value.particulars.subTypeID,
+          ss_others: service_others.value
         }
       ])
       .select('id')
@@ -340,7 +345,7 @@ const submitScoreboard = async () => {
 
     const insertedScoreboardID = fadInsertData?.id;
     //Insert function for the scoreboard_fad_process table
-
+   if(dmsRemark.value==='Pending'){
     const { error: fadprocessInsertError } = await supabase
         .from('scoreboard_fad_process')
         .insert([
@@ -350,8 +355,9 @@ const submitScoreboard = async () => {
             sub_unit_id: formData.value.particulars.agencyID,
             owner_id: formData.value.particulars.staffID,
             date_received: formattedDateTime,
-            from_id: userUUID.value
-          }
+            from_id: userUUID.value,
+            remark: formData.value.remark
+           }
         ]);
       if (fadprocessInsertError) {
         console.error('🚨 Insert Error (FAD Process table):', fadprocessInsertError.message);
@@ -369,7 +375,6 @@ const submitScoreboard = async () => {
               cc_id: formData.value.particulars.subTypeID,
             }
           ]);
-
         if (internalCitizenCharterError) {
           console.error('🚨 Insert Error (Citizen Charter Report):', internalCitizenCharterError.message);
           alert('❌ Failed to save data in citizen_charter_received! Error: ' + internalCitizenCharterError.message);
@@ -395,8 +400,7 @@ const submitScoreboard = async () => {
       console.log("✅ Data saved in internal_report_received");
     }
     else if (formData.value.particulars.transactionID === 3) {
-       console.log("scoreboard_id: ",insertedScoreboardID );
-      console.log("external_id: ",insertedScoreboardID );
+    
       const { error: externalInsertError } = await supabase
         .from('external_report_received')
         .insert([
@@ -412,10 +416,8 @@ const submitScoreboard = async () => {
       }
       console.log("✅ Data saved in external_report_received");
     }
-    // ✅ Show final success message
-    
-    if (formData.value.particulars.ssItems) {
-      const { error: supportServiceInsertError } = await supabase
+    else if (formData.value.particulars.transactionID === 4) {
+           const { error: supportServiceInsertError } = await supabase
         .from('scoreboard_support_services')
         .insert([
           {
@@ -432,8 +434,12 @@ const submitScoreboard = async () => {
       }
 
       console.log("✅ Data saved in scoreboard_support_services");
-           
     }
+
+
+   } 
+    
+    //end-if not for approval
      successDialog.value = true;
       router.push('/add-scoreboard-fad');
   } catch (e) {
@@ -442,7 +448,7 @@ const submitScoreboard = async () => {
   }
   
 };
-const fadSubUnits = ref([]); // Store FAD Sub Units
+const fadSubUnits = ref([]); 
 
 </script>
 
@@ -497,16 +503,6 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
       <v-row>
           <v-col>
             <v-select
-              label="Support Services"
-              :items="supportservices"
-              item-title="support_services" 
-              item-value="id"
-              outlined
-              v-model="formData.particulars.ssID" 
-            ></v-select>
-          </v-col>
-          <v-col>
-            <v-select
             label="Support Services Items"
             :items="supportservicesitems"
             item-title="support_services_items"
@@ -515,20 +511,18 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
             v-model="formData.particulars.ssItems" 
           ></v-select>
           </v-col>
-        </v-row>
-        <transition name="slide-fade">
-          <v-row v-if="othersFlag">
-            <v-col>
-              <v-text-field
+           <v-col>
+            <transition name="slide-fade">
+                <v-text-field
+                v-if="othersFlag"
                 v-model="service_others"
                 label="Others item"
                 type="text"
               ></v-text-field>
+            </transition>
+            
             </v-col>
-            <v-col>
-            </v-col>
-          </v-row>
-          </transition>
+        </v-row>
         <v-row>
           <v-col>
             <v-select
@@ -639,9 +633,20 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
             />
           </v-col>
         </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+              label="DMS Remark"
+              v-model="formData.remark"
+              outlined
+              clearable
+            />
+          </v-col>
+        </v-row>
         <v-row dense>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="submitScoreboard">Submit FAD Scoreboard</v-btn>
+          <v-btn color="primary"  @click="dialogFAD = true">Submit FAD Scoreboard</v-btn>
+          <!--@click="submitScoreboard"-->
         </v-row>
       </v-form>
        <v-dialog v-model="successDialog" width="400">
@@ -667,4 +672,32 @@ const fadSubUnits = ref([]); // Store FAD Sub Units
       />
     </v-card-text>
   </v-card>
+  
+<!-- Add Dialog -->
+  <v-dialog v-model="dialogFAD" max-width="500px">
+      <v-card 
+          title="Process Routing Setup"
+          class ="pt-3"
+          subtitle="Set CAO/SAO approval">
+          <v-container class="d-flex justify-center ">
+          <v-row justify="center" dense style="max-width: 500px;">
+            <v-col cols="6">
+              <v-btn color="blue-darken-4" block @click="submitScoreboard(true)">
+                For approval of SAO/CAO
+              </v-btn>
+            </v-col>
+            <v-col cols="6">
+              <v-btn class="mb-6" color="red-darken-4" block @click="submitScoreboard(false)">
+                Forward DMS
+              </v-btn>  
+            </v-col>
+          </v-row>
+        </v-container>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn class="mr-5 my-2" text="Close" variant="plain" prepend-icon="mdi-close" @click="dialogFAD = false"></v-btn>
+        </v-card-actions>
+      </v-card>
+     </v-dialog>
 </template>

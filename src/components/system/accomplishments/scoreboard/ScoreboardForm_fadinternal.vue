@@ -198,7 +198,8 @@ if (isNaN(combinedDate.getTime())) {
         date_received: dateForwarded,
         owner_id: formData.value.particulars.staffID ?? null,
         sub_unit_id: formData.value.particulars.agencyID ?? null,
-        from_id: userUUID.value
+        from_id: userUUID.value,
+         remark: formData.value.remark ?? null
       }])
       .throwOnError();
         console.log("Insert response:", insertedData, insertError);
@@ -290,8 +291,13 @@ const confirmEndProcess = async () => {
   } 
    showEndProcessDialog.value = true;
 };
-const routePage = async () => {
-      router.push('/dashboard');
+const handleDialogClose = (isOpen) => {
+  if (!isOpen) {
+    routePage()
+  }
+}
+const routePage = () => {
+  router.push('/dashboard')
 }
 const handleEndProcess = async () => {
   if (!formData.value.dateForwarded) {
@@ -383,12 +389,6 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
       <v-form ref="refVForm" @submit.prevent="handleFormSubmit">
         <v-row>
           <v-col>
-             <p class="ms-4 text-wrap">
-              Process ID: <b style="padding-left: 10px;">{{ processId }}</b>
-            </p>
-            <p class="ms-4 text-wrap">
-              Scoreboard ID: <b style="padding-left: 10px;">{{ scoreboardId }}</b>
-            </p>
             <p class="ms-4 text-wrap">
               DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>
             </p>
@@ -494,6 +494,17 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
             />
           </v-col>
         </v-row>
+        <v-row>
+          <v-col>
+             <v-text-field
+              label="DMS Remark"
+              v-model="formData.remark"
+              type= "text"
+              outlined
+              clearable
+            />
+          </v-col>
+        </v-row>
         <!-- Time Picker Dialog for Date Forwarded -->
         <v-dialog v-model="timeDialogForwarded" max-width="400">
         <v-card>
@@ -558,7 +569,11 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
         </v-col>
         </v-row>
       </v-form>
-      <SuccessDialog  @close-dialog="routePage" :isActive="isSuccess" />
+    <SuccessDialog 
+      v-model="isSuccess" 
+      @update:model-value="handleDialogClose" 
+    />
+    
       <SuccessDialog
   :isActive="showEndProcessDialog"
   @close-dialog="routePage"

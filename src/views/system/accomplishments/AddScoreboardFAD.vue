@@ -1,7 +1,5 @@
 <script setup>
 import ScoreboardForm_receiving from '@/components/system/accomplishments/scoreboard/ScoreboardForm_fad_receiving.vue'
-import ScoreboardForm_technical from '@/components/system/accomplishments/scoreboard/ScoreboardForm_technical.vue'
-import ScoreboardForm from '@/components/system/accomplishments/scoreboard/ScoreboardForm.vue'
 import SideNavigation from '@/components/layout/navigation/SideNavigation.vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAuthUserStore } from '@/stores/authUser'
@@ -13,22 +11,8 @@ import { ref, computed } from 'vue'
 // State
 const isDrawerVisible = ref(true)
 
-// Auth Store
-const authStore = useAuthUserStore()
-
-// Computed: Get user role
-//const userRole = computed(() => authStore.userRole)
 const SelectedForm = ScoreboardForm_receiving;
-// Dynamic Component Selection
-/* const SelectedForm = computed(() => {
-  if (userRole.value === 'Technical') {
-    return ScoreboardForm_technical
-  } else if (userRole.value === 'Administrator') {
-    return ScoreboardForm  // ✅ Show Admin Form
-  } else {
-    return ScoreboardForm_receiving  // Default: Receiving Form
-  }
-}) */
+
 </script>
 
 <template>
