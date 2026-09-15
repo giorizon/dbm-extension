@@ -44,7 +44,7 @@ const props = defineProps({
   subunit: String,
   scoreboardId: String,
   processId: String,
-  agencyName: String // ✅ Added missing prop
+  agencyName: String 
 })
 
 const {
@@ -206,7 +206,6 @@ const handleFormSubmit = async () => {
 }
 
 const confirmEndProcess = async () => {
-  alert(formData.value.processId);
   const timestamp = getFormattedTimestamp()
   if (!timestamp) return
 
@@ -224,6 +223,7 @@ const confirmEndProcess = async () => {
 }
 
 const handleRelease = async () => {
+  alert(formData.value.processId);
   showReleaseDialog.value = false
   const timestamp = getFormattedTimestamp()
   if (!timestamp) return
@@ -232,7 +232,7 @@ const handleRelease = async () => {
     await supabase
       .from('scoreboard_fad_process')
       .update({ date_forwarded: timestamp, status: "Pending in Releasing" })
-      .eq('id', props.processId) // ✅ Fixed
+      .eq('id', formData.value.processId)
       .throwOnError()
 
     if (downtimeChecker.value) {
@@ -241,13 +241,13 @@ const handleRelease = async () => {
         .insert([{
           downtime_id: typeDowntime.value,
           downtime: downtimeValue.value,
-          process_id: props.processId,
+          process_id: formData.value.processId,
           remark: remark.value || null
         }])
         .throwOnError()
     }
-
-    await insertReleasingFad({ formData, dateForwarded: timestamp, userUUID, typeId: 1 })
+    alert("Here");
+    await insertReleasingFad({ scoreboardId: formData.value.scoreboardId, dateForwarded: timestamp, userUUID, typeId: 4 })
     isSuccess.value = true
   } catch (err) {
     formErrorMessage.value = err.message || "An unknown error occurred during release."
@@ -472,10 +472,7 @@ onMounted(() => {
       v-model="isSuccessEnd" 
       @update:model-value="handleDialogClose" 
     />
-    <!-- <SuccessDialog
-            :isActive="showEndProcessDialog"
-            @close-dialog="routePage"
-          />  -->  
+
       <v-dialog v-model="showEndConfirmDialog" max-width="500">
         <v-card>
           <v-card-title class="text-h6">

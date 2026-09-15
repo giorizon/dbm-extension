@@ -174,13 +174,13 @@ const fetchUsersByDivision = async () => {
   }));
 };
 
-const insertReleasingFad = async ({ formData, dateForwarded, userUUID, typeId }) => {
+const insertReleasingFad = async ({ scoreboardId, dateForwarded, userUUID, typeId }) => {
     try {
       const { data: insertedData, error: insertError } = await supabase
         .from("releasing_fad")
         .insert([
           {
-            scoreboard_id: formData.scoreboardId?.value ?? null,
+            scoreboard_id: scoreboardId ?? null,
             status: "Pending",
             date_received: dateForwarded,
             from_id: userUUID.value,

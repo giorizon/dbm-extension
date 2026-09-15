@@ -1,20 +1,41 @@
 <script setup>
-import { ref, defineProps, onMounted } from 'vue'
+import { ref, defineProps, onMounted, watch } from 'vue' // Combined imports
 import { format } from 'date-fns'
-import '@/assets/scoreboard.css'
+import { useRouter } from 'vue-router'
+import supabase from './supabase'
+import { useScoreboardLogic } from './scoreboardLogic.js'
 import ScoreboardFormDialog from './ScoreboardFormDialog.vue'
 import SuccessDialog from './SuccessDialog.vue'
+import SuccessEndProcessDialog from './Dialog/SuccessEndProcess.vue'
 import ErrorDialog from './ErrorDialog.vue'
-import { useScoreboardLogic } from './scoreboardLogic.js'
-import supabase from './supabase'; 
-import { watch } from 'vue';
-import { useRouter } from 'vue-router';
-const router = useRouter();
+import '@/assets/scoreboard.css'
 
+const router = useRouter()
+
+// UI Dialog & Error Controls
 const validationError = ref("")
 const isSuccess = ref(false)
-const user = ref(null);
+const isSuccessEnd = ref(false)
 const formErrorMessage = ref("")
+const downtimeChecker = ref(false)
+const selectedTimeForwarded = ref(format(new Date(), 'HH:mm'))
+const timeDialogForwarded = ref(false)
+const showEndConfirmDialog = ref(false)
+const showReleaseDialog = ref(false)
+const showEndProcessDialog = ref(false)
+const showErrorDialog = ref(false)
+const errorDialogTitle = ref("")
+const errorDialogMessage = ref("")
+
+// Data Storage Refs
+const downtimeValue = ref(null)
+const typeDowntime = ref(null)
+const remark = ref(null)
+const userUUID = ref(null)
+const processOwners = ref([])
+const fadSubUnits = ref([])
+const type_of_downtime = ref([])
+const releasing_id = ref(null)
 
 const props = defineProps({
   dmsReferenceNumber: String,
@@ -22,8 +43,9 @@ const props = defineProps({
   report: String,
   subunit: String,
   scoreboardId: String,
-  processId: String
-});
+  processId: String,
+  agencyName: String 
+})
 
 const {
   formData,
@@ -32,20 +54,15 @@ const {
   prescribedPeriodValues,
   insertReleasingFad,
   requiredValidator
-} = useScoreboardLogic();
+} = useScoreboardLogic()
 
-const downtimeChecker = ref(false);
-
-formData.dateReceivedRecordSection = ref(format(new Date(), 'yyyy-MM-dd'))
-const dateForwardedValue = ref(format(new Date(), 'yyyy-MM-dd'))
-const selectedTimeForwarded = ref(format(new Date(), 'HH:mm'))
-const timeDialogForwarded = ref(false)
-const showEndConfirmDialog = ref(false);
-const showReleaseDialog = ref(false);
-const showEndProcessDialog = ref(false);
-const showErrorDialog = ref(false)
-const errorDialogTitle = ref("")
-const errorDialogMessage = ref("")
+// ✅ Critical Fix: Standardized .value notation across initial mapping
+formData.value.dateReceivedRecordSection = format(new Date(), 'yyyy-MM-dd')
+formData.value.dmsReferenceNumber = props.dmsReferenceNumber
+formData.value.dateReceived = props.dateReceived
+formData.value.agencyName = props.agencyName
+formData.value.scoreboardId = props.scoreboardId
+formData.value.processId = props.processId
 
 const showError = (title, message) => {
   errorDialogTitle.value = title
@@ -53,349 +70,216 @@ const showError = (title, message) => {
   showErrorDialog.value = true
 }
 
-
-
-const downtimeValue = ref(null);
-const typeDowntime = ref(null);
-const remark = ref(null);
-const downtimeFlag = ref(0); 
-const userUUID = ref(null);
-const processOwners = ref([]);
-const fadSubUnits = ref([]);
-
-const staffID = ref(null);
-const agencyID = ref(null);
-
-watch(downtimeChecker, (newVal) => {
-  downtimeFlag.value = newVal ? 1 : 0;
-});
-
-const fetchLoggedInUser = async () => {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error("Error fetching user:", error);
-    return;
+// 🛠️ Optimization: Shared Helper to generate and validate timestamps (DRY)
+const getFormattedTimestamp = () => {
+  if (!formData.value.dateForwarded) {
+    showError("Date Forwarded is empty", "Please select a valid date before continuing.")
+    return null
   }
-  userUUID.value = data?.user?.id;
-  console.log("✅ User UUID:", userUUID.value);
-};
 
-const type_of_downtime = ref([])
-  // Fetch Type of Transactions from Supabase
+  const datePart = format(new Date(formData.value.dateForwarded), 'yyyy-MM-dd')
+  const timePart = selectedTimeForwarded.value
+  const combinedDate = new Date(`${datePart}T${timePart}:00Z`)
+
+  if (isNaN(combinedDate.getTime())) {
+    formErrorMessage.value = "Invalid date or time format."
+    return null
+  }
+  return combinedDate.toISOString()
+}
+
+// System Fetches
+const fetchLoggedInUser = async () => {
+  const { data, error } = await supabase.auth.getUser()
+  if (!error) userUUID.value = data?.user?.id
+}
+
 const fetchTypeOfDowntime = async () => {
-    try {
-     
-      const { data, error } = await supabase.from('type_of_downtime').select('id, name')
-      if (error) {
-        alert("error1");
-        console.error('Error fetching Type of Downtime:', error)
-        return
-      }
-      type_of_downtime.value = data.map(item => ({
-        title: item.name,
-        value: item.id
-      }))
-      console.log("Fetched Downtime Types:", data);
-    } catch (err) {
-      alert("error2");
-      console.error('Unexpected error fetching Type of downtime:', err)
+  try {
+    const { data, error } = await supabase.from('type_of_downtime').select('id, name')
+    if (!error) {
+      type_of_downtime.value = data.map(item => ({ title: item.name, value: item.id }))
     }
-  } 
-formData.dmsReferenceNumber = props.dmsReferenceNumber;
-formData.dateReceived = props.dateReceived;
-formData.agencyName = props.agencyName;
-formData.scoreboardId = props.scoreboardId;
-formData.processId = props.processId;
+  } catch (err) {
+    console.error('Unexpected error fetching Type of downtime:', err)
+  }
+}
 
-const releasing_id = ref(null);
 const fetchReleasingId = async () => {
   const { data, error } = await supabase
     .from('user_profile_role')
-    .select('user_id') 
+    .select('user_id')
     .eq('user_role', 'Releasing Data')
-    .single(); 
+    .maybeSingle()
+  if (!error) releasing_id.value = data?.user_id
+}
 
-  if (error) {
-    console.error("Error fetching releasing ID:", error);
-    return;
+const fetchFADSubUnits = async () => {
+  const { data, error } = await supabase.from('fad_sub_units').select('id, name')
+  if (!error) fadSubUnits.value = data.map(item => ({ id: item.id, name: item.name }))
+}
+
+const fetchProcessOwners = async () => {
+  const subunitID = formData.value.particulars.agencyID
+  if (!subunitID) return
+  
+  const { data, error } = await supabase
+    .from('view_fad_process_owner')
+    .select('*')
+    .eq('sub_unit_id', subunitID)
+
+  if (!error && data) {
+    processOwners.value = data.map(user => ({
+      id: user.id,
+      name: `${user.pos} - ${user.firstname} ${user.lastname}`.trim()
+    }))
   }
-  releasing_id.value = data?.user_id;
-};
+}
 
-onMounted(() => {
-  //formData.dateForwarded = dateForwardedValue.value;
-  fetchTypeOfDowntime();
-  fetchReleasingId();
-  fetchLoggedInUser();
-  fetchFADSubUnits();
-  selectedTimeForwarded.value = format(new Date(), 'HH:mm');
-    console.log("processId:", props.processId);
-  console.log("scoreboardId:", props.scoreboardId);
-})
+// Form Submission & Document Lifecycle Actions
 const handleFormSubmit = async () => {
-if (!formData.value.dateForwarded) {
-  console.log('Date is empty or null!');
-  showError("Date Forwarded is empty", "Please select a valid date before continuing.")
-  return false
-}
-
- const dateform = new Date(formData.value.dateForwarded);
- const datePart = format(dateform, 'yyyy-MM-dd');
-const timePart = selectedTimeForwarded.value;
-if (!datePart || !timePart) {
-  validationError.value = "Both date and time must be selected.";
-  return;
-}
-
-const combinedDatetimeStr = `${datePart}T${timePart}:00Z`;
-const combinedDate = new Date(combinedDatetimeStr);
-
-if (isNaN(combinedDate.getTime())) {
-  formErrorMessage.value = "Invalid date or time format.";
-  console.error("❌ Invalid combinedDatetimeStr:", combinedDatetimeStr);
-  return;
-}
-
-const dateForwarded = combinedDate.toISOString();
-  const updateData = {
-    date_forwarded: dateForwarded,
-    status: "Accepted"
-  };
+  const timestamp = getFormattedTimestamp()
+  if (!timestamp) return
 
   try {
-   const { data: updatedRows, error: updateError } = await supabase
-  .from('scoreboard_fad_process')
-  .update(updateData)
-  .eq('id', props.processId.value)
-  .select()// 👈 include this to return affected rows
-   .throwOnError();
+    const cleanProcessId = props.processId && typeof props.processId === 'object'
+      ? (props.processId.id ?? props.processId.value)
+      : props.processId;
 
-    
-    console.log("🔁 Updated rows:", updatedRows);
-    if (updateError) {
-      console.error("❌ Update error:", updateError);
-      throw updateError;
+    const cleanDowntimeId = typeDowntime.value && typeof typeDowntime.value === 'object'
+      ? (typeDowntime.value.value ?? typeDowntime.value.id)
+      : typeDowntime.value;
+
+    const cleanScoreboardId = formData.value.scoreboardId && typeof formData.value.scoreboardId === 'object'
+      ? formData.value.scoreboardId.id
+      : formData.value.scoreboardId;
+
+    const cleanSubUnitId = formData.value.particulars.agencyID && typeof formData.value.particulars.agencyID === 'object'
+      ? formData.value.particulars.agencyID.id
+      : formData.value.particulars.agencyID;
+
+    const cleanOwnerId = formData.value.particulars.staffID && typeof formData.value.particulars.staffID === 'object'
+      ? formData.value.particulars.staffID.id
+      : formData.value.particulars.staffID;
+
+
+    // 1. Update the current active process stage
+    await supabase
+      .from('scoreboard_fad_process')
+      .update({ date_forwarded: timestamp, status: "Accepted" })
+      .eq('id', cleanProcessId)
+      .throwOnError()
+
+    // 2. Conditional Downtime log
+    if (downtimeChecker.value) {
+      await supabase
+        .from('fad_downtime')
+        .insert([{
+          downtime_id: cleanDowntimeId,
+          downtime: downtimeValue.value,
+          process_id: cleanProcessId,
+          remark: remark.value
+        }])
+        .throwOnError()
     }
-  
-    
 
-    if (downtimeFlag.value === 1) {
-    console.log("Downtime ", downtimeValue.value);
-    console.log("Downtime type:", typeDowntime.value);
-    console.log("Remark:", remark.value);
-    const { error: insertError, data: insertedData } = await supabase
-      .from('fad_downtime')
-      .insert([{
-        downtime_id: typeDowntime.value,
-        downtime: downtimeValue.value,
-        process_id: props.processId.value,
-        remark: remark.value
-      }]);
-    console.log("Insert response:", insertedData, insertError);
-    if (insertError) throw insertError;
-    isSuccess.value = true;
-    console.log("✅ Passed downtime insert successfully"); // ← add this
-  }
-    console.log("Owner ID:",formData.value.particulars.staffID);
-    console.log("sub_unit_id:", formData.value.particulars.agencyID);
-    const { error: insertError, data: insertedData } = await supabase
+    // 3. Chain/Route the process forward to the next stage
+    await supabase
       .from('scoreboard_fad_process')
       .insert([{
-        scoreboard_id: formData.scoreboardId?.value ?? null,
+        scoreboard_id: cleanScoreboardId ?? null,
         status: 'Pending',
         date_forwarded: null,
-        date_received: dateForwarded,
-        owner_id: formData.value.particulars.staffID ?? null,
-        sub_unit_id: formData.value.particulars.agencyID?? null,
-        from_id: userUUID.value
+        date_received: timestamp,
+        owner_id: cleanOwnerId ?? null,
+        sub_unit_id: cleanSubUnitId ?? null,
+        from_id: userUUID.value,
+        remark: formData.value.remark ?? null
       }])
-      .throwOnError();
-        console.log("Insert response:", insertedData, insertError);
-        if (insertError) {
-          console.error("Insert error:", insertError);
-          throw insertError;
-        }
-        isSuccess.value = true;
-  } catch (err) {
-     console.error("❌ Caught error:", err); 
-    formErrorMessage.value = err.message || "Failed to submit the form.";
-  } 
-};
-const fetchProcessOwners = async () => {
-  let subunitID = formData.value.particulars.agencyID;
-  console.log("Selected FAD Sub Units:", subunitID);
-  try {
-    const { data, error } = await supabase
-      .from('view_fad_process_owner')
-      .select('*')
-      .eq('sub_unit_id',subunitID )
-    console.log('Fetched process owner data:', data);
-    if (error) {
-      console.error('Error fetching process owners:', error);
-      return;
-    }
+      .throwOnError()
 
-    processOwners.value = data.map(user => {
-      console.log('user_id:', user.user_id); // 👈 Logs the UUID
-      return {
-        id: user.id,
-        name: `${user.pos} - ${user.firstname} ${user.lastname}`.trim()
-      };
-    });
-
-    console.log('🏷️ Owner ID:', user.value.id);
+        isSuccess.value = true
   } catch (err) {
-    console.error('Unexpected error fetching process owners:', err);
+    console.error("❌ Form Submission Failed:", err)
+    validationError.value = err.message || "Failed to submit the form."
   }
-};
-const fetchFADSubUnits = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('fad_sub_units')
-      .select('id, name'); 
+}
 
-    if (error) {
-      console.error('Error fetching FAD Sub Units:', error);
-      return;
-    }
-
-    console.log("FAD Sub Units Data:", data); // ✅ Log fetched data
-
-    fadSubUnits.value = data.map(item => ({
-      id: item.id,
-      name: item.name, // Display name
-    }));
-
-  } catch (err) {
-    console.error('Unexpected error fetching FAD Sub Units:', err);
-  }
-};
 const confirmEndProcess = async () => {
+  const timestamp = getFormattedTimestamp()
+  if (!timestamp) return
 
-const dateform = new Date(formData.value.dateForwarded);
-const datePart = format(dateform, 'yyyy-MM-dd');
-const timePart = selectedTimeForwarded.value;
-if (!datePart || !timePart) {
-  validationError.value = "Both date and time must be selected.";
-  return;
-}
-
-const combinedDatetimeStr = `${datePart}T${timePart}:00Z`;
-const combinedDate = new Date(combinedDatetimeStr);
-
-  const dateEnded = combinedDate.toISOString();
-  console.log("🟦 End Process clicked");
-    const updateData = {
-    end_date: dateEnded,
-    status: "Process End"
-  };
   try {
-  const { data: updatedRows, error: updateError } = await supabase
-  .from('scoreboard_fad_process')
-  .update(updateData)
-  .eq('id', props.processId.value)
-  .select()// 👈 include this to return affected rows
-  .throwOnError();
-        
-  console.log("🔁 Updated rows:", updatedRows);
-  if (updateError) {
-    console.error("❌ Update error:", updateError);
-    throw updateError;
-  }
-  } catch (err) {
-    console.error("❌ Caught error:", err); 
-    formErrorMessage.value = err.message || "Failed to submit the form.";
-  } 
-   showEndProcessDialog.value = true;
-};
-const handleDialogClose = (isOpen) => {
-  if (!isOpen) {
-    routePage()
-  }
-}
-const routePage = () => {
-  router.push('/dashboard')
-}
-const handleEndProcess = async () => {
-  if (!formData.value.dateForwarded) {
-    console.log('Date is empty or null!');
-    showError("Date Forwarded is empty", "Please select a valid date before continuing.")
-    return false
-  }
-  showEndConfirmDialog.value = true;
-  
-};
-
-const releaseWarning = async () => {
-  if (!formData.value.dateForwarded) {
-    console.log('Date is empty or null!');
-    showError("Date Forwarded is empty", "Please select a valid date before continuing.")
-    return false
-  }
-  showReleaseDialog.value = true;
-  
-};
-const handleRelease = async () => {
-showReleaseDialog.value = false;
-const dateform = new Date(formData.value.dateForwarded);
-const datePart = format(dateform, 'yyyy-MM-dd');
-const timePart = selectedTimeForwarded.value;
-if (!datePart || !timePart) {
-  validationError.value = "Both date and time must be selected.";
-  return;
-}
-
-const combinedDatetimeStr = `${datePart}T${timePart}:00Z`;
-const combinedDate = new Date(combinedDatetimeStr);
-
-  const dateForwarded = combinedDate.toISOString();
-  try {
-
-    const updateData = {
-      date_forwarded: dateForwarded,
-      status: "Pending in Releasing"
-    };
-
-    const { data: updatedRows, error: updateError } = await supabase
+    await supabase
       .from('scoreboard_fad_process')
-      .update(updateData)
-      .eq('id', props.processId.value)
-      .select();
+      .update({ end_date: timestamp, status: "Process End" })
+      .eq('id', formData.value.processId) // ✅ Removed broken .value layout
+      .throwOnError()
 
-    if (updateError) {
-      console.error("❌ Update error (scoreboard_fad_process):", updateError);
-      throw new Error("Failed to update scoreboard_fad_process.");
-    }
+    isSuccessEnd.value=true  
+  } catch (err) {
+    formErrorMessage.value = err.message || "Failed to end process."
+  }
+}
 
-    console.log("✅ Updated scoreboard_fad_process:", updatedRows);
+const handleRelease = async () => {
+  showReleaseDialog.value = false
+  const timestamp = getFormattedTimestamp()
+  if (!timestamp) return
 
-    // ⏱️ 2. INSERT: fad_downtime (conditional)
-    if (downtimeFlag.value === 1) {
-      const { data: insertedDowntime, error: downtimeError } = await supabase
+  try {
+    await supabase
+      .from('scoreboard_fad_process')
+      .update({ date_forwarded: timestamp, status: "Pending in Releasing" })
+      .eq('id', formData.value.processId) // ✅ Fixed
+      .throwOnError()
+
+    if (downtimeChecker.value) {
+      await supabase
         .from('fad_downtime')
         .insert([{
           downtime_id: typeDowntime.value,
           downtime: downtimeValue.value,
-          process_id: props.processId.value,
+          process_id: formData.value.processId,
           remark: remark.value || null
-        }]);
-
-      if (downtimeError) {
-        console.error("❌ Insert error (fad_downtime):", downtimeError);
-        throw new Error("Failed to insert into fad_downtime.");
-      }
-
-      console.log("✅ Inserted into fad_downtime:", insertedDowntime);
+        }])
+        .throwOnError()
     }
-    const typeId = 1;
-    await insertReleasingFad({ formData, dateForwarded, userUUID, typeId });
-    isSuccess.value = true;
+
+    await insertReleasingFad({ scoreboardId: formData.value.scoreboardId, dateForwarded: timestamp, userUUID, typeId: 1 })
+    isSuccess.value = true
   } catch (err) {
-    console.error("❌ Caught error in handleRelease:", err);
-    formErrorMessage.value = err.message || "An unknown error occurred while submitting the form.";
+    formErrorMessage.value = err.message || "An unknown error occurred during release."
   }
-};
-watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
+}
+
+const handleEndProcess = () => {
+  if (getFormattedTimestamp()) showEndConfirmDialog.value = true
+}
+
+const releaseWarning = () => {
+  if (getFormattedTimestamp()) showReleaseDialog.value = true
+}
+const handleDialogClose = (isOpen) => {
+  // When isOpen becomes false (the user dismissed the dialog)
+  if (!isOpen) {
+    routePage()
+  }
+}
+
+const routePage = () => {
+  router.push('/dashboard')
+}
+// Reactive Observers
+watch(() => formData.value.particulars.agencyID, fetchProcessOwners)
+
+onMounted(() => {
+  fetchTypeOfDowntime()
+  fetchReleasingId()
+  fetchLoggedInUser()
+  fetchFADSubUnits()
+  selectedTimeForwarded.value = format(new Date(), 'HH:mm')
+})
 </script>
 
 <template>
@@ -588,11 +472,11 @@ watch(() => formData.value.particulars.agencyID, fetchProcessOwners);
       v-model="isSuccess" 
       @update:model-value="handleDialogClose" 
     />
-    
-      <SuccessDialog
-  :isActive="showEndProcessDialog"
-  @close-dialog="routePage"
-/>
+    <SuccessEndProcessDialog 
+      v-model="isSuccessEnd" 
+      @update:model-value="handleDialogClose" 
+    />
+  
       <v-dialog v-model="showEndConfirmDialog" max-width="500">
         <v-card>
           <v-card-title class="text-h6">
