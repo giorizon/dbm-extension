@@ -289,6 +289,7 @@ function reloadPage() {
 }
 
 const submitScoreboard = async (approval) => {
+  alert("here");
   if(approval){
     dmsRemark.value = 'Approval_Needed';
   }
@@ -308,13 +309,11 @@ const submitScoreboard = async (approval) => {
     const forwardedCombinedDateTime = `${forwardedDatePart}T${forwardedTimePart}:00`;
     const formattedForwardedDateTime = format(new Date(forwardedCombinedDateTime), "yyyy-MM-dd HH:mm:ss");
     
-    //check if user is logged in
     if (!user.value?.id) {
         alert("User not yet loaded. Please wait and try again.");
     return;
     }   
 
-    // 1️⃣ Insert into scoreboard_receiving_fad
     const { data: fadInsertData, error: fadError } = await supabase
       .from('scoreboard_receiving_fad')
       .insert([
@@ -335,8 +334,7 @@ const submitScoreboard = async (approval) => {
       ])
       .select('id')
       .single(); // Return the inserted row
- 
-    // console.log('Auth UID match policy will allow this:', userUUID.value === <value you expect>);   
+  
     if (fadError) {
       console.error('🚨 Insert Error (FAD Receiving):', fadError.message);
       alert('❌ Failed to save data in scoreboard_receiving_fad! Error: ' + fadError.message);
@@ -435,10 +433,7 @@ const submitScoreboard = async (approval) => {
 
       console.log("✅ Data saved in scoreboard_support_services");
     }
-
-
-   } 
-    
+   }  
     //end-if not for approval
      successDialog.value = true;
       router.push('/add-scoreboard-fad');
@@ -446,7 +441,6 @@ const submitScoreboard = async (approval) => {
     console.error('Unexpected Error in submitScoreboard:', e);
     alert('⚠️ An unexpected error occurred: ' + e.message);
   }
-  
 };
 const fadSubUnits = ref([]); 
 
@@ -672,7 +666,6 @@ const fadSubUnits = ref([]);
       />
     </v-card-text>
   </v-card>
-  
 <!-- Add Dialog -->
   <v-dialog v-model="dialogFAD" max-width="500px">
       <v-card 

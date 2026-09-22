@@ -262,7 +262,6 @@ const handleFormSubmit = async () => {
       .insert([{
         scoreboard_id: formData.scoreboardId,
         status: 'Pending',
-        owner_id: SecretaryId.value,
         from_id: userUUID.value,
         level: 'Secretary',
         date_received: combinedDateTime,
