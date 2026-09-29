@@ -306,13 +306,10 @@ const handleFormSubmit = async () => {
               </v-dialog>
           </v-col>
           <v-col cols="5">
-            <!-- Clickable Time Input -->
-            <v-text-field
+             <v-text-field
               v-model="selectedTimeForwarded"
               label="Time Forwarded"
-              prepend-inner-icon="mdi-clock"
-              readonly
-              @click="timeDialogForwarded = true"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>

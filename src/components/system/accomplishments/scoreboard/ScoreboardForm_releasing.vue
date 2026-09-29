@@ -263,12 +263,7 @@ const routePage = async () => {
       <v-form ref="refVForm" @submit.prevent="handleFormSubmit">
         <v-row>
           <v-col>
-            <p class="ms-4 text-wrap">
-              Process ID: <b style="padding-left: 10px;">{{ processId }}</b>
-            </p>
-            <p class="ms-4 text-wrap">
-              Scoreboard ID: <b style="padding-left: 10px;">{{ scoreboardId }}</b>
-            </p>
+        
             <p class="ms-4 text-wrap">
               DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>
             </p>
@@ -333,13 +328,10 @@ const routePage = async () => {
               </v-dialog>
           </v-col>
           <v-col cols="5">
-            <!-- Clickable Time Input -->
             <v-text-field
               v-model="selectedTimeForwarded"
               label="Time Forwarded"
-              prepend-inner-icon="mdi-clock"
-              readonly
-              @click="timeDialogForwarded = true"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>

@@ -38,11 +38,8 @@ const props = defineProps({
 });
 
 const {
-  //handleDialogFormSubmit,
-  //handleFormSubmit,
   formData,
   formAction,
- // isSuccess,
   refVForm,
   prescribedPeriodValues,
   type_of_transaction,
@@ -423,13 +420,10 @@ const routePage = async () => {
         </v-dialog>
           </v-col>
           <v-col cols="5">
-            <!-- Clickable Time Input -->
             <v-text-field
               v-model="selectedTimeForwarded"
               label="Time Forwarded"
-              prepend-inner-icon="mdi-clock"
-              readonly
-              @click="timeDialogForwarded = true"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>

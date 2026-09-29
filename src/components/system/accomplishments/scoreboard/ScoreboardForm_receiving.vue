@@ -127,42 +127,32 @@ const submitScoreboard = async () => {
     return;
   }
   
-// Format time in AM/PM
-    const formatTime = (time) => {
-      if (!time) return '';
-      const parsedTime = parse(time, 'HH:mm', new Date());
-      return format(parsedTime, 'hh:mm a'); // 12-hour format with AM/PM
-    };
-    const formattedReceivedTime = formatTime(selectedTimeReceived.value);
-    const formattedForwardedTime = formatTime(selectedTimeForwarded.value);
+  // Helper to build clean "YYYY-MM-DD HH:mm:ss" without UTC conversion
+  const combineDateTime = (dateVal, timeVal) => {
+    if (!dateVal || !timeVal) return null;
 
-    console.log("✅ Time Received:", formattedReceivedTime);
-    console.log("✅ Time Forwarded:", formattedForwardedTime);
+    // 1. Format Date to YYYY-MM-DD
+    const dateStr = format(new Date(dateVal), "yyyy-MM-dd");
+
+    // 2. Ensure Time is HH:mm:ss
+    const timeParts = timeVal.split(':');
+    const hh = timeParts[0].padStart(2, '0');
+    const mm = timeParts[1] ? timeParts[1].padStart(2, '0') : '00';
+    const ss = timeParts[2] ? timeParts[2].padStart(2, '0') : '00';
+
+    // 3. Combine without 'T' or 'Z'
+    return `${dateStr} ${hh}:${mm}:${ss}`;
+  };
+
   try {
-    // ✅ Received Date + Time
-    const formattedReceivedDate = format(new Date(selectedDateReceived.value), "yyyy-MM-dd");
-    const formattedReceivedTime = selectedTimeReceived.value.includes(":") 
-      ? selectedTimeReceived.value 
-      : `${selectedTimeReceived.value}:00`;
-    const receivedDateTime = `${formattedReceivedDate}T${formattedReceivedTime}:00Z`;
-    const finalReceivedDateTime = format(new Date(receivedDateTime), "yyyy-MM-dd HH:mm:ss");
+    // ✅ Formatted local date-times (e.g. "2026-09-28 14:30:00")
+    const finalReceivedDateTime = combineDateTime(selectedDateReceived.value, selectedTimeReceived.value);
+    const finalForwardedDateTime = combineDateTime(selectedDateForwarded.value, selectedTimeForwarded.value);
 
-    // ✅ Forwarded Date + Time 
-    let finalForwardedDateTime = null;
-    if (selectedDateForwarded.value && selectedTimeForwarded.value) {
-      const formattedForwardedDate = format(new Date(selectedDateForwarded.value), "yyyy-MM-dd");
-      const formattedForwardedTime = selectedTimeForwarded.value.includes(":") 
-        ? selectedTimeForwarded.value 
-        : `${selectedTimeForwarded.value}:00`;
-      const forwardedDateTime = `${formattedForwardedDate}T${formattedForwardedTime}:00Z`;
-      finalForwardedDateTime = format(new Date(forwardedDateTime), "yyyy-MM-dd HH:mm:ss");
-    }
+    console.log("✅ Final Date-Time Received:", finalReceivedDateTime);
+    console.log("✅ Final Date-Time Forwarded:", finalForwardedDateTime);
 
-
-    console.log("✅ Date-Time Received:", finalReceivedDateTime);
-    console.log("✅ Date-Time Forwarded:", finalForwardedDateTime );
-
-    // ✅ Insert into scoreboard_receiving and RETURN the inserted ID
+    // ✅ Insert into scoreboard_receiving
     const { data: receivingData, error: receivingError } = await supabase
       .from('scoreboard_receiving')
       .insert([
@@ -170,18 +160,19 @@ const submitScoreboard = async () => {
           dms_reference_number: formData.value.dmsReferenceNumber,
           agency_id: formData.value.particulars.agencyID,
           user_id: userUUID.value,
-          date_received: finalReceivedDateTime, // ✅ Store as YYYY-MM-DD
-          date_forwarded: finalForwardedDateTime  // ✅ Store as YYYY-MM-DD
+          date_received: finalReceivedDateTime,
+          date_forwarded: finalForwardedDateTime
         }
       ])
       .select('id'); 
+
     if (receivingError) {
       console.error('🚨 Supabase Insert Error (Receiving):', receivingError.message);
       alert('❌ Failed to save data! Error: ' + receivingError.message);
       return;
     }
 
-    const newReceivingId = receivingData ? receivingData[0]?.id : null; // ✅ Get the inserted ID
+    const newReceivingId = receivingData ? receivingData[0]?.id : null;
     if (!newReceivingId) {
       alert('❌ Error: Could not retrieve new scoreboard_receiving ID.');
       return;
@@ -189,12 +180,12 @@ const submitScoreboard = async () => {
 
     console.log("✅ New scoreboard_receiving ID:", newReceivingId);
 
-    // ✅ Insert into scoreboard_individual using the newReceivingId
+    // ✅ Insert into scoreboard_technical_process
     const { data: technicalData, error: technicalError } = await supabase
       .from('scoreboard_technical_process')
       .insert([
         {
-          scoreboard_id: newReceivingId, // ✅ Insert the new ID
+          scoreboard_id: newReceivingId,
           owner_id: formData.value.particulars.staffID,
           from_id: userUUID.value,
           date_received: finalReceivedDateTime,
@@ -210,16 +201,12 @@ const submitScoreboard = async () => {
       return;
     }
 
-      isSuccess.value = true;
+    isSuccess.value = true;
   } catch (err) {
     console.error('Unexpected error:', err);
     alert('❌ Unexpected error occurred while saving to the database.');
   }
 };
-const onCloseSuccess = () => {
-  isSuccess.value = false 
-  routePage()            
-}
 const routePage = async () => {
     router.push('/add-scoreboard');
 }
@@ -284,9 +271,7 @@ const routePage = async () => {
             <v-text-field
               v-model="selectedTimeReceived"
               label="Time Received"
-              prepend-icon="mdi-clock"
-              readonly
-              @click="timeReceivedDialog = true"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -304,16 +289,13 @@ const routePage = async () => {
             ></v-text-field>
           </v-col>
           <v-col>
-            <v-text-field
+              <v-text-field
               v-model="selectedTimeForwarded"
               label="Time Forwarded"
-              prepend-icon="mdi-clock"
-              readonly
-              @click="timeForwardedDialog = true"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>
-
         <!-- DATE PICKERS -->
         <v-dialog v-model="dateReceivedDialog" max-width="400">
           <v-card>

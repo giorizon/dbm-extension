@@ -359,12 +359,10 @@ onMounted(() => {
           </v-col>
           <v-col cols="5">
             <!-- Clickable Time Input -->
-            <v-text-field
+             <v-text-field
               v-model="selectedTimeForwarded"
-              label="Time Forwarded"
-              prepend-inner-icon="mdi-clock"
-              readonly
-              @click="timeDialogForwarded = true"
+              label="Time Received"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>

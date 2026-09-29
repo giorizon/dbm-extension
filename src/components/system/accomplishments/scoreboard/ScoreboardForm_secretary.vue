@@ -36,14 +36,8 @@ const {
   formAction,
  // isSuccess,
   refVForm,
-  options,
   prescribedPeriodValues,
-  type_of_transaction,
-  //type_of_downtime,
-  nature_of_transaction,
-  fetchPAP,
-  papData,
-  requiredValidator
+
 } = useScoreboardLogic();
 
 const downtimeChecker = ref(false);
@@ -58,8 +52,6 @@ const remark = ref(null);
 const downtimeFlag = ref(0); 
 const userUUID = ref(null);
 const scoreboardId = props.scoreboardId;
-const unformattedDate = props.unformattedDate;
-const fromId = props.processId;
 
 watch(downtimeChecker, (newVal) => {
   downtimeFlag.value = newVal ? 1 : 0;
@@ -318,12 +310,6 @@ const confirmedfunction = async () => {
         <v-row>
           <v-col>
             <p class="ms-4 text-wrap">
-              Process_id: <b style="padding-left: 10px;">{{ processId }}</b>
-            </p>
-          <p class="ms-4 text-wrap">
-              Scoreboard_id: <b style="padding-left: 10px;">{{ scoreboardId }}</b>
-            </p>
-            <p class="ms-4 text-wrap">
               DMS Reference Number: <b style="padding-left: 10px;">{{ dmsReferenceNumber }}</b>
             </p>
             <p class="ms-4 text-wrap">
@@ -398,13 +384,10 @@ const confirmedfunction = async () => {
               </v-dialog>
           </v-col>
           <v-col cols="5">
-            <!-- Clickable Time Input -->
             <v-text-field
               v-model="selectedTimeForwarded"
               label="Time Forwarded"
-              prepend-inner-icon="mdi-clock"
-              readonly
-              @click="timeDialogForwarded = true"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>

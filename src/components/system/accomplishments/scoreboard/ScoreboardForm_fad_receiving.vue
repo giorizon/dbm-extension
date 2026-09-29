@@ -289,7 +289,6 @@ function reloadPage() {
 }
 
 const submitScoreboard = async (approval) => {
-  alert("here");
   if(approval){
     dmsRemark.value = 'Approval_Needed';
   }
@@ -551,12 +550,10 @@ const fadSubUnits = ref([]);
             />
           </v-col>
           <v-col>
-            <v-text-field
+             <v-text-field
               v-model="selectedTime"
               label="Time Received"
-              prepend-icon="mdi-clock"
-              readonly
-              @click="timeDialog = true"
+              type="time"
             ></v-text-field>
           </v-col>
           
@@ -570,12 +567,10 @@ const fadSubUnits = ref([]);
             />
           </v-col>
           <v-col>
-            <v-text-field
+             <v-text-field
               v-model="selectedTime2"
-              label="Time Forwarded2"
-              prepend-icon="mdi-clock"
-              readonly
-              @click="timeDialog2 = true"
+              label="Time Forwarded"
+              type="time"
             ></v-text-field>
           </v-col>
           

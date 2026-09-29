@@ -411,9 +411,7 @@ const routePage = async () => {
             <v-text-field
               v-model="selectedTimeForwarded"
               label="Time Forwarded"
-              prepend-inner-icon="mdi-clock"
-              readonly
-              @click="timeDialogForwarded = true"
+              type="time"
             ></v-text-field>
           </v-col>
         </v-row>
