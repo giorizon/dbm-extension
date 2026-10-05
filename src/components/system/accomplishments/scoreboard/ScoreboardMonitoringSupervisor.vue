@@ -47,13 +47,13 @@ const {
   fetchARD,
   fetchYear,
   generateTable2: executeGenerateTable,
-  printSection
+  //printSection
 } = useScoreboardReport();
 
+const printSection = () => {
+  window.print();
+};
 
-const Test = async () => {
-  alert(selectedRole.value);
-}
 const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value, selectedRole.value);
 onMounted(async () => {
   await fetchLoggedInUser();
@@ -137,7 +137,7 @@ onMounted(async () => {
             </v-col>
         </v-row>
     </v-container>
- <v-data-table  :items="scoreboardData1"
+    <v-data-table  :items="scoreboardData1"
                 :search="search"
                 class="elevation-1 styled-scoreboard-table"
                 hide-default-footer

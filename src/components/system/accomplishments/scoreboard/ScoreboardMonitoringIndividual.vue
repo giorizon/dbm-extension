@@ -42,12 +42,15 @@ const {
   fetchARD,
   fetchYear,
   generateTable2: executeGenerateTable,
-  printSection
+  //printSection
 } = useScoreboardReport();
 
 
 const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value, 'Individual');
 
+const printSection = () => {
+  window.print();
+}; 
 onMounted(async () => {
   await fetchLoggedInUser();
   await fetchIndividual();

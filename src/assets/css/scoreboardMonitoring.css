@@ -174,71 +174,131 @@ signatory-block {
 }
 
 @media print {
-  body, html {
+   /* Hide everything by default */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show only the print section and everything inside it */
+  #printSection,
+  #printSection * {
+    visibility: visible !important;
+  }
+
+  /* Position the print section at the top-left of the page */
+  #printSection {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  @page {
+    size: landscape;
+    margin: 8mm;
+  }
+  
+
+  /* 2. Reset Vuetify Layout Wrappers (Fixes height/overflow collapsing) */
+  html,
+  body,
+  #app,
+  .v-application,
+  .v-application--wrap,
+  .v-main {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    position: static !important;
+    background: white !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  .v-container,
-  .v-col,
-  .v-row {
-    padding: 0 !important;
-    margin: 0 !important;
+  /* 3. Hide Unnecessary UI (Navbars, sidebars, buttons, etc.) */
+  /* Add class "no-print" to buttons or navigation headers in your template */
+  .no-print,
+  .v-navigation-drawer,
+  .v-app-bar,
+  .v-footer,
+  .v-btn {
+    display: none !important;
   }
 
+  /* 4. Fix Print Section Flow (DO NOT use position: absolute) */
+  #printSection {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 5. Force Vuetify Table Container to Expand Fully */
+  #printSection .v-data-table,
+  #printSection .v-data-table__wrapper,
+  #printSection .v-data-table__wrapper table,
+  #printSection table {
+    display: table !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  /* 6. Compact Table Typography & Borders for 22 Columns */
+  #printSection table {
+    font-size: 8px !important;
+    line-height: 1.1 !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+  }
+
+  #printSection th,
+  #printSection td {
+    padding: 2px 3px !important;
+    height: auto !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    border: 1px solid #000 !important;
+  }
+
+  #printSection thead {
+    display: table-header-group !important; /* Repeats table header across printed pages */
+  }
+
+  #printSection tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 7. Signatory Section Layout */
   .signatory-container {
     display: flex !important;
-    justify-content: space-between;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    margin-top: 15px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
+
   .signatory-container .v-col {
     flex: 1 1 0 !important;
-    max-width: 100% !important;
+    max-width: 30% !important;
     box-sizing: border-box;
-  }
-    .signatory-block {
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .ard{
-   position: relative;
-  left: 150px;
-  }
-  .rd{
-      position: relative;
-  left: 300px;
-  }
-  .print-container {
-    max-width: 100% !important; /* Override Vuetify's default max-width for containers */
-    padding: 0 !important; /* Remove any padding that might limit width */
-  }
-  .print-row {
-    width: 100% !important;
-    margin: 0 !important; 
-    flex-wrap: nowrap !important; 
-  }
-  .v-col {
-    flex-basis: 0 !important; 
-    flex-grow: 1 !important; 
-    max-width: 100% !important;
-    box-sizing: border-box; 
-    padding: 0 15px !important; 
-    text-align: left; 
-  }
-  .signatory-block {
-    
-    font-size: 0.9em;
-    margin-bottom: 3px;
+    padding: 0 10px !important;
   }
 
   .signatory-name {
     font-size: 1em;
     margin-top: 8px;
     margin-bottom: 2px;
-    border-bottom: 3px solid black;
-  }
-
-  /* Adjust line height for better readability on print */
-  div {
-    line-height: 1.3;
+    border-bottom: 2px solid black;
   }
 }
