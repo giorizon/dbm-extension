@@ -292,7 +292,7 @@ const handleFormSubmit = async () => {
         status: 'Pending',
         owner_id: selectedAssignee.value,
         from_id: userUUID.value,
-        level: selectedAssigneeRole.value,
+        level: 'Supervising BMS',
         date_received: combinedDateTime,
         date_forwarded: null
       }])

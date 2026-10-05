@@ -194,7 +194,7 @@ onMounted(async () => {
             <v-col>
               <div class="signatory-block"><strong>Prepared by:</strong></div>
               <div class="signatory-name">{{individual_name}}</div>
-              <div>P.R.I.M.E. Officer Designate</div>
+              <div>{{ userRole }}</div>
             </v-col>
 
             <v-col>

@@ -1,157 +1,90 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { format } from 'date-fns';
-import supabase from '@/components/system/accomplishments/scoreboard/supabase';
+import { ref, computed, onMounted } from "vue";
+
+import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+import AlertNotification from "@/components/common/AlertNotification.vue";
+import { useScoreboardTable } from "@/composables/scoreboard/scoreboardTable";
+import { useScoreboardStore } from "@/stores/scoreboard";
+import { useScoreboardReport } from "@/composables/scoreboard/useScoreboardReport";
+import "@/assets/css/scoreboardMonitoring.css";
+
 import {
-  formatDate,
-  formatTime,
-  fetchLoggedInUser,
-  fetchIndividual,
-  fetchUserDivisionId,
-  fetchDivisionChief,
-  fetchARD,
-  fetchRD,
-  fetchYear,
-  printSection,
-  userUUID,
-  individual_name,
-  useSelectedLabels,
-  reportYear,
   quarter,
-  ARD_name,
-  ARD_pos,
+  reportYear,
+  fetchRD,
+  ExtensionName,
   RD_name,
   RD_pos,
-  divisionChief,
-  ExtensionName,
+  useSelectedLabels
 } from '@/utils/scoreboardHelpers';
-
+import { useAuthUserStore } from '@/stores/authUser'
+const authStore = useAuthUserStore()
+const userRole = computed(() => authStore.userRole)
+// Local UI state
 const dialog = ref(false);
-const search = ref('');
-const formAction = ref({
-  formSuccessMessage: '',
-  formErrorMessage: ''
-});
-const isDialogVisible = ref(false);
+const search = ref("");
 const selQuarter = ref(null);
 const selectedYear = ref(null);
+
+const scoreboardStore = useScoreboardStore();
+const { onLoadItems, tableOptions, formAction, isDialogVisible, onConfirmDelete } = useScoreboardTable();
 const { dateRange, selectedYearName } = useSelectedLabels(selQuarter, selectedYear);
-const scoreboardData = ref([]);
 
-function getQuarterDateRange(year, quarter) {
-  const ranges = {
-    1: [`${year}-01-01`, `${year}-03-31`],
-    2: [`${year}-04-01`, `${year}-06-30`],
-    3: [`${year}-07-01`, `${year}-09-30`],
-    4: [`${year}-10-01`, `${year}-12-31`],
-  };
-  return ranges[quarter];
+const selectedRole = ref(null)
+
+const roles = ref([
+  { id: "Individual", name: 'As Individual' },
+  { id: "Supervising BMS", name: 'As Supervising' }
+])
+const { 
+  fetchIndividual,
+  individual_name,
+  ARD_name,
+  ARD_pos,
+  scoreboardData1,
+  fetchLoggedInUser,
+  fetchCBMS,
+  fetchARD,
+  fetchYear,
+  generateTable2: executeGenerateTable,
+  printSection
+} = useScoreboardReport();
+
+
+const Test = async () => {
+  alert(selectedRole.value);
 }
-
-const generateTable = async () => {
-  if (!selQuarter.value || !selectedYear.value) {
-      alert("⚠️ Please select both a quarter and a year before generating the report.");
-    return;
-  }
-
-  const [startDate, endDate] = getQuarterDateRange(selectedYear.value, selQuarter.value );
-  let numberDaysWork;
-  let numberDowntime;
-  let SBMSDate;
-  let DCDate;
-  const { data, error } = await supabase
-    .from('view_scoreboard_id_released')
-    .select('*')
-    .eq('from_id', userUUID.value)
-    .gte('date_released', startDate)
-    .lte('date_released', endDate);
-    
-  if (error) return console.error("Error fetching data:", error);
-  
-  // For each row, fetch related data
-    const results = await Promise.all(
-      data.map(async (row) => {
-        const { data: processDataRaw, error: processError } = await supabase
-          .from('view_scoreboard_supervisor')
-          .select('*')
-          .eq('scoreboard_id', row.scoreboard_id)
-          .eq('current_from_id', userUUID.value);
-
-        if (processError) {
-          console.error('Process query error for row:', row, processError);
-        }
-      const processData = processDataRaw?.[0] || null;
-      console.log("scoreboard_id", processData.scoreboard_id);
-      console.log("Previous Process Id", processData.previous_process_id);
-      console.log("tod_id", row.tod_id);
-        //setting up downtime and workingdays
-        console.log("Downtime value", processData.downtime_value);
-        if(processData.downtime_value == null)
-        {
-          numberDowntime = 0;
-        }
-        else{
-          numberDowntime = processData.downtime_value;
-         
-        }
-      if (row.tod_id == 1) {
-         console.log("Calndar Days  - Downtime", processData.calendar_days, numberDowntime);
-          numberDaysWork = processData.calendar_days - numberDowntime + " days";
-        } else if (row.tod_id == 2) {
-          console.log("Working Days  - Downtime", processData.working_days, numberDowntime);
-          numberDaysWork = processData.working_days - numberDowntime + " days";
-        } else {
-          numberDaysWork = '—';
-      }
-      console.log("NumberDaysWork", numberDaysWork);
-      if (processData.current_level == 'Division Chief') {
-          DCDate = format(new Date(processData.previous_date_forwarded), 'MMMM dd, yyyy')
-          SBMSDate = null;
-        } else if (processData.current_level == 'Supervising BMS') {
-          DCDate = null;
-          SBMSDate = format(new Date(processData.previous_date_forwarded), 'MMMM dd, yyyy');
-        } 
-      let modifiedProcessData = null;
-         if (processData) {
-          const date_received = processData.previous_date_received
-            ? format(new Date(processData.previous_date_received), 'MMMM dd, yyyy')
-            : 'N/A';
-            modifiedProcessData = {
-              ...processData,
-              DC_date_forwarded: DCDate, 
-              SBMS_date_forwarded: SBMSDate, 
-              date_received: date_received,
-              numberDaysWork: numberDaysWork             
-             };
-          }
-      return {
-        ...row,
-        date_released: formatDate(row.date_released),
-        time_released: formatTime(row.date_released),
-        processData: modifiedProcessData, // Attach the fetched data
-      };
-    })
-  );
-  scoreboardData.value = results;
-};
+const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value, selectedRole.value);
 onMounted(async () => {
   await fetchLoggedInUser();
   await fetchIndividual();
-  await fetchUserDivisionId();
-  await fetchDivisionChief();
+  await fetchCBMS();
   await fetchARD();
   await fetchRD();
   await fetchYear();
 });
 </script>
-
 <template>
   <AlertNotification :form-success-message="formAction.formSuccessMessage"
     :form-error-message="formAction.formErrorMessage"></AlertNotification>
-    <h1>Supervising Level</h1>
   <v-container>
+    <v-row align = "left">
+      <v-col>
+      <v-select
+        v-model="selectedRole"
+        :items="roles"
+        item-title="name"
+        item-value="id"
+        label="Select User Role"
+      />
+      <v-col>
+      </v-col>
+      </v-col>
+      <v-col>
+      </v-col>
+    </v-row>
     <v-row align="center">
-        <v-col cols="auto">
+       <v-col cols="auto">
            <v-select
             class="header-selector"
             v-model="selQuarter"
@@ -175,7 +108,7 @@ onMounted(async () => {
             <v-btn
             class="my-1 header-button"
            prepend-icon="mdi-file-chart"
-            @click="generateTable"
+            @click="generateTable2"
             color="green-darken-1"
             >
             Generate Table
@@ -204,66 +137,99 @@ onMounted(async () => {
             </v-col>
         </v-row>
     </v-container>
- <v-data-table  :items="scoreboardData"
+ <v-data-table  :items="scoreboardData1"
                 :search="search"
                 class="elevation-1 styled-scoreboard-table"
                 hide-default-footer
                 :items-per-page="-1"  
                 >
                 <template v-slot:headers>
-                    <tr>
-                        <th class="center-header ">No</th>
-                        <th class="center-header ">DMS No.</th>
-                        <th class="center-header ">Agency</th>
-                         <th class="center-header ">Nature of Transaction</th>
-                        <th class="center-header ">Date Received</th>
-                        <th class="center-header ">Date Forwarded to SBMS</th>
-                        <th class="center-header ">Date Forwarded to Division Chief</th>
-                        <th class="center-header ">Prescribed Period</th>
-                        <th class="center-header ">No. of working hours/days/calendar days acted upon</th>
-                        <th class="center-header ">Remark (e.g. downtime)</th>
-                        <th class="center-header ">Date and Time released</th>
+                    <tr>                        
+                      <th colspan ="4" rowspan="1"><b>Particulars(1)</b></th>
+                      <th colspan ="1" rowspan="2"><b>DMS Reference Number (2)</b></th>
+                      <th colspan ="1" rowspan="2"><b>Date and Time Received by the Records Section(3)</b></th>
+                      <th colspan ="1" rowspan="2"><b>Type of Transaction (4)</b></th>
+                      <th colspan ="3" rowspan="1"><b>IPAR (5)</b></th>
+                      <th colspan ="4" rowspan="1"><b>Asst. DC/Sr. BMS (6)</b></th>
+                      <th colspan ="3" rowspan="1"><b>DPAR (7)</b></th>
+                      <th colspan ="3" rowspan="1"><b>OPAR (8)</b></th>
+                       <th colspan ="1" rowspan="2"><b>Remarks</b>(e.g. Downtime)<b>(9)</b></th>
                     </tr>
-                </template>
+                    <tr>
+                      <th rowspan="1" colspan="1"><b>P/A/P No.(1.1)</b></th>
+                      <th rowspan="1" colspan="1"><b>TS-in-Charge (1.2)</b></th>
+                      <th rowspan="1" colspan="1"><b>Agency name(1.3)</b></th>
+                      <th rowspan="1" colspan="1"><b>Nature of Transacation(1.4)</b></th>
+                      <th rowspan="1" colspan="1"><b>Prescribed Period(5.1)</b></th>
+                      <th rowspan="1" colspan="1"><b>Date and Time forwarded to Asst. DC/ Sr. BMS (5.2)</b></th>
+                      <th rowspan="1" colspan="1"><b>No. of <u>Working Days/Working Hours/Calendar Days </u>Acted Upon(5.3)</b></th>
+                      <th rowspan="1" colspan="1"><b>Prescribed Period(6.1)</b></th>
+                      <th rowspan="1" colspan="1"><b>Reviewed by(6.2)</b></th>
+                      <th rowspan="1" colspan="1"><b>Date and Time Forwaded to DC(6.3)</b></th>
+                      <th rowspan="1" colspan="1"><b>No. of <u>Working Days/Working Hours/Calendar Days </u>Acted Upon(6.4)</b></th>
+                      <th rowspan="1" colspan="1"><b>Prescribed Period(7.1)</b></th>
+                      <th rowspan="1" colspan="1"><b>Date and Time Forwaded to ARD/RD(7.2)</b></th>
+                      <th rowspan="1" colspan="1"><b>No. of <u>Working Days/Working Hours/Calendar Days </u>Acted Upon(7.3)</b></th>
+                      <th rowspan="1" colspan="1"><b>Prescribed Period(8.1)</b></th>
+                      <th rowspan="1" colspan="1"><b>Date and Time Released(8.2)</b></th>
+                      <th rowspan="1" colspan="1"><b>No. of <u>Working Days/Working Hours/Calendar Days </u>Acted Upon(8.3)</b></th>
+                   
+                    </tr>
+                  </template>  
+              
                 <template v-slot:body="{ items }">
-                    <tr v-for="(item, index) in items" :key="item.dms_reference_number">
-                        <td>{{ index + 1 }}</td>
-                        <td contenteditable="true">{{ item.dms_reference_number }}</td>
-                        <td contenteditable="true">{{ item.agency_name }}</td>   
-                        <td contenteditable="true">{{ item.not_name }}</td>  
-                        <td contenteditable="true">{{ item.processData?.date_received || 'N/A' }}</td>
-                        <td contenteditable="true">{{ item.processData?.SBMS_date_forwarded || 'N/A' }}</td>
-                        <td contenteditable="true">{{ item.processData?.DC_date_forwarded || 'N/A'  }}</td>
-                         <td contenteditable="true">{{ item.prescribed_period }}</td>
-                        <td contenteditable="true">{{ item.processData?.numberDaysWork || 'N/A'  }}</td>
-                        <td  contenteditable="true">{{ item.processData?.downtime_remark  || 'N/A' }}</td>
-                        <td contenteditable="true" >{{ item.date_released }} - {{ item.time_released }} </td>
+                   <tr v-for="(item, index) in items" :key="item.dms_reference_number + '-' + index">
+                   <template v-if="item.isHeader"> 
+                    <td contenteditable="true" colspan="22" style="text-align:left; background-color:#e6f0ff; margin: 0; padding: 2px; height: 5px;" class ="sm-table-header" >
+                       <b>PAP {{item.pap_id}} - {{item.pap_label}}</b>
+                        
+                    </td>
+                    </template>
+                    <template v-else>
+                        <td contenteditable="true" >{{ index + 1 }}</td>
+                        <td contenteditable="true">{{ item.short_name_ipar }}-{{ item.initials_ipar }}</td>
+                        <td contenteditable="true">{{ item.agency }}</td>   
+                        <td contenteditable="true">{{ item.nature }}</td>  
+                        <td contenteditable="true">{{ item.dms_reference_number }}</td>  
+                        <td contenteditable="true"> {{ item.date_received }} </td>
+                        <td contenteditable="true">{{ item.transaction_type }}</td>
+                        <td contenteditable="true">{{ item.pp_ipar }}</td>
+                        <td contenteditable="true">{{ item.date_forwarded_ipar }}, {{ item.time_forwarded_ipar }}</td>
+                        <td contenteditable="true">{{ item.numberDaysWork_ipar }}</td>
+                        <td contenteditable="true">{{ item.pp_spar }}</td>
+                        <td contenteditable="true">{{ item.short_name_spar }}-{{ item.initials_spar }}</td>
+                        <td contenteditable="true">{{ item.date_forwarded_spar }}, {{ item.time_forwarded_spar }}</td>
+                        <td contenteditable="true">{{ item.numberDaysWork_spar }}</td>
+                        <td contenteditable="true">{{ item.pp_dpar }}</td>
+                        <td contenteditable="true">{{ item.date_forwarded_dpar }}, {{ item.time_forwarded_dpar }}</td>
+                        <td contenteditable="true">{{ item.numberDaysWork_dpar }}</td>
+                        <td contenteditable="true">{{ item.pp_opar }}</td>
+                        <td contenteditable="true">{{ item.date_released_opar }}, {{ item.time_released_opar }}</td>
+                        <td contenteditable="true">{{ item.numberDaysWork_opar }}</td>
+                        <td contenteditable="true">{{ item.all_remarks }}</td>
+                        </template>
                     </tr>
                     </template>
               </v-data-table>
-        <v-container fluid class="signatory-container print-container">
-        <v-row class="print-row">
-          <v-col class="individual-one">
-            <div class="signatory-block"><strong>Prepared by:</strong></div>
-            <div class="signatory-name">{{ individual_name }}</div>
-            <div>Individual</div>
-          </v-col>
-          <v-col class="individual-two">
-            <div class="signatory-block"><strong>Reviewed by:</strong></div>
-            <div class="signatory-name">{{ divisionChief }}</div>
-            <div>Division Chief</div>
-          </v-col>
-          <v-col class="individual-three">
-            <div class="signatory-block"><strong>Recommending Approval:</strong></div>
-            <div class="signatory-name">{{ ARD_name }}</div>
-            <div>{{ ARD_pos }}</div>
-          </v-col>
-          <v-col class="individual-four">
-            <div class="signatory-block"><strong>Approved by:</strong></div>
-            <div class="signatory-name">{{ RD_name }}<span>, {{ ExtensionName }}</span></div>
-            <div>{{ RD_pos }}</div>
-          </v-col>
-        </v-row>
+        <v-container class="signatory-container">
+          <v-row>
+            <v-col>
+              <div class="signatory-block"><strong>Prepared by:</strong></div>
+              <div class="signatory-name">{{individual_name}}</div>
+              <div>{{ userRole }}</div>
+            </v-col>
+
+            <v-col>
+              <div class="signatory-block ard"><strong>Reviewed by:</strong></div>
+              <div class="signatory-name ard">{{ ARD_name }}</div>
+              <div class = "ard ">{{ ARD_pos }}</div>
+            </v-col>
+            <v-col>
+              <div class="signatory-block rd"><strong>Approved by:</strong></div>
+              <div class="signatory-name rd">{{ RD_name }}<span>, {{ ExtensionName }}</span></div>
+              <div class ="rd">{{ RD_pos }}</div>
+            </v-col>
+          </v-row>
         </v-container>
     </div>
   <!-- Add Dialog -->

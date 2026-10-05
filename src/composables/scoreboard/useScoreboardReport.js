@@ -211,6 +211,7 @@ export function useScoreboardReport() {
     scoreboardData1.value = processedData;
   };
    const generateTable2 = async (selQuarter, selectedYear, userRole) => {
+    alert(userRole);
     if (!selQuarter || !selectedYear) {
       alert("⚠️ Please select both a quarter and a year before generating the report.");
       return;
