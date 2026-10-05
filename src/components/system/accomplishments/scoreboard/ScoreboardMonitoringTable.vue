@@ -1,16 +1,14 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
 import AlertNotification from "@/components/common/AlertNotification.vue";
-import supabase from '@/components/system/accomplishments/scoreboard/supabase'
 import { useScoreboardTable } from "@/composables/scoreboard/scoreboardTable";
 import { useScoreboardStore } from "@/stores/scoreboard";
-//import "@/assets/css/scoreboardTableStyle.css";
+import { useScoreboardReport } from "@/composables/scoreboard/useScoreboardReport";
 import "@/assets/css/scoreboardMonitoring.css";
-import{
-  formatDate,
-  formatTime,
+
+import {
   quarter,
   reportYear,
   fetchRD,
@@ -20,326 +18,40 @@ import{
   useSelectedLabels
 } from '@/utils/scoreboardHelpers';
 
-const scoreboardStore = useScoreboardStore();
-const { onLoadItems, tableOptions, formAction } = useScoreboardTable();
+// Local UI state
 const dialog = ref(false);
-const userUUID = ref(null);
-const userRole = ref(null);
 const search = ref("");
-const scoreboardData1 = ref([]);
-
-const CBMS_name = ref(null);
-const CBMS_pos = ref(null);
-const ARD_name = ref(null);
-const ARD_pos = ref(null);
-const selectedUser = ref(null)
-const selectedYear = ref(null)
-
 const selQuarter = ref(null);
+const selectedYear = ref(null);
 
+const scoreboardStore = useScoreboardStore();
+const { onLoadItems, tableOptions, formAction, isDialogVisible, onConfirmDelete } = useScoreboardTable();
 const { dateRange, selectedYearName } = useSelectedLabels(selQuarter, selectedYear);
 
-const fetchLoggedInUser = async () => {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+// Extracted composable
+const {
+  ARD_name,
+  ARD_pos,
+  scoreboardData1,
+  fetchLoggedInUser,
+  fetchCBMS,
+  fetchARD,
+  fetchYear,
+  generateTable: executeGenerateTable,
+  printSection
+} = useScoreboardReport();
 
-  if (userError) {  
-    console.error("❌ Error fetching user:", userError);
-    return;
-  }
+// Wrapper to pass reactive state into composable method
+const generateTable = () => executeGenerateTable(selQuarter.value, selectedYear.value);
 
-  userUUID.value = userData?.user?.id;
-  console.log("✅ User UUID:", userUUID.value);
-
-  // ✅ Now query your `technical_division_user` table using the user UUID
-  if (userUUID.value) {
-    try{
-      const { data: profileData, error: profileError } = await supabase
-      .from('user_profile_role')
-      .select('user_role') // or 'user_role', depending on your schema
-      .eq('user_id', userUUID.value)
-      .single();
-
-   if (profileError) {
-      console.error("❌ Error fetching user role:", profileError);
-      return;
-    }
-    userRole.value = profileData.user_role;
-    console.log("✅ User role:", userRole.value);
-
-    // await fetchScoreboardDataBasedOnRole(); 
-    }catch (err) {
-       console.error("❌ Unexpected error fetching scoreboard data:", err); 
-    }
-  }
-};
-const fetchCBMS = async () => {
-
-  const { data, error } = await supabase
-    .from('view_signatory')
-    .select('*') 
-    .eq('pos_id', '16')
-
-  if (error) {
-    console.error("Error fetching CBMS name and position:", error);
-    return;
-  }
-
-  if (data.length === 0) {
-    console.warn("No Data was fetch.");
-    return;
-  }
-
-    CBMS_name.value = data[0].name;
-    CBMS_pos.value = data[0].position;
-  console.log("✅ Retrieved Name and Position:",CBMS_name.value, "and ", CBMS_pos.value);
-};
-const fetchARD = async () => {
-
-  const { data, error } = await supabase
-    .from('view_signatory')
-    .select('*') 
-    .eq('pos_id', '4')
-
-  if (error) {
-    console.error("Error fetching CBMS name and position:", error);
-    return;
-  }
-
-  if (data.length === 0) {
-    console.warn("No Data was fetch.");
-    return;
-  }
-
-    ARD_name.value = data[0].name;
-    ARD_pos.value = data[0].position;
-  console.log("✅ Retrieved Name and Position:",ARD_name.value, "and ", ARD_pos.value);
-};
-const printSection = () => {
-  const printContents = document.getElementById('printSection').innerHTML;
-  const originalContents = document.body.innerHTML;
-
-  document.body.innerHTML = printContents;
-  window.print();
-  document.body.innerHTML = originalContents;
-  window.location.reload(); // Optional: reload to restore event bindings (esp. for Vue)
-};
-
-
-function getQuarterDateRange(year, quarter) {
-  const ranges = {
-    1: [`${year}-01-01`, `${year}-03-31`],
-    2: [`${year}-04-01`, `${year}-06-30`],
-    3: [`${year}-07-01`, `${year}-09-30`],
-    4: [`${year}-10-01`, `${year}-12-31`],
-  };
-  return ranges[quarter];
-}
-
-const fetchYear = async () => {
-  try {
-    const { data, error } = await supabase.rpc('get_unique_years');
-
-    if (error) {
-      console.error('Error fetching Years:', error);
-      return;
-    }
-
-    // 👇 Map year to match item-title & item-value
-    reportYear.value = data.map((item) => ({
-      name: item.year.toString(),  // title to show
-      id: item.year                // value to bind
-    }));
-  } catch (err) {
-    console.error('Unexpected error fetching Years:', err);
-  }
-};
-const generateTable = async () => {
-    if (!selQuarter.value || !selectedYear.value) {
-        alert("⚠️ Please select both a quarter and a year before generating the report.");
-        return;
-    }
-
-    const [startDate, endDate] = getQuarterDateRange(selectedYear.value, selQuarter.value);
-    
-    // --- Data Fetching ---
-    const [sectionOne, sectionTwo, sectionThree, sectionFour, sectionFive] = await Promise.all([
-        supabase.from('view_section_one').select('*').gte('date_released', startDate).lte('date_released', endDate),
-        supabase.from('view_section_two').select('*').gte('date_released', startDate).lte('date_released', endDate),
-        supabase.from('view_section_three').select('*').gte('date_released', startDate).lte('date_released', endDate),
-        supabase.from('view_section_four').select('*').gte('date_released', startDate).lte('date_released', endDate),
-        supabase.from('view_section_five').select('*').gte('date_released', startDate).lte('date_released', endDate)
-    ]);
-
-    if (sectionOne.error) return console.error('Error fetching section one:', sectionOne.error);
-    if (sectionTwo.error) return console.error('Error fetching section two:', sectionTwo.error);
-    if (sectionThree.error) return console.error('Error fetching section three:', sectionThree.error);
-    if (sectionFour.error) return console.error('Error fetching section four:', sectionFour.error);
-    if (sectionFive.error) return console.error('Error fetching section five:', sectionFive.error); // Corrected 'four' to 'five' in the original code's error check
-
-    const dataOne = sectionOne.data;
-    const dataTwo = sectionTwo.data;
-    const dataThree = sectionThree.data;
-    const dataFour = sectionFour.data;
-    const dataFive = sectionFive.data;
-
-    // --- Data Merging and Mapping for Lookup ---
-    const twoMap = Object.fromEntries(dataTwo.map(t => [t.scoreboard_id, t]));
-    const threeMap = Object.fromEntries(dataThree.map(t => [t.scoreboard_id, t]));
-    const fourMap = Object.fromEntries(dataFour.map(t => [t.scoreboard_id, t]));
-    const fiveMap = Object.fromEntries(dataFive.map(t => [t.scoreboard_id, t]));
-
-    const mergedData = dataOne.map(one => ({
-        ...one,
-        ...twoMap[one.scoreboard_id],
-        ...threeMap[one.scoreboard_id],
-        ...fourMap[one.scoreboard_id],
-        ...fiveMap[one.scoreboard_id],
-    }));
-
-    // --- Grouping, Sorting, and Header Injection ---
-    
-    // 1. Sort the merged data by pap_id to ensure all rows of a PAP are together
-    mergedData.sort((a, b) => a.pap_id - b.pap_id);
-
-    const processedData = [];
-    let currentPapId = null;
-
-    for (const row of mergedData) {
-        // 2. Inject a special 'header' object when the PAP ID changes
-        console.log("PAP_description", row.pap_label);
-        if (row.pap_id !== currentPapId) {
-            currentPapId = row.pap_id;
-            
-            // This is the special object the HTML template will recognize as a header
-            processedData.push({
-                isHeader: true,
-                pap_id: currentPapId, 
-                pap_label: row.pap_label,
-                // Using a unique key for Vuetify/Vue rendering efficiency
-                // This is needed because the actual data rows are keyed by dms_reference_number
-                key: `header-${currentPapId}-${Date.now()}` 
-            });
-        }
-
-        // --- Calculation Logic (Your original logic moved into the loop) ---
-        
-        let numberDaysWork_ipar;
-        let numberDaysWork_spar;
-        let numberDaysWork_dpar;
-        let numberDaysWork_opar;
-        let numberDowntime;
-        
-        // Calculate IPAR number of days
-        numberDowntime = row.downtime_ipar == null ? 0 : row.downtime_ipar;
-        if (row.tod_id == 1) {
-            numberDaysWork_ipar = (row.calendar_days_ipar - numberDowntime) + " calendar days";
-        } else if (row.tod_id == 2) {
-            numberDaysWork_ipar = (row.working_days_ipar - numberDowntime) + " working days";
-        } else if(row.tod_id == 3) {
-            // Assuming 'working_hours_ipar' is the base metric for tod_id=3
-            numberDaysWork_ipar = (row.working_hours_ipar - numberDowntime) + " working hours"; 
-        }
-
-        // Calculate SPAR number of days (Asst. DC/Sr. BMS - Section 6 in HTML)
-        numberDowntime = row.downtime_spar == null ? 0 : row.downtime_spar;
-        if (row.tod_id == 1) {
-            numberDaysWork_spar = (row.calendar_days_spar - numberDowntime) + " calendar days";
-        } else if (row.tod_id == 2) {
-            numberDaysWork_spar = (row.working_days_spar - numberDowntime) + " working days";
-        } else if(row.tod_id == 3) {
-            numberDaysWork_spar = (row.working_hours_spar - numberDowntime) + " working hours";
-        }
-
-        // Calculate DPAR number of days
-        numberDowntime = row.downtime_dpar == null ? 0 : row.downtime_dpar;
-        if (row.tod_id == 1) {
-            numberDaysWork_dpar = (row.calendar_days_dpar - numberDowntime) + " calendar days";
-        } else if (row.tod_id == 2) {
-            numberDaysWork_dpar = (row.working_days_dpar - numberDowntime) + " working days";
-        } else if(row.tod_id == 3) {
-            numberDaysWork_dpar = (row.working_hours_dpar - numberDowntime) + " working hours";
-        }
-
-        // Calculate OPAR number of days
-        numberDowntime = row.total_downtime == null ? 0 : row.total_downtime;
-        if (row.tod_id == 1) {
-            numberDaysWork_opar = (row.calendar_days_opar - numberDowntime) + " calendar days";
-        } else if (row.tod_id == 2) {
-            numberDaysWork_opar = (row.working_days_opar - numberDowntime) + " working days";
-        } else if(row.tod_id == 3) {
-            numberDaysWork_opar = (row.working_hours_opar - numberDowntime) + " working hours";
-        }
-        
-        // --- 3. Push the Formatted Data Row ---
-        processedData.push({
-            // Data properties
-            scoreboard_id: row.scoreboard_id,
-            dms_reference_number: row.dms_reference_number ?? '—',
-            pap_label: row.pap_label ?? '-',
-            agency: row.agency ?? '—',
-            date_received: formatDate(row.date_received),
-            date_released: formatDate(row.date_released),
-            nature: row.nature ?? '—',
-            time_released: formatTime(row.date_released),
-            division: row.division ?? '—',
-            transaction_type: row.transaction_type ?? '—',
-            pp_ipar: row.pp_ipar ?? '—',
-            short_name_ipar: row.short_name_ipar ?? '-',
-            initials_ipar: row.initials_ipar ?? '-',
-            date_forwarded_ipar: formatDate(row.date_forward_ipar) ?? '—',
-            time_forwarded_ipar: formatTime(row.date_forward_ipar) ?? '—',
-            pp_spar: row.pp_spar ?? '—',
-            short_name_spar: row.short_name_spar ?? '-',
-            initials_spar: row.initials_spar ?? '-',
-            date_forwarded_spar: formatDate(row.date_forward_spar) ?? '—',
-            time_forwarded_spar: formatTime(row.date_forward_spar) ?? '—',
-            pp_dpar: row.pp_dpar ?? '—',
-            short_name_dpar: row.short_name_dpar ?? '-',
-            initials_dpar: row.initials_dpar ?? '-',
-            date_forwarded_dpar: formatDate(row.date_forward_dpar) ?? '—',
-            time_forwarded_dpar: formatTime(row.date_forward_dpar) ?? '—',
-            pp_opar: row.pp_opar ?? '—',
-            date_released_opar: formatDate(row.date_forward_opar) ?? '—',
-            time_released_opar: formatTime(row.date_forward_opar) ?? '—',
-            // Calculated properties
-            numberDaysWork_ipar: numberDaysWork_ipar ?? '—',
-            numberDaysWork_spar: numberDaysWork_spar ?? '—',
-            numberDaysWork_dpar: numberDaysWork_dpar ?? '—',
-            numberDaysWork_opar: numberDaysWork_opar ?? '—',
-            
-            // Remarks
-            all_remarks: row.all_remarks ?? '-',
-            
-            // Flag for the HTML template
-            isHeader: false, 
-            
-            // Key for Vue's v-for loop
-            key: row.dms_reference_number,
-
-       
-        });
-    }
-
-    // 4. Update the reactive data source
-    scoreboardData1.value = processedData;
-    
-    // Clean up unnecessary console log (optional)
-    // console.log("PAP_ID =", row.pap_id); 
-    
-    // pap1.value and pap2.value are no longer needed
-    // if(row.pap_id == 1) { pap1.value = true; } 
-    // if(row.pap_id == 2) { pap2.value = true; }
-}
 onMounted(async () => {
-  await fetchLoggedInUser(); 
+  await fetchLoggedInUser();
   await fetchCBMS();
   await fetchARD();
-   await fetchRD();
+  await fetchRD();
   await fetchYear();
-
 });
 </script>
-
 <template>
   <AlertNotification :form-success-message="formAction.formSuccessMessage"
     :form-error-message="formAction.formErrorMessage"></AlertNotification>
