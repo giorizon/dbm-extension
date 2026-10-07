@@ -573,7 +573,7 @@ export function useScoreboardReport() {
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
-    saveAs(blob, `Transaction_Scoreboard_${selectedYearName || 'Report'}.xlsx`);
+    saveAs(blob, `Scoreboard_Monitoring_${dateRange}, ${selectedYearName || 'Report'}.xlsx`);
   };
 
   return {

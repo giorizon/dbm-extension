@@ -47,11 +47,19 @@ const {
   fetchARD,
   fetchYear,
   generateTable2: executeGenerateTable,
+  exportToExcel,
   //printSection
 } = useScoreboardReport();
 
 const printSection = () => {
   window.print();
+};
+const handleExportToExcel = () => {
+  exportToExcel(dateRange.value, selectedYearName.value, {
+    rdName: RD_name.value,
+    rdPos: RD_pos.value,
+    extensionName: ExtensionName.value
+  });
 };
 
 const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value, selectedRole.value);
@@ -123,6 +131,13 @@ onMounted(async () => {
             >
             Download
             </v-btn>
+          </v-col>
+          <v-col>
+          <v-btn class="my-1 header-button"
+             prepend-icon="mdi-printer" 
+             color="success" 
+             @click="handleExportToExcel">Export to Excel
+          </v-btn>
           </v-col>
       </v-row>
 

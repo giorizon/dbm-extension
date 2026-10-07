@@ -43,13 +43,12 @@ const {
   fetchARD,
   fetchYear,
   generateTable2: executeGenerateTable,
-  exportToExcel, // <--- Destructured from composable
+  exportToExcel,
   //printSection
 } = useScoreboardReport();
 
 const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value, 'Individual');
 
-// Method to trigger Excel Export
 const handleExportToExcel = () => {
   exportToExcel(dateRange.value, selectedYearName.value, {
     rdName: RD_name.value,
@@ -117,8 +116,11 @@ onMounted(async () => {
             </v-btn>
           </v-col>
           <v-col>
-            <v-btn class="my-1 header-button"
-           prepend-icon="mdi-printer" color="success" @click="handleExportToExcel">Export to Excel</v-btn>
+          <v-btn class="my-1 header-button"
+             prepend-icon="mdi-printer" 
+             color="success" 
+             @click="handleExportToExcel">Export to Excel
+          </v-btn>
           </v-col>
       </v-row>
 
