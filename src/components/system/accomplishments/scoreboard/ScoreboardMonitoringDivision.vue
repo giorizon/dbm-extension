@@ -62,7 +62,7 @@ const handleExportToExcel = () => {
   });
 };
 
-const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value, selectedRole.value);
+const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value,'Division Chief');
 onMounted(async () => {
   await fetchLoggedInUser();
   await fetchIndividual();
@@ -76,21 +76,6 @@ onMounted(async () => {
   <AlertNotification :form-success-message="formAction.formSuccessMessage"
     :form-error-message="formAction.formErrorMessage"></AlertNotification>
   <v-container>
-    <v-row align = "left">
-      <v-col>
-      <v-select
-        v-model="selectedRole"
-        :items="roles"
-        item-title="name"
-        item-value="id"
-        label="Select User Role"
-      />
-      <v-col>
-      </v-col>
-      </v-col>
-      <v-col>
-      </v-col>
-    </v-row>
     <v-row align="center">
        <v-col cols="auto">
            <v-select
