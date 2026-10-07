@@ -7,7 +7,6 @@ import { useScoreboardTable } from "@/composables/scoreboard/scoreboardTable";
 import { useScoreboardStore } from "@/stores/scoreboard";
 import { useScoreboardReport } from "@/composables/scoreboard/useScoreboardReport";
 import "@/assets/css/scoreboardMonitoring.css";
-
 import {
   quarter,
   reportYear,
@@ -18,8 +17,10 @@ import {
   useSelectedLabels
 } from '@/utils/scoreboardHelpers';
 import { useAuthUserStore } from '@/stores/authUser'
+
 const authStore = useAuthUserStore()
 const userRole = computed(() => authStore.userRole)
+
 // Local UI state
 const dialog = ref(false);
 const search = ref("");
@@ -42,15 +43,25 @@ const {
   fetchARD,
   fetchYear,
   generateTable2: executeGenerateTable,
+  exportToExcel, // <--- Destructured from composable
   //printSection
 } = useScoreboardReport();
 
-
 const generateTable2 = () => executeGenerateTable(selQuarter.value, selectedYear.value, 'Individual');
+
+// Method to trigger Excel Export
+const handleExportToExcel = () => {
+  exportToExcel(dateRange.value, selectedYearName.value, {
+    rdName: RD_name.value,
+    rdPos: RD_pos.value,
+    extensionName: ExtensionName.value
+  });
+};
 
 const printSection = () => {
   window.print();
 }; 
+
 onMounted(async () => {
   await fetchLoggedInUser();
   await fetchIndividual();
@@ -104,6 +115,10 @@ onMounted(async () => {
             >
             Download
             </v-btn>
+          </v-col>
+          <v-col>
+            <v-btn class="my-1 header-button"
+           prepend-icon="mdi-printer" color="success" @click="handleExportToExcel">Export to Excel</v-btn>
           </v-col>
       </v-row>
 
