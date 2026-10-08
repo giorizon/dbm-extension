@@ -382,7 +382,9 @@ export function useScoreboardReport() {
       alert("⚠️ No data available to export.");
       return;
     }
-
+    if(userRole.value ==='Releasing Data'){
+        userRole.value = 'P.R.I.M.E. Officer Designate'
+    }
     const {
       rdName = CBMS_name.value || '',
       rdPos = CBMS_pos.value || '',
@@ -393,7 +395,7 @@ export function useScoreboardReport() {
     const worksheet = workbook.addWorksheet('Transactions Scoreboard');
 
     // 1. PAGE TITLE HEADER
-    worksheet.addRow([individual_name.value || '']);
+    worksheet.addRow([individual_name.value || 'Department of Budget and Management RO XIII']);
     worksheet.addRow(['List of requests received and acted transaction']);
     worksheet.addRow([`For the Period Covered ${dateRange}, ${selectedYearName}`]);
     worksheet.addRow([]); // Blank spacing row
@@ -539,28 +541,28 @@ export function useScoreboardReport() {
 
     const sigLabelRow = worksheet.addRow([]);
     sigLabelRow.getCell(1).value = 'Prepared by:';
-    sigLabelRow.getCell(8).value = 'Reviewed by:';
-    sigLabelRow.getCell(15).value = 'Approved by:';
+    sigLabelRow.getCell(6).value = 'Reviewed by:';
+    sigLabelRow.getCell(12).value = 'Approved by:';
 
-    [1, 8, 15].forEach(col => {
+    [1, 6, 12].forEach(col => {
       sigLabelRow.getCell(col).font = { bold: true };
     });
 
     worksheet.addRow([]); // Blank line for signature spacing
 
     const sigNameRow = worksheet.addRow([]);
-    sigNameRow.getCell(1).value = individual_name.value || '';
-    sigNameRow.getCell(8).value = ARD_name.value || '';
-    sigNameRow.getCell(15).value = `${rdName}${extensionName ? ', ' + extensionName : ''}`;
+    sigNameRow.getCell(1).value = individual_name.value || 'JUDI D. ACDAL';
+    sigNameRow.getCell(6).value = ARD_name.value || '';
+    sigNameRow.getCell(12).value = `${rdName}${extensionName ? ', ' + extensionName : ''}`;
 
-    [1, 8, 15].forEach(col => {
+    [1, 6, 12].forEach(col => {
       sigNameRow.getCell(col).font = { bold: true, underline: true };
     });
 
     const sigPosRow = worksheet.addRow([]);
-    sigPosRow.getCell(1).value = userRole.value || '';
-    sigPosRow.getCell(8).value = ARD_pos.value || '';
-    sigPosRow.getCell(15).value = rdPos;
+    sigPosRow.getCell(1).value = userRole.value || 'P.R.I.M.E. Officer Designated';
+    sigPosRow.getCell(6).value = ARD_pos.value || '';
+    sigPosRow.getCell(12).value = rdPos;
 
     // 5. COLUMN WIDTHS
     worksheet.columns.forEach(column => {

@@ -38,11 +38,19 @@ const {
   fetchARD,
   fetchYear,
   generateTable: executeGenerateTable,
+  exportToExcel,
   printSection
 } = useScoreboardReport();
 
 // Wrapper to pass reactive state into composable method
 const generateTable = () => executeGenerateTable(selQuarter.value, selectedYear.value);
+const handleExportToExcel = () => {
+  exportToExcel(dateRange.value, selectedYearName.value, {
+    rdName: RD_name.value,
+    rdPos: RD_pos.value,
+    extensionName: ExtensionName.value
+  });
+};
 
 onMounted(async () => {
   await fetchLoggedInUser();
@@ -96,6 +104,13 @@ onMounted(async () => {
             >
             Download
             </v-btn>
+          </v-col>
+           <v-col>
+          <v-btn class="my-1 header-button"
+             prepend-icon="mdi-printer" 
+             color="success" 
+             @click="handleExportToExcel">Export to Excel
+          </v-btn>
           </v-col>
       </v-row>
 
