@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useAuthUserStore } from '@/stores/authUser'
 import supabase from '@/components/system/accomplishments/scoreboard/supabase';
 import "@/assets/css/scoreboardMonitoring.css";
+import { useScoreboardReport } from "@/composables/scoreboard/useScoreboardReport";
 import {
   //formatDate,
  // formatTime,
@@ -28,6 +29,30 @@ import {
   ExtensionName,
   role_select
 } from '@/utils/scoreboardHelpers';
+
+const { 
+  exportToExcelMT1,
+  //printSection
+} = useScoreboardReport();
+
+const handleExportToExcel = () => {
+ exportToExcelMT1(
+    from_date.value,
+    to_date.value,
+    selectedYearName.value,
+    scoreboardData.value,
+    {
+      individualName: individual_name.value,
+      pmsLevel: PMS_level.value,
+      divisionChief: divisionChief.value,
+      ardName: ARD_name.value,
+      ardPos: ARD_pos.value,
+      rdName: RD_name.value,
+      rdPos: RD_pos.value,
+      extensionName: ExtensionName.value
+    }
+  );
+};
 const authStore = useAuthUserStore()
 const userRole = computed(() => authStore.userRole);
 
@@ -614,7 +639,7 @@ onMounted(async () => {
           />
     </v-col>
 </v-row>
-<v-row no-gutters class="mt-2">
+<v-row  align="center" class="mt-2">
   <v-col cols="auto" class="pe-2">
     <v-btn
       class="my-1 header-button"
@@ -635,6 +660,11 @@ onMounted(async () => {
       Download
     </v-btn>
   </v-col>
+   <v-btn class="my-1 header-button"
+             prepend-icon="mdi-printer" 
+             color="success" 
+             @click="handleExportToExcel">Export to Excel
+          </v-btn>
 </v-row>
   </v-container>
  <div id="printSection">

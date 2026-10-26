@@ -340,7 +340,6 @@ export function useScoreboardReport() {
         date_released_opar: formatDate(row.date_forward_opar) ?? '—',
         time_released_opar: formatTime(row.date_forward_opar) ?? '—',
         
-        // Duration Calculations
         numberDaysWork_ipar: calculateWorkDays(row.tod_id, row.tod_id === 1 ? row.calendar_days_ipar : row.tod_id === 2 ? row.working_days_ipar : row.working_hours_ipar, row.downtime_ipar),
         numberDaysWork_spar: calculateWorkDays(row.tod_id, row.tod_id === 1 ? row.calendar_days_spar : row.tod_id === 2 ? row.working_days_spar : row.working_hours_spar, row.downtime_spar),
         numberDaysWork_dpar: calculateWorkDays(row.tod_id, row.tod_id === 1 ? row.calendar_days_dpar : row.tod_id === 2 ? row.working_days_dpar : row.working_hours_dpar, row.downtime_dpar),
@@ -577,7 +576,269 @@ export function useScoreboardReport() {
     });
     saveAs(blob, `Scoreboard_Monitoring_${dateRange}, ${selectedYearName || 'Report'}.xlsx`);
   };
+  // For Monitoring Tool 1 export
+  const exportToExcelMT1 = async (fromDate = '', toDate = '', selectedYearName = '', filteredData = [], options = {}) => {
+    if (!filteredData || filteredData.length === 0) {
+      alert("⚠️ No data available to export.");
+      return;
+    }
 
+    const {
+      individualName = '',
+      pmsLevel = '',
+      divisionChief = '',
+      ardName = '',
+      ardPos = '',
+      rdName = '',
+      rdPos = '',
+      extensionName = ''
+    } = options;
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('LGU Budget Review');
+
+    // ----------------------------------------------------
+    // 1. PAGE TITLE BLOCK
+    // ----------------------------------------------------
+    worksheet.addRow(['MONITORING TOOL 1: LGU BUDGET REVIEW']);
+    worksheet.addRow([`FOR THE PERIOD COVERED ${fromDate} to ${toDate}, ${selectedYearName}`]);
+    worksheet.addRow([]); // Blank spacing row
+
+    worksheet.getCell('A1').font = { bold: true, size: 14 };
+    worksheet.getCell('A2').font = { bold: true, size: 11, italic: true };
+
+    // ----------------------------------------------------
+    // 2. TABLE HEADERS (2-Row Structure - 12 Columns Total)
+    // ----------------------------------------------------
+    const headerRow1 = [
+      'PARTICULARS',
+      '1st Quarter', '',
+      '2nd Quarter', '',
+      '1st Semester SPMS Rating',
+      '3rd Quarter', '',
+      '4th Quarter', '',
+      '2nd Semester SPMS Rating',
+      'Year-End SPMS Rating'
+    ];
+
+    const headerRow2 = [
+      '', // Placeholder for PARTICULARS rowspan merge
+      'Basis', 'SMPs',
+      'Basis', 'SMPs',
+      '', // Placeholder for 1st Semester SPMS Rating rowspan merge
+      'Basis', 'SMPs',
+      'Basis', 'SMPs',
+      '', // Placeholder for 2nd Semester SPMS Rating rowspan merge
+      ''  // Placeholder for Year-End SPMS Rating rowspan merge
+    ];
+
+    worksheet.addRow(headerRow1); // Row 4
+    worksheet.addRow(headerRow2); // Row 5
+
+    // Header Cell Merges (Rowspan & Colspan)
+    const headerMerges = [
+      { top: 4, left: 1, bottom: 5, right: 1 },   // PARTICULARS (Col A, Rows 4-5)
+      { top: 4, left: 2, bottom: 4, right: 3 },   // 1st Quarter (Cols B-C, Row 4)
+      { top: 4, left: 4, bottom: 4, right: 5 },   // 2nd Quarter (Cols D-E, Row 4)
+      { top: 4, left: 6, bottom: 5, right: 6 },   // 1st Semester SPMS Rating (Col F, Rows 4-5)
+      { top: 4, left: 7, bottom: 4, right: 8 },   // 3rd Quarter (Cols G-H, Row 4)
+      { top: 4, left: 9, bottom: 4, right: 10 },  // 4th Quarter (Cols I-J, Row 4)
+      { top: 4, left: 11, bottom: 5, right: 11 }, // 2nd Semester SPMS Rating (Col K, Rows 4-5)
+      { top: 4, left: 12, bottom: 5, right: 12 }  // Year-End SPMS Rating (Col L, Rows 4-5)
+    ];
+
+    headerMerges.forEach(m => {
+      worksheet.mergeCells(m.top, m.left, m.bottom, m.right);
+    });
+
+    // Style Header Rows
+    for (let r = 4; r <= 5; r++) {
+      const row = worksheet.getRow(r);
+      for (let col = 1; col <= 12; col++) {
+        const cell = row.getCell(col);
+        cell.font = { bold: true };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE6E6E6' }
+        };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      }
+    }
+    // ----------------------------------------------------
+    // 3. DATA ROWS (Iterating over scoreboardData)
+    // ----------------------------------------------------
+    filteredData.forEach((row) => {
+      // A. Handle Spacer Rows (e.g., customHeight: '20px' with no particular text)
+      if (!row.particular && row.customHeight) {
+        worksheet.addRow([]);
+        return;
+      }
+
+      // B. Handle Section / Dimension Header Rows (e.g., "Dimension: Efficiency", "As Technical Staff")
+      const isSectionHeader = row.isItalic || (row.isBold && !row.q1_basis && !row.q2_basis && !row.q3_basis && !row.q4_basis && !row.sem1_spms);
+      if (isSectionHeader) {
+        const addedRow = worksheet.addRow([row.particular, ...new Array(11).fill('')]);
+        const rowNum = addedRow.number;
+        worksheet.mergeCells(rowNum, 1, rowNum, 12);
+
+        const cell = addedRow.getCell(1);
+        cell.font = { bold: !!row.isBold, italic: !!row.isItalic, size: 11 };
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF2F2F2' } // Light gray background for section banners
+        };
+
+        for (let col = 1; col <= 12; col++) {
+          addedRow.getCell(col).border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        }
+        return;
+      }
+
+      // C. Handle Standard Metric / Summary Data Rows
+      const val = (v) => (v != null && v !== '' ? v : ' ');
+      const rowValues = [
+        row.particular || '',
+        val(row.q1_basis),
+        val(row.q1_spms),
+        val(row.q2_basis),
+        val(row.q2_spms),
+        val(row.sem1_spms),
+        val(row.q3_basis),
+        val(row.q3_spms),
+        val(row.q4_basis),
+        val(row.q4_spms),
+        val(row.sem2_spms),
+        val(row.year_end_spms)
+      ];
+
+      const addedRow = worksheet.addRow(rowValues);
+
+      addedRow.eachCell((cell, colNumber) => {
+        const horizontalAlign = colNumber === 1 ? 'left' : 'center';
+        cell.alignment = { vertical: 'middle', horizontal: horizontalAlign, wrapText: true };
+        
+        // Apply styling based on row flags (isBold, isLarge)
+        cell.font = {
+          bold: !!row.isBold,
+          size: row.isLarge ? 12 : 11
+        };
+
+        if (row.isBold) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFF9F9F9' } // Subtle highlight for summary/rating rows
+          };
+        }
+
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+    const endRow = Math.max(17, worksheet.rowCount); // Ensures rows 4 to 17 are covered
+    for (let r = 4; r <= endRow; r++) {
+      const row = worksheet.getRow(r);
+      for (let col = 1; col <= 12; col++) {
+        const cell = row.getCell(col);
+        // Apply thin border to all 4 sides while preserving existing font/fill/alignment
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      }
+    }
+    // ----------------------------------------------------
+    // 4. SIGNATORIES SECTION (4 Signatory Blocks)
+    // ----------------------------------------------------
+    worksheet.addRow([]); // Blank line spacing
+    worksheet.addRow([]); // Blank line spacing
+
+    const sigLabelRow = worksheet.addRow([]);
+    sigLabelRow.getCell(1).value = 'Prepared by:';
+    sigLabelRow.getCell(3).value = 'Reviewed by:';
+    sigLabelRow.getCell(6).value = 'Approved by:';
+
+    [1, 4, 7].forEach(col => {
+      sigLabelRow.getCell(col).font = { bold: true };
+    });
+
+    worksheet.addRow([]); // Blank row for signature spacing
+
+    const sigNameRow = worksheet.addRow([]);
+    sigNameRow.getCell(1).value = individualName;
+    sigNameRow.getCell(3).value = divisionChief;
+    sigNameRow.getCell(7).value = ardName;
+    sigNameRow.getCell(10).value = `${rdName}${extensionName ? ', ' + extensionName : ''}`;
+
+    [1, 4, 7, 10].forEach(col => {
+      sigNameRow.getCell(col).font = { bold: true, underline: true };
+    });
+
+    const sigPosRow = worksheet.addRow([]);
+    sigPosRow.getCell(1).value = pmsLevel;
+    sigPosRow.getCell(3).value = 'Division Chief';
+    sigPosRow.getCell(7).value = ardPos;
+    sigPosRow.getCell(10).value = rdPos;
+
+    // ----------------------------------------------------
+    // 5. COLUMN WIDTH ADJUSTMENTS
+    // ----------------------------------------------------
+    const columnWidths = [
+      45, // Col 1: PARTICULARS (Wider for descriptions)
+      14, // Col 2: Q1 Basis
+      14, // Col 3: Q1 SMPs
+      14, // Col 4: Q2 Basis
+      14, // Col 5: Q2 SMPs
+      20, // Col 6: 1st Semester SPMS Rating
+      14, // Col 7: Q3 Basis
+      14, // Col 8: Q3 SMPs
+      14, // Col 9: Q4 Basis
+      14, // Col 10: Q4 SMPs
+      20, // Col 11: 2nd Semester SPMS Rating
+      20  // Col 12: Year-End SPMS Rating
+    ];
+
+    columnWidths.forEach((width, index) => {
+      worksheet.getColumn(index + 1).width = width;
+    });
+   
+    worksheet.getColumn(1).width = 35; // Generous width for PARTICULARS description text
+    for (let i = 2; i <= 12; i++) {
+      worksheet.getColumn(i).width = 9;
+    }
+
+    // ----------------------------------------------------
+    // 6. GENERATE AND SAVE FILE
+    // ----------------------------------------------------
+    const yearPart = selectedYearName ? `_${selectedYearName}` : '';
+    const fileName = `Monitoring_Tool_one${yearPart}.xlsx`;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    saveAs(blob, fileName);
+  };
   return {
     userUUID,
     userRole,
@@ -595,6 +856,7 @@ export function useScoreboardReport() {
     generateTable2,
     printSection,
     fetchIndividual,
-    exportToExcel
+    exportToExcel,
+    exportToExcelMT1
   };
 }
