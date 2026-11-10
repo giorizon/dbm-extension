@@ -227,25 +227,30 @@ const loadPosition = async () => {
 }
 const handleSelectRow = async (rowData) => {
   console.log('Full Row Data:', rowData)
-  const insertData = await insertRecord(rowData)
+  
+  // 1. Insert record
+  const { data: insertData, error: insertError } = await insertRecord(rowData)
 
-  if (insertData) {
-   
-    const updateData = await updateRemark(rowData)
-    // Actions to take on success:
-    
-    if (updateData.success) {
-      console.log('Inserte and update are successful');
-    //  await fetchApprovalList();
-         successDialog.value = true;
-    }
-    else{
-           console.error('Failed to update record.')  
-
-    }
-  } else {
-    console.error('Failed to insert record.')  
+  if (insertError) {
+    console.error('Failed to insert record:', insertError.message)
+    dialogFAD.value = false
+    return
   }
+
+  // 2. Update remark (runs only if insert was successful)
+  const { data: updateData, error: updateError } = await updateRemark(rowData)
+
+  if (updateError) {
+    console.error('Failed to update record:', updateError.message)
+  } else {
+    console.log('Inserted and updated successfully')
+    
+    // Uncomment to refresh your list after success
+   await fetchApprovalList()
+    
+    successDialog.value = true
+  }
+
   dialogFAD.value = false
 }
 function reloadPage() {
@@ -509,7 +514,7 @@ onMounted(async () => {
           size="small" 
           color="blue-darken-4" 
           variant="outlined" 
-          @click="handleSelectRow(item.raw)"
+          @click="handleSelectRow(item)"
         >
           Approve
         </v-btn>

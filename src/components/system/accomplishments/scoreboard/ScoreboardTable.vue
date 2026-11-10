@@ -470,7 +470,7 @@ const fetchScoreboardDataBasedOnRole = async () => {
       showReceivingselector.value = true;
 
       const { data: fadData, error: fadError } = await supabase
-        .from('view_scoreboard_monitoring_receiving_fad')
+        .from('view_scoreboard_fad_receiver')
         .select('*')
 
       if (fadError) {
@@ -921,15 +921,7 @@ onMounted(async () => {
                         Edit
                       </v-btn>
                     </td>
-                     <td>
-                      <v-btn 
-                        color="red-lighten-1" 
-                        size="small" 
-                        @click="goToAddScoreboard(item)"
-                      ><v-icon left>mdi-delete</v-icon>
-                        Delete
-                      </v-btn>
-                    </td>
+                    
                   </tr>
                 </template>
     </v-data-table>
