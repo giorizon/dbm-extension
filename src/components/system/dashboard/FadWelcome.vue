@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import supabase from '@/components/system/accomplishments/scoreboard/supabase'
 import {
  fetchSupportServices,
+ fetchPendingFad,
  fetchUserPosition,
  approvalHeaders,
  fetchApprovalList,
@@ -19,8 +20,10 @@ const InternalReportData = ref([]);
 const ExternalReportData = ref([]);
 const CitizenCharterData = ref([]);
 const SupportServicesData = ref([]);
+const PendingFadData = ref([]);
 const loading = ref(true);
 const posName = ref('');
+const fadtransactiontype = ref('');
 const dialogFAD = ref(false)
 const selected = ref([]) // Holds selected row objects
 const isBatchProcessing = ref(false)
@@ -58,6 +61,12 @@ const fetchSS = async () => {
   console.log("👉 Current Rows fetched from Supabase:", result);
   
   SupportServicesData.value = result || []; 
+};
+const fetchUserPendingFad = async () => {
+  const result = await fetchPendingFad(userUUID.value);
+  console.log("👉 Current Rows fetched from Supabase:", result);
+  
+  PendingFadData.value = result || []; 
 };
 const fetchInternalReport = async () => {
   loading.value = true;
@@ -201,12 +210,25 @@ const goToAddScoreboardFADcitizencharter = (item) => {
 };
 
 const goToAddScoreboardFADSupportServices = (item) => {
+
+  if(item.report_source=='Internal Report'){
+     fadtransactiontype.value =  '/add-scoreboard-fad-internal'    
+  }
+  else if(item.report_source=='External Report'){
+      fadtransactiontype.value =  '/add-scoreboard-fad-external'    
+  }
+  else if(item.report_source=='Citizens Charter'){
+      fadtransactiontype.value =  '/add-scoreboard-fad-citizen-charter'    
+  }
+  else if(item.report_source=='Support Services Report'){
+      fadtransactiontype.value =  '/add-scoreboard-fad-support-services'    
+  }
   router.push({
-    path: '/add-scoreboard-fad-support-services',
+    path: fadtransactiontype.value,
     query: {
       dms_reference_number: item.dms_reference_number,
       date_received: item.date_received,
-      report: `${item.ss_name} - ${item.ss_items_name}`, 
+      report: `${item.report}`, 
       sub_unit: item.sub_unit,
       scoreboard_id: item.scoreboard_id,
       process_id: item.process_id
@@ -214,8 +236,9 @@ const goToAddScoreboardFADSupportServices = (item) => {
   });
 };
 const loadData = async () => {
+ 
   loading.value = true
-  items.value = await fetchApprovalList()
+  items.value = await fetchApprovalList(posName.value)
   loading.value = false
 }
 const loadPosition = async () => {
@@ -295,6 +318,7 @@ onMounted(async () => {
   await fetchExternalReport ();
   await fetchCitizenCharterReport();
   await fetchSS();
+  await fetchUserPendingFad();
   await loadPosition();
   await loadData();
 });
@@ -303,138 +327,31 @@ onMounted(async () => {
 <template>
  <v-card-text>
        <v-row>
-        <v-col cols="12" >
-            <v-container>
-                <v-card><v-btn 
-                    v-if="['CAO', 'SAO'].includes(posName)" 
+        <v-col>
+          
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-btn 
+                    v-if="['CAO', 'SAO', 'CAO_test', 'SAO_test'].includes(posName)" 
                     class="mb-6" 
-                    color="red-darken-4"
+                    color="red-darken-2"
                     @click="dialogFAD = true"
                   >
-                    For approval
-                  </v-btn></v-card>
-                <v-card>
-                <v-card-title>Internal Reports:</v-card-title>
-                <v-card-text>
-                  <v-data-table :items="InternalReportData" class="elevation-1">
-                <template v-slot:headers>
-                  <tr>
-                    <th>DMS Reference Number</th>
-                    <th>Report</th>
-                    <th>Date Received</th>
-                    <th>Sub Unit</th>
-                    <th>Status</th>
-                  </tr>
-                </template>
-                <template v-slot:body="{ items }">
-                  <tr v-for="item in items" :key="item.dms_reference_number">
-                    <td>{{ item.dms_reference_number }}</td>
-                    <td>{{ item.report }}</td>
-                    <td>{{ item.date_received }}</td>
-                    <td>{{ item.sub_unit }}</td>
-                    <td>
-                      <v-btn 
-                        color="primary" 
-                        size="small" 
-                        @click="goToAddScoreboardFADinternal(item)"
-                      >
-                        Pending
-                      </v-btn>
-                    </td>
-                  </tr>
-                </template>
-              </v-data-table>
-                </v-card-text>
-                </v-card>
-            </v-container>
-        </v-col>
-        
-      </v-row>
-      <v-row>
-        <v-container>
-                <v-card>
-                <v-card-title>External Reports:</v-card-title>
-                <v-card-text>
-                  <v-data-table :items="ExternalReportData" class="elevation-1">
-                    <template v-slot:headers>
-                  <tr>
-                   <th>DMS Reference Number</th>
-                    <th>Report</th>
-                    <th>Date Received</th>
-                    <th>Sub Unit</th>
-                    <th>Status</th>
-                  </tr>
-                </template>
-                <template v-slot:body="{ items }">
-                  <tr v-for="item in items" :key="item.dms_reference_number">
-                    <td>{{ item.dms_reference_number }}</td>
-                    <td>{{ item.report }}</td>
-                    <td>{{ item.date_received }}</td>
-                    <td>{{ item.sub_unit }}</td>
-                    <td>
-                      <v-btn 
-                        color="primary" 
-                        size="small" 
-                        @click="goToAddScoreboardFADexternal(item)"
-                      >
-                        Pending
-                      </v-btn>
-                    </td>
-                  </tr>
-                </template>
-                  </v-data-table>
-                </v-card-text>
-                </v-card>
-            </v-container>
-      </v-row>
-      <v-row>
-        <v-container>
-                <v-card>
-                <v-card-title>Citizen Charter Reports:</v-card-title>
-                <v-card-text>
-                  <v-data-table :items="CitizenCharterData" class="elevation-1">
-                    <template v-slot:headers>
-                  <tr>
-                   <th>DMS Reference Number</th>
-                    <th>Report</th>
-                    <th>Date Received</th>
-                    <th>Sub Unit</th>
-                    <th>Status</th>
-                  </tr>
-                </template>
-                <template v-slot:body="{ items }">
-                  <tr v-for="item in items" :key="item.dms_reference_number">
-                    <td>{{ item.dms_reference_number }}</td>
-                    <td>{{ item.report }}</td>
-                    <td>{{ item.date_received }}</td>
-                    <td>{{ item.sub_unit }}</td>
-                    <td>
-                      <v-btn 
-                        color="primary" 
-                        size="small" 
-                        @click="goToAddScoreboardFADcitizencharter(item)"
-                      >
-                        Pending
-                      </v-btn>
-                    </td>
-                  </tr>
-                </template>
-                  </v-data-table>
-                </v-card-text>
-                </v-card>
-            </v-container>
+                    For Approval Processes
+                  </v-btn>
             <v-container>
               <v-card>
-                <v-card-title>Support Services Reports:</v-card-title>
+                <v-card-title>Pending Processes:</v-card-title>
                 <v-card-text>
-                  <v-data-table :items="SupportServicesData" class="elevation-1">
+                  <v-data-table :items="PendingFadData" class="elevation-1">
                     <template v-slot:headers>
                       <tr>
                         <th>DMS Reference Number</th>
                         <th>Report</th>
                         <th>Date Received</th>
-                        <th>Sub Unit</th>
-                        <th>Status</th>
+                        <th>Transaction Type</th>
+                        <th>Action</th>
                       </tr>
                     </template>
 
@@ -442,16 +359,16 @@ onMounted(async () => {
                      
                       <tr v-for="item in items" :key="item.dms_reference_number">
                         <td>{{ item.dms_reference_number }}</td>
-                        <td>{{ item.ss_name }} - {{ item.ss_items_name }}</td> <!-- ✅ Changed item.report to real view columns -->
+                        <td>{{ item.report }}</td>
                         <td>{{ item.date_received }}</td>
-                        <td>{{ item.sub_unit }}</td>
+                        <td>{{ item.report_source }}</td>
                         <td>
                           <v-btn 
                             color="primary" 
                             size="small" 
                             @click="goToAddScoreboardFADSupportServices(item)"
                           >
-                            Pending
+                            Accept
                           </v-btn>
                         </td>
                       </tr>

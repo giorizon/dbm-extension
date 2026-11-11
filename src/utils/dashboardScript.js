@@ -50,7 +50,27 @@ export const fetchSupportServices = async (userUUID) => {
     console.error("❌ Unexpected error fetching Supporting Services data:", err);
     return [];
   } 
-};export const approvalHeaders = [
+};
+
+export const fetchPendingFad = async (userUUID) => {
+  try {
+    const { data, error } = await supabase
+      .from('view_fad_pending_process') // ✅ Matches your SQL View name
+      .select('*')
+      .eq('owner_id', userUUID); // ✅ Removed .value since it's already unwrapped
+
+    if (error) {
+      console.error("❌ Error fetching scoreboard data:", error);
+      return [];
+    }
+
+    return data; 
+  } catch (err) {
+    console.error("❌ Unexpected error fetching Supporting Services data:", err);
+    return [];
+  } 
+};
+export const approvalHeaders = [
   { title: 'DMS Ref No.', key: 'dms_reference_number' },
   { title: 'DMS Title', key: 'dms_title' },
   { title: 'Date Received', key: 'date_received' },
@@ -58,12 +78,21 @@ export const fetchSupportServices = async (userUUID) => {
 ]
 
 // 2. Export fetch function (returns data array directly)
-export const fetchApprovalList = async () => {
+export const fetchApprovalList = async (position) => {
   try {
+    // Determine which remarks are allowed based on the user position
+    let allowedRemarks = ['Approval_Needed', 'Approval_Needed_CAO', 'Approval_Needed_SAO'] // Default/Fallback
+
+    if (position === 'CAO' || position === 'CAO_test') {
+      allowedRemarks = ['Approval_Needed', 'Approval_Needed_CAO']
+    } else if (position === 'SAO' || position === 'SAO_test') {
+      allowedRemarks = ['Approval_Needed', 'Approval_Needed_SAO']
+    }
+
     const { data, error } = await supabase
       .from('scoreboard_receiving_fad')
       .select('*')
-      .eq('remark', 'Approval_Needed')
+      .in('remark', allowedRemarks)
 
     if (error) {
       console.error('Error fetching approval list:', error)

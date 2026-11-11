@@ -17,6 +17,7 @@ const user = ref(null);
 const service_others = ref(null); 
 const othersFlag = ref(false);
 const dialogFAD = ref(false);
+const dialogFAD2 = ref(false);
 const dmsRemark = ref('');
 const fetchUser = async () => {
   const { data, error } = await supabase.auth.getUser();
@@ -288,13 +289,9 @@ function reloadPage() {
   window.location.reload();
 }
 
-const submitScoreboard = async (approval) => {
-  if(approval){
-    dmsRemark.value = 'Approval_Needed';
-  }
-  else{
-     dmsRemark.value = 'Pending';
-  }
+const submitScoreboard = async (val) => {
+  alert(val);
+   dmsRemark.value = val;
   try {
     // Format received datetime
     const receivedDatePart = format(new Date(formData.value.dateReceivedRecordSection), "yyyy-MM-dd");
@@ -670,12 +667,12 @@ const fadSubUnits = ref([]);
           <v-container class="d-flex justify-center ">
           <v-row justify="center" dense style="max-width: 500px;">
             <v-col cols="6">
-              <v-btn color="blue-darken-4" block @click="submitScoreboard(true)">
-                For approval of SAO/CAO
-              </v-btn>
+             <v-btn color="blue-darken-4" block @click="dialogFAD = false; dialogFAD2 = true">
+              For approval of SAO/CAO
+            </v-btn>
             </v-col>
             <v-col cols="6">
-              <v-btn class="mb-6" color="red-darken-4" block @click="submitScoreboard(false)">
+              <v-btn class="mb-6" color="red-darken-4" block @click="submitScoreboard('Pending')">
                 Forward DMS
               </v-btn>  
             </v-col>
@@ -688,4 +685,35 @@ const fadSubUnits = ref([]);
         </v-card-actions>
       </v-card>
      </v-dialog>
+     <v-dialog v-model="dialogFAD2" max-width="500px">
+      <v-card 
+          title="For Approval"
+          class ="pt-3"
+          subtitle="Select approval authority">
+          <v-container class="d-flex justify-center ">
+          <v-row justify="center" dense style="max-width: 500px;">
+            <v-col cols="4">
+              <v-btn color="blue-darken-1" block @click="submitScoreboard('Approval_Needed_CAO')">
+                CAO
+              </v-btn>
+            </v-col>
+            <v-col cols="4">
+              <v-btn class="mb-6" color="blue-darken-2" block @click="submitScoreboard('Approval_Needed_SAO')">
+                SAO
+              </v-btn>  
+            </v-col>
+            <v-col cols="4">
+              <v-btn class="mb-6" color="blue-darken-3" block @click="submitScoreboard('Approval_Needed')">
+                CAO or SAO
+              </v-btn>  
+            </v-col>
+          </v-row>
+        </v-container>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn class="mr-5 my-2" text="Close" variant="plain" prepend-icon="mdi-close" @click="dialogFAD2 = false"></v-btn>
+        </v-card-actions>
+      </v-card>
+     </v-dialog> 
 </template>
