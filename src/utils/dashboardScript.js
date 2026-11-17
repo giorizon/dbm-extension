@@ -55,9 +55,9 @@ export const fetchSupportServices = async (userUUID) => {
 export const fetchPendingFad = async (userUUID) => {
   try {
     const { data, error } = await supabase
-      .from('view_fad_pending_process') // ✅ Matches your SQL View name
+      .from('view_fad_pending_process') 
       .select('*')
-      .eq('owner_id', userUUID); // ✅ Removed .value since it's already unwrapped
+      .eq('owner_id', userUUID); 
 
     if (error) {
       console.error("❌ Error fetching scoreboard data:", error);

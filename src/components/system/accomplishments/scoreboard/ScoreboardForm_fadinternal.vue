@@ -459,7 +459,7 @@ onMounted(() => {
             color="red-darken-4"
             @click="releaseWarning"
           >
-            Release
+           For Release
           </v-btn>
         </v-col>
         </v-row>

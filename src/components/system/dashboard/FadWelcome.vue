@@ -66,7 +66,21 @@ const fetchUserPendingFad = async () => {
   const result = await fetchPendingFad(userUUID.value);
   console.log("👉 Current Rows fetched from Supabase:", result);
   
-  PendingFadData.value = result || []; 
+  //PendingFadData.value = result || []; 
+
+  PendingFadData.value = result.map(row => ({
+      dms_reference_number: row.dms_reference_number,
+      date_received: formatDate(row.date_received),
+      dms_title: row.dms_title,
+      report: row.report,
+      report_source: row.report_source,
+      status: row.status,
+      sub_unit: row.sub_unit,
+      owner_id: row.owner_id,
+      scoreboard_id: row.scoreboard_id,
+      process_id: row.process_id
+    }));
+
 };
 const fetchInternalReport = async () => {
   loading.value = true;
@@ -209,19 +223,25 @@ const goToAddScoreboardFADcitizencharter = (item) => {
   });
 };
 
-const goToAddScoreboardFADSupportServices = (item) => {
-
+const goToAddScoreboard = (item) => {
+  
   if(item.report_source=='Internal Report'){
      fadtransactiontype.value =  '/add-scoreboard-fad-internal'    
   }
   else if(item.report_source=='External Report'){
       fadtransactiontype.value =  '/add-scoreboard-fad-external'    
   }
-  else if(item.report_source=='Citizens Charter'){
+  else if(item.report_source=='Citizens Charter Report'){
       fadtransactiontype.value =  '/add-scoreboard-fad-citizen-charter'    
   }
   else if(item.report_source=='Support Services Report'){
       fadtransactiontype.value =  '/add-scoreboard-fad-support-services'    
+  }
+  else if(item.report_source=='External/Internal Report'){
+      fadtransactiontype.value =  '/add-scoreboard-fad-external-internal'    
+  }
+  else if(item.report_source=='Other Administrative Commitment Report'){
+      fadtransactiontype.value =  '/add-scoreboard-fad-administrative-commitment'    
   }
   router.push({
     path: fadtransactiontype.value,
@@ -366,7 +386,7 @@ onMounted(async () => {
                           <v-btn 
                             color="primary" 
                             size="small" 
-                            @click="goToAddScoreboardFADSupportServices(item)"
+                            @click="goToAddScoreboard(item)"
                           >
                             Accept
                           </v-btn>

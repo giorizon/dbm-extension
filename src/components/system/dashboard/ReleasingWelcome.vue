@@ -423,7 +423,7 @@ const activeRow = ref('row1') // default to row 1
 <template>
   
  <v-card-text>
-        <v-row>
+    <v-row>
               <!-- Control Buttons -->
             <v-btn @click="activeRow = 'row1'" :color="activeRow === 'row1' ? 'primary' : 'default'" class="me-2">
               Technical

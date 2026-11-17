@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import supabase from '@/components/system/accomplishments/scoreboard/supabase';
 import '@/assets/dashboard.css';
 
-
+const activeRow = ref('row1');
 const userUUID = ref(null);
 const scoreboardData = ref([]);
 const loading = ref(true);
@@ -111,7 +111,16 @@ onMounted(async () => {
 </script>
 <template>
  <v-card-text>
-       <v-row>
+    <v-row>
+              <!-- Control Buttons -->
+            <v-btn @click="activeRow = 'row1'" :color="activeRow === 'row1' ? 'primary' : 'default'" class="me-2">
+              Technical
+            </v-btn>
+            <v-btn @click="activeRow = 'row2'" :color="activeRow === 'row2' ? 'primary' : 'default'">
+              FAD
+            </v-btn>
+    </v-row>
+       <v-row v-row  v-if="activeRow === 'row1'" class="mt-4">
         <v-col>
             <v-container>
                 <v-card>
@@ -155,5 +164,51 @@ onMounted(async () => {
         </v-col>
        
       </v-row>
+      <!-- Start For FAD section -->
+
+      <v-row v-if="activeRow === 'row2'" class="mt-4">
+        <v-col>
+            <v-container>
+                <v-card>
+                <v-card-title>PENDING FAD DMS:</v-card-title>
+                <v-card-text>
+                  <v-data-table :items="releasedFAD" class="elevation-1">
+                <template v-slot:headers>
+                  <tr>
+                    <th>DMS Reference Number</th>
+                    <th>Date Received</th>
+                    <th>Name</th>
+                    <th>Type of Transaction</th>
+                    <th>DMS Title</th>
+                    <th>Action</th>
+                  </tr>
+                </template>
+                <template v-slot:body="{ items }">
+                  <tr v-for="item in items" :key="item.scoreboard_id">
+                    <td>{{ item.dms_reference_number }}</td>
+                    <td>{{ item.date_received }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.type_of_transaction }}</td>
+                    <td>{{ item.dms_title }}</td>
+                    <td>
+                      <v-btn 
+                        color="primary" 
+                        size="small" 
+                        class="me-2" 
+                        @click="goToFadreleasing(item)"
+                      >
+                        Accept
+                      </v-btn>
+                      </td>
+                  </tr>
+                </template>
+              </v-data-table>
+                </v-card-text>
+                </v-card>
+            </v-container>
+        </v-col>
+       
+      </v-row>
+       <!-- End For FAD section -->
     </v-card-text>
 </template>

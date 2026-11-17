@@ -116,8 +116,8 @@ const fetchTransactionTypes = async () => {
   try {
     const { data, error } = await supabase
       .from('type_of_transactions_fad')
-      .select('id, name');
-
+      .select('id, name')
+      .order('name', { ascending: true });
     if (error) {
       console.error('Error fetching transactions:', error);
       return;
@@ -135,6 +135,7 @@ const fetchTransactionTypes = async () => {
 };
 // Function to fetch sub-types based on selected transaction type
 const fetchSubTypes = async () => {
+  
   if (!formData.value.particulars.transactionID) {
     subtypeList.value = []; // Clear sub-type list if no transaction selected
     return;
@@ -151,14 +152,21 @@ const fetchSubTypes = async () => {
     tableName = 'external_reports';
   } else if (formData.value.particulars.transactionID === 4) {
     tableName = 'support_services';
-  } else {
+  }
+   else if (formData.value.particulars.transactionID === 5) {
+    tableName = 'external_internal';
+  }
+   else if (formData.value.particulars.transactionID === 6) {
+    tableName = 'administrative_commitment';
+  }else {
     subtypeList.value = []; // No valid transaction type selected
     return;
   }
   try {
     const { data, error } = await supabase
       .from(tableName)
-      .select('id, name'); // Fetch sub-types
+      .select('id, name')
+      .order('name', { ascending: true });
 
     if (error) {
       console.error(`Error fetching ${tableName}:`, error);
@@ -290,7 +298,6 @@ function reloadPage() {
 }
 
 const submitScoreboard = async (val) => {
-  alert(val);
    dmsRemark.value = val;
   try {
     // Format received datetime
@@ -428,6 +435,42 @@ const submitScoreboard = async (val) => {
       }
 
       console.log("✅ Data saved in scoreboard_support_services");
+    }
+    else if (formData.value.particulars.transactionID === 5) {
+           const { error: externalInternalInsertError } = await supabase
+        .from('external_internal_received')
+        .insert([
+          {
+            scoreboard_id: insertedScoreboardID,
+            ei_id: formData.value.particulars.subTypeID
+          }
+        ]);
+
+      if (externalInternalInsertError) {
+        console.error('🚨 Insert Error (External/Internal):', externalInternalInsertError.message);
+        alert('❌ Failed to save data in external_internal_received! Error: ' + externalInternalInsertError.message);
+        return;
+      }
+
+      console.log("✅ Data saved in external_internal_received");
+    }
+    else if (formData.value.particulars.transactionID === 6) {
+           const { error: administrativeCommitmentInsertError } = await supabase
+        .from('administrative_commitment_received')
+        .insert([
+          {
+            scoreboard_id: insertedScoreboardID,
+            ac_id: formData.value.particulars.subTypeID
+          }
+        ]);
+
+      if (administrativeCommitmentInsertError) {
+        console.error('🚨 Insert Error (Administrative Commitment):', administrativeCommitmentInsertError.message);
+        alert('❌ Failed to save data in administrative_commitment_received! Error: ' + administrativeCommitmentInsertError.message);
+        return;
+      }
+
+      console.log("✅ Data saved in external_internal_received");
     }
    }  
     //end-if not for approval

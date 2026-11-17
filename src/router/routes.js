@@ -28,7 +28,9 @@ import AddScoreBoardFadInternalView from '@/views/system/accomplishments/AddScor
 import AddScoreBoardFadExternalView from '@/views/system/accomplishments/AddScoreboardFadExternalView.vue'
 import AddScoreBoardFadCitizenCharterView from '@/views/system/accomplishments/AddScoreBoardFadCitizenCharterView.vue'
 import AddScoreBoardFadSupportServicesView from '@/views/system/accomplishments/AddScoreBoardFadSupportServicesView.vue'
-// 👉 Routes
+import AddScoreBoardFadExternalInternalView from '@/views/system/accomplishments/AddScoreboardFadExternalInternalView.vue'
+import AddScoreBoardFadAdministrativeCommitmentView from '@/views/system/accomplishments/AddScoreBoardFadAdmistrativeCommitmentView.vue'
+
 export const routes = [
   // Auth Pages
   {   
@@ -119,6 +121,18 @@ export const routes = [
     path: '/add-scoreboard-fad-support-services',
     name: 'add-scoreboard-fad-support-services',
     component: AddScoreBoardFadSupportServicesView,
+    meta: { requiresAuth: true }
+  },
+   {
+    path: '/add-scoreboard-fad-external-internal',
+    name: 'add-scoreboard-fad-external-internal',
+    component: AddScoreBoardFadExternalInternalView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/add-scoreboard-fad-administrative-commitment',
+    name: 'add-scoreboard-fad-administrative-commitment',
+    component: AddScoreBoardFadAdministrativeCommitmentView,
     meta: { requiresAuth: true }
   },
   {
